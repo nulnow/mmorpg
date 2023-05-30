@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Game</title>
+    <style>
+        html {
+            font-family: system-ui;
+            color: white;
+        }
+        body {
+            background-color: black;
+        }
+    </style>
+</head>
+<body>
+    <div id="debug" style="
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 200px;
+        height: 100px;
+        background-color: rgba(0,0,0,0.69);
+        padding: 20px;
+        color: greenyellow;
+        overflow: scroll;
+    "></div>
+
+    <canvas id="canvas" style="border: 4px solid #212121; border-radius: 16px"></canvas>
+    <div>
+        <label>
+            Player speed:
+            <input type="range" id="speedInput" min="0" value="100" max="1000">
+        </label>
+        <label>
+            Attack speed:
+            <input type="range" id="attackSpeedInput" min="0" value="10" max="25">
+        </label>
+    </div>
+    <div>
+        <div>state: <span id="state"></span></div>
+        <button id="start">start</button>
+        <button id="stop">stop</button>
+    </div>
+    <script type="module" src="src/main.ts"></script>
+</body>
+</html>

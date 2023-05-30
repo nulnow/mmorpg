@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MMORPG</title>
+    <style>
+        #scene {
+            position: relative;
+            width: 600px;
+            height: 600px;
+            border: 1px solid red;
+        }
+        .entity {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            color: green;
+            transition: transform 0.1s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <label>
+        Name:
+        <input type="text" id="name-input">
+    </label>
+    <button id="enter-button">enter</button>
+</div>
+<div id="scene"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js" integrity="sha512-WFN04846sdKMIP5LKNphMaWzU7YpMyCU245etK3g/2ARYbPK9Ub18eG+ljU96qKRCWh+quCY7yefSmlkQw1ANQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script type="module">
+    const socket = io();
+
+    const nameInput = document.getElementById('name-input');
+    const scene = document.getElementById('scene');
+    const enterButton = document.getElementById('enter-button');
+
+    let inputFocus = false;
+    let isAuthorized = false;
+
+    nameInput.addEventListener('focusin', () => {
+        inputFocus = true;
+    });
+    nameInput.addEventListener('focusout', () => {
+        inputFocus = false;
+    });
+
+    const getUserName = () => {
+        return nameInput.value;
+    };
+
+    function createEntity(params) {
+        const div = document.createElement('div');
+        div.classList.add('entity');
+        div.style.backgroundColor = params.color;
+        div.style.top = params.y + 'px';
+        div.style.left = params.x + 'px';
+        div.style.transform = `rotate(${params.rotation + 'deg'})`;
+        div.setAttribute('id', params.name);
+        div.innerText = params.name;
+        return div;
+    }
+
+    function resetWorld(entities) {
+        scene.innerHTML = '';
+        const divs = entities.map(createEntity);
+        divs.forEach(div => scene.appendChild(div));
+    }
+
+    let entities = [];
+
+    socket.on('world:update', (gameWorld) => {
+        console.log(gameWorld);
+        entities = gameWorld.entities;
+        resetWorld(entities);
+    });
+
+    enterButton.onclick = function () {
+        socket.emit('auth', getUserName());
+        isAuthorized = true;
+    }
+
+    const speed = 10;
+    document.addEventListener("keydown", (event) => {
+        if (!isAuthorized) {
+            return;
+        }
+
+        const code = event.code;
+        const name = getUserName()
+        const self = entities.find(e => e.name === name);
+
+        if (!self) {
+            return;
+        }
+
+        switch (code) {
+            case "KeyW": {
+                self.y -= speed;
+                break;
+            }
+            case "KeyA": {
+                self.x -= speed;
+                break;
+            }
+            case "KeyS": {
+                self.y += speed;
+                break;
+            }
+            case "KeyD": {
+                self.x += speed;
+                break;
+            }
+            default: return;
+        }
+
+        socket.emit('user:controls', self);
+        resetWorld(entities);
+    });
+
+    function angle(cx, cy, ex, ey) {
+        var dy = ey - cy;
+        var dx = ex - cx;
+        var theta = Math.atan2(dy, dx); // range (-PI, PI]
+        theta *= 180 / Math.PI; // rads to degs, range (-180, 180]
+        //if (theta < 0) theta = 360 + theta; // range [0, 360)
+        return theta;
+    }
+
+    const throttledMouseMoveHandler = _.throttle(event => {
+        if (!isAuthorized) return;
+        const self = entities.find(e => e.name === getUserName());
+        if (!self) return;
+
+        const { clientX, clientY } = event;
+
+        self.rotation = angle(self.x, self.y, clientX, clientY);
+        socket.emit('user:controls', self);
+        resetWorld(entities);
+    }, 50);
+
+    document.addEventListener('mousemove', throttledMouseMoveHandler);
+
+</script>
+</body>
+</html>
