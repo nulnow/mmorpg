@@ -1,6 +1,8 @@
 import { Entity } from './Entity';
 import { Scene } from './types';
 import { Position } from './Rendering/Position';
+import { IDrawableEntity } from './Rendering/IDrawableEntity';
+import { GameObject } from './Rendering/GameObject';
 
 export class GameMap extends Entity {
   private static MAX_DISTANCE = Infinity;
@@ -18,9 +20,29 @@ export class GameMap extends Entity {
 
   public findEntities(point: Position, maxDistance: number = GameMap.MAX_DISTANCE): Entity[] {
     return this.scene.entities.filter((entity) => {
-      const center = entity.getBox().getCenter();
+      // TODO!!!
+      const center = entity.getGameObject?.()?.getBox()?.getCenter();
+      if (!center) {
+        return false;
+      }
       const distance = Math.sqrt((center.x - point.x) ** 2 + (center.y - point.y) ** 2);
       return distance <= maxDistance;
     });
+  }
+
+  public getCollidableGameObjects(): GameObject[] {
+    return this.scene.entities.reduce((result, entity) => {
+      if (!entity.getGameObject) {
+        return result;
+      }
+      const gameObject = (entity as any as IDrawableEntity).getGameObject();
+      const collidable = gameObject.getAllCollidables();
+
+      collidable.forEach(c => {
+        result.push(c);
+      });
+
+      return result;
+    }, [] as GameObject[]);
   }
 }

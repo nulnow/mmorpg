@@ -4,14 +4,35 @@ import { UIController } from './UIController';
 import { EntityManager } from './EntityManager';
 import { PlayerEntity } from './Player/PlayerEntity';
 import { InputController } from './InputController';
-import { Camera } from './Camera';
 import { GameMap } from './GameMap';
 import { Scene } from './types';
 import { ResourceLoader } from './ResourceLoader';
 import { MusicPlayer } from './MusicPlayer';
+import { EnemyEntity } from './Enemies/EnemyEntity';
+import { MapWall } from './Buildings/MapWall';
+import { FollowPlayerCamera } from './Camera/FollowPlayerCamera';
+import { Position } from './Rendering/Position';
+import { FireEntity } from './Buildings/FireEntity';
 
 const canvasWidth = 800;
 const canvasHeight = 600;
+
+const timeSpeedInput = document.getElementById('timeSpeedInput') as HTMLInputElement;
+let timeSpeed = 1;
+function setTimeSpeed(ts: number) {
+  document.getElementById('timeSpeedValue')!.innerText = ts.toString();
+  timeSpeed = ts;
+  timeSpeedInput.value = ts.toString();
+}
+
+timeSpeedInput!.oninput = (event: any) => {
+  setTimeSpeed(parseFloat(event.target.value));
+
+};
+timeSpeedInput.value = timeSpeed.toString();
+document.getElementById('resetTimeButton')!.onclick = () => {
+  setTimeSpeed(1);
+}
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const speedInput = document.getElementById('speedInput') as HTMLInputElement;
@@ -86,19 +107,28 @@ class Game {
     this.context.fillStyle = '#3f4941';
     this.context.fill();
 
-    this.flowersMap.forEach(({i, j}) => {
+    const camera = this.scene.camera;
+
+    this.flowersMap.forEach(({i: x, j: y}) => {
+      const relativePosition = camera.getRelativePosition(new Position(x, y, 0));
       this.context.drawImage(
         ResourceLoader.getLoadedAssets().flower,
-        i,
-        j,
+        relativePosition.x,
+        relativePosition.y,
         20, 20
-      )
+      );
     });
 
-    // const camera = this.scene.camera;
-    const entities = this.scene.entities;
+    const allEntities = this.scene.entities;
+    allEntities.forEach((entity) => {
+      entity.update(timeElapsed);
+    });
 
-    entities.forEach(entity => {
+    const visibleEntity = this.scene.entities.filter(entity => {
+      return camera.isVisibleDrawableEntity(entity as any);
+    });
+
+    visibleEntity.forEach(entity => {
       // if (!camera.isVisible(entity)) {
       //   return;
       // }
@@ -108,67 +138,57 @@ class Game {
       // console.log(camera);
       // console.log(relationalEntityCoordinates);
 
-      const box = entity.getBox();
-      const relationalEntityCoordinates = box.getRect();
+      if (entity.getGameObject) {
+        // const relationalEntityCoordinates = entity.getGameObject().getBox().getRect();
 
-      if (entity instanceof PlayerEntity) {
-        const player = entity as PlayerEntity;
-        if (player.getCurrentState() === 'attack1') {
-          const center = box.getCenter();
-          this.context.save();
-          this.context.strokeStyle = 'rgba(255,0,0,0.32)';
-          this.context.beginPath();
-          this.context.arc(
-            center.x,
-            center.y,
-            100,
-            0,
-            2 * Math.PI,
-          );
-          this.context.stroke();
-          this.context.restore();
-        }
-        const sprite = player.getCurrentSprite();
-        if (sprite instanceof HTMLImageElement) {
-          this.context.save();
+        entity.getGameObject().draw(this.context, camera);
+        // if (player.getCurrentState() === 'attack1') {
+        //   const center = box.getCenter();
+        //   this.context.save();
+        //   this.context.strokeStyle = 'rgba(255,0,0,0.32)';
+        //   this.context.beginPath();
+        //   this.context.arc(
+        //     center.x,
+        //     center.y,
+        //     100,
+        //     0,
+        //     2 * Math.PI,
+        //   );
+        //   this.context.stroke();
+        //   this.context.restore();
+        // }
 
-          this.context.drawImage(
-            sprite,
-            relationalEntityCoordinates.left,
-            relationalEntityCoordinates.top,
-            relationalEntityCoordinates.width,
-            relationalEntityCoordinates.height,
-          );
-          this.context.restore();
-        } else {
-          console.error('Sprite is not an instance of HTMLImageElement', sprite);
-        }
+        // const player = entity as PlayerEntity;
+        // const gameObject = player.getGameObject();
+        //
+        // const currentSprite = gameObject.getCurrentSprite();
 
-        this.context.fillStyle = entity.COLOR;
-        this.context.strokeStyle =  entity.COLOR;
-        this.context.beginPath();
-        this.context.rect(
-          relationalEntityCoordinates.left,
-          relationalEntityCoordinates.top,
-          relationalEntityCoordinates.width,
-          relationalEntityCoordinates.height,
-        );
-        this.context.stroke();
+        // const sprite = player.get.getCurrentSprite();
+
+
+        // this.context.fillStyle = entity.COLOR;
+        // this.context.strokeStyle =  entity.COLOR;
+        // this.context.beginPath();
+        // this.context.rect(
+        //   relationalEntityCoordinates.left,
+        //   relationalEntityCoordinates.top,
+        //   relationalEntityCoordinates.width,
+        //   relationalEntityCoordinates.height,
+        // );
+        // this.context.stroke();
       } else {
-        this.context.lineWidth = 1;
-        this.context.fillStyle = entity.COLOR;
-        this.context.strokeStyle =  '#000';
-        this.context.beginPath();
-        this.context.rect(
-          relationalEntityCoordinates.left,
-          relationalEntityCoordinates.top,
-          relationalEntityCoordinates.width,
-          relationalEntityCoordinates.height,
-        );
-        this.context.fill();
+        // this.context.lineWidth = 1;
+        // this.context.fillStyle = entity.COLOR;
+        // this.context.strokeStyle =  '#000';
+        // this.context.beginPath();
+        // this.context.rect(
+        //   relationalEntityCoordinates.left,
+        //   relationalEntityCoordinates.top,
+        //   relationalEntityCoordinates.width,
+        //   relationalEntityCoordinates.height,
+        // );
+        // this.context.fill();
       }
-
-      entity.update(timeElapsed);
     });
   }
 
@@ -184,12 +204,13 @@ class Game {
     }
 
     this.interval = this.requestAnimationFrame((timeStamp) => {
-      const timeElapsed = timeStamp - this.prevDOMHighResTimeStamp;
+      const timeElapsedReal = timeStamp - this.prevDOMHighResTimeStamp
+      const timeElapsed = timeElapsedReal * timeSpeed;
       this.prevDOMHighResTimeStamp = timeStamp;
       this.draw(timeElapsed);
 
       if (debugMODE && debug && (this.i % 10 === 0)) {
-        debug.innerText = 'FPS: ' + String(Math.round(1000 / timeElapsed));
+        debug.innerText = 'FPS: ' + String(Math.round(1000 / timeElapsedReal));
       }
 
       this.run();
@@ -232,7 +253,7 @@ class Game {
     player.addComponent(inputController);
     this.entityManager.addEntity(player, 'player');
 
-    const camera = new Camera(canvasWidth, canvasHeight);
+    const camera = new FollowPlayerCamera(canvasWidth, canvasHeight, player);
     this.entityManager.addEntity(camera, 'camera');
 
     this.scene = {
@@ -243,27 +264,33 @@ class Game {
     const map = new GameMap(this.scene);
     this.entityManager.addEntity(map, 'map');
 
+    const mapWall = new MapWall(canvasWidth, canvasHeight);
+    this.entityManager.addEntity(mapWall, 'mapWall');
+    this.scene.entities.push(mapWall);
+
+    for (let j = 0; j < 5; j++) {
+      const fire = new FireEntity(-70, 50 * (j + 1), 150, 150);
+      this.scene.entities.push(fire);
+    }
+
+    for (let j = 0; j < 10; j++) {
+      const fire = new FireEntity(j * 50, -70, 150, 150);
+      this.scene.entities.push(fire);
+    }
+
+    const slime = new EnemyEntity();
+    this.entityManager.addEntity(slime, 'slime');
+    this.scene.entities.push(slime);
+
     this.scene.entities.push(player);
 
-    // for (let j = 0; j < 5; j++) {
-    //   const enemyEntity = new Entity();
-    //   enemyEntity.getBox().move(0, 50 * (j + 1));
-    //   this.scene.entities.push(enemyEntity);
-    // }
-    //
-    // for (let j = 0; j < 10; j++) {
-    //   const enemyEntity = new Entity();
-    //   enemyEntity.getBox().move(j * 50, 50);
-    //   this.scene.entities.push(enemyEntity);
-    // }
-    //
     // for (let j = 0; j < 5; j++) {
     //   if (j === 3 || j === 4) continue;
     //   const enemyEntity = new Entity();
     //   enemyEntity.getBox().move(150, 50 * (j + 1));
     //   this.scene.entities.push(enemyEntity);
     // }
-    //
+
     // for (let j = 0; j < 5; j++) {
     //   if (j === 3 || j === 4) {
     //     continue;
@@ -272,13 +299,13 @@ class Game {
     //   enemyEntity.getBox().move(450, 50 * (j + 1));
     //   this.scene.entities.push(enemyEntity);
     // }
-    //
+
     // for (let j = 0; j < 10; j++) {
     //   const enemyEntity = new Entity();
     //   enemyEntity.getBox().move(50 * (j), 300);
     //   this.scene.entities.push(enemyEntity);
     // }
-    //
+
     // for (let j = 0; j < 10; j++) {
     //   const enemyEntity = new Entity();
     //   enemyEntity.getBox().move(50 * (j), 450);

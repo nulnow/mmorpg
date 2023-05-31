@@ -11,19 +11,39 @@ export type Rect = {
 }
 
 export class Box {
-  private p1: Position;
-  private p2: Position;
+  public constructor(
+    private topLeft: Position,
+    private width: number,
+    private height: number
+  ) {}
 
-  public constructor(p1: Position, p2: Position) {
-    this.p1 = p1;
-    this.p2 = p2;
+  public getTopLeft(): Position {
+    return this.topLeft;
+  }
+
+  public setTopLeft(position: Position): void {
+    this.topLeft = position;
+  }
+
+  public getWidth(): number {
+    return this.width;
+  }
+  public setWidth(width: number): void {
+    this.width = width;
+  }
+
+  public getHeight(): number {
+    return this.height;
+  }
+  public setHeight(height: number): void {
+    this.height = height;
   }
 
   public getRect(): Rect {
-    const top = Math.min(this.p1.y, this.p2.y);
-    const left = Math.min(this.p1.x, this.p2.x);
-    const right = Math.max(this.p1.x, this.p2.x);
-    const bottom = Math.max(this.p1.y, this.p2.y);
+    const top = this.topLeft.y;
+    const left = this.topLeft.x;
+    const right = this.topLeft.x + this.width;
+    const bottom = this.topLeft.y + this.height;
 
     const width = right - left;
     const height = bottom - top;
@@ -55,17 +75,27 @@ export class Box {
   }
 
   public move(x: number, y: number): void {
-    this.p1.x += x;
-    this.p2.x += x;
-
-    this.p1.y += y;
-    this.p2.y += y;
+    this.topLeft.x += x;
+    this.topLeft.y += y;
   }
+
+  // public setCenter(newCenter: Position): void {
+  //   const currentCenter = this.getCenter();
+  //   const dx = newCenter.x - currentCenter.x;
+  //   const dy = newCenter.y - currentCenter.y;
+  //
+  //   this.p1.x += dx;
+  //   this.p1.y += dy;
+  //
+  //   this.p2.x += dx;
+  //   this.p2.y += dy;
+  // }
 
   public copy(): Box {
     return new Box(
-      this.p1.copy(),
-      this.p2.copy(),
+      this.topLeft.copy(),
+      this.width,
+      this.height,
     );
   }
 

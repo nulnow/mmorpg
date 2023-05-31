@@ -2,6 +2,10 @@ import mainTheme from '../assets/Main Theme.mp3';
 import swordAttack from '../assets/Sword Whooshes Medium - QuickSounds.com.mp3';
 import steps from '../assets/sneaker-shoe-on-concrete-floor-fast-pace-1-www.FesliyanStudios.com.mp3';
 
+import evilSlime from '../assets/evil-slime.mp3';
+import neutralSlime from '../assets/neutral-slime.mp3';
+import movingSlime from '../assets/moving-slime.mp3';
+
 export class MusicPlayer {
   private static currentTrack: HTMLAudioElement;
   private static steps: HTMLAudioElement;
@@ -78,5 +82,55 @@ export class MusicPlayer {
     audio.loop   = options.loop;
     audio.src    = src;
     return audio;
+  }
+
+  public static createPlayer(src: string, options: any): MusicPlayer {
+    return new MusicPlayer(this.createAudio(src, options));
+  }
+
+  public static createSlimeMovingPlayer(): MusicPlayer {
+    return this.createPlayer(movingSlime, { loop: true });
+  }
+
+  public static createEvilSlimePlayer(): MusicPlayer {
+    return this.createPlayer(evilSlime, { loop: true });
+  }
+
+  public static createNeutralSlimePlayer(): MusicPlayer {
+    return this.createPlayer(neutralSlime, { loop: true });
+  }
+
+  private audio: HTMLAudioElement;
+  private isPlaying: boolean = false;
+  private constructor(audio: HTMLAudioElement) {
+    this.audio = audio;
+  }
+
+  public play(): void {
+    if (this.isPlaying) {
+      return;
+    }
+    this.audio.play();
+    this.isPlaying = true;
+  }
+  public pause(): void {
+    if (!this.isPlaying) {
+      return;
+    }
+    this.audio.pause();
+    this.isPlaying = false;
+  }
+  public setVolume(volume: number): void {
+    this.audio.volume = volume;
+  }
+  public tuneSoundByDistance(distance: number): void {
+    const MAX_DISTANCE = 400;
+    if (distance > MAX_DISTANCE) {
+      this.setVolume(0);
+    } else {
+      const MAX_VOLUME = 0.3;
+      const volume = MAX_VOLUME - (distance / MAX_DISTANCE) * MAX_VOLUME;
+      this.setVolume(volume);
+    }
   }
 }

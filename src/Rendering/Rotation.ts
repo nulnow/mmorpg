@@ -12,4 +12,17 @@ export class Rotation {
   public set(val: number) {
     this.value = val;
   }
+
+  public isLeft(): boolean {
+    const value = this.value % (Math.PI * 2);
+    return (
+      Math.abs(value)
+      >
+      (Math.PI / 2)
+    );
+  }
+
+  public isRight(): boolean {
+    return !this.isLeft();
+  }
 }

@@ -21,7 +21,29 @@
         position: fixed;
         top: 0;
         right: 0;
-        width: 200px;
+        width: 500px;
+        height: 100px;
+        background-color: rgba(0,0,0,0.69);
+        padding: 20px;
+        color: greenyellow;
+        overflow: scroll;
+    "></div>
+    <div id="cameraPos" style="
+        position: fixed;
+        top: 120px;
+        right: 0;
+        width: 500px;
+        height: 100px;
+        background-color: rgba(0,0,0,0.69);
+        padding: 20px;
+        color: greenyellow;
+        overflow: scroll;
+    "></div>
+    <div id="playerPos" style="
+        position: fixed;
+        top: 320px;
+        right: 0;
+        width: 500px;
         height: 100px;
         background-color: rgba(0,0,0,0.69);
         padding: 20px;
@@ -38,6 +60,12 @@
         <label>
             Attack speed:
             <input type="range" id="attackSpeedInput" min="0" value="10" max="25">
+        </label>
+        <button id="resetTimeButton">reset time</button>
+        <label>
+            Time speed
+            <input type="range" id="timeSpeedInput" min="0" step="0.2" value="1" max="10">
+            (<span id="timeSpeedValue">1</span>)
         </label>
     </div>
     <div>

@@ -29,4 +29,24 @@ export class Position {
   public copy(): Position {
     return new Position(this.pos[0], this.pos[1], this.pos[2]);
   }
+
+  public getAngle(pos: Position): number {
+    return Math.atan2(this.y - pos.y, this.x - pos.x);
+  }
+
+  public distance(pos: Position): number {
+    return Math.sqrt( Math.pow(this.x - pos.x, 2) + Math.pow(this.y - pos.y, 2));
+  }
+
+  public getVector(pos: Position): Position {
+    const copy = this.copy();
+    copy.x = this.x - pos.x;
+    copy.y = this.y - pos.y;
+    return copy;
+  }
+
+  public addVector(pos: Position): void {
+    this.x += pos.x;
+    this.y += pos.y;
+  }
 }
