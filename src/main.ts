@@ -13,6 +13,7 @@ import { MapWall } from './Buildings/MapWall';
 import { FollowPlayerCamera } from './Camera/FollowPlayerCamera';
 import { Position } from './Rendering/Position';
 import { FireEntity } from './Buildings/FireEntity';
+import { BedEntity } from './Buildings/BedEntity';
 
 const canvasWidth = 800;
 const canvasHeight = 600;
@@ -69,7 +70,7 @@ class Game {
   private readonly requestAnimationFrame: typeof window.requestAnimationFrame;
   private readonly cancelAnimationFrame: typeof window.cancelAnimationFrame;
 
-  private readonly entityManager: EntityManager = new EntityManager();
+  private entityManager!: EntityManager;
 
   private interval: number = -1;
 
@@ -86,9 +87,9 @@ class Game {
 
   private flowersMap = (() => {
     const flowers: {i: number, j: number}[] = [];
-    for (let i = 0; i < canvasWidth; i++) {
-      for (let j = 0; j < canvasHeight; j++) {
-        if (Math.random() < 0.00005) {
+    for (let i = -canvasWidth; i < canvasWidth * 2; i++) {
+      for (let j = -canvasHeight; j < canvasHeight*2; j++) {
+        if (Math.random() < 0.000025) {
           flowers.push({
             i, j
           });
@@ -99,6 +100,10 @@ class Game {
     return flowers;
   })();
 
+  private tick(timeElapsed: number): void {
+    this.entityManager.update(timeElapsed);
+  }
+
   private draw(timeElapsed: number): void {
     this.context.imageSmoothingEnabled = false;
     this.context.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -108,6 +113,7 @@ class Game {
     this.context.fill();
 
     const camera = this.scene.camera;
+    this.context.filter = camera.getFilter();
 
     this.flowersMap.forEach(({i: x, j: y}) => {
       const relativePosition = camera.getRelativePosition(new Position(x, y, 0));
@@ -119,10 +125,10 @@ class Game {
       );
     });
 
-    const allEntities = this.scene.entities;
-    allEntities.forEach((entity) => {
-      entity.update(timeElapsed);
-    });
+    // const allEntities = this.scene.entities;
+    // allEntities.forEach((entity) => {
+    //   entity.update(timeElapsed);
+    // });
 
     const visibleEntity = this.scene.entities.filter(entity => {
       return camera.isVisibleDrawableEntity(entity as any);
@@ -208,6 +214,7 @@ class Game {
       const timeElapsed = timeElapsedReal * timeSpeed;
       this.prevDOMHighResTimeStamp = timeStamp;
       this.draw(timeElapsed);
+      this.tick(timeElapsed);
 
       if (debugMODE && debug && (this.i % 10 === 0)) {
         debug.innerText = 'FPS: ' + String(Math.round(1000 / timeElapsedReal));
@@ -226,6 +233,11 @@ class Game {
       console.error('Game is already set up!');
       return;
     }
+    this.scene = {
+      camera: null as any,
+      entities: [],
+    };
+    this.entityManager = new EntityManager(this.scene);
     await ResourceLoader.loadGameAssets();
 
     const uiEntity = new Entity();
@@ -255,11 +267,7 @@ class Game {
 
     const camera = new FollowPlayerCamera(canvasWidth, canvasHeight, player);
     this.entityManager.addEntity(camera, 'camera');
-
-    this.scene = {
-      camera: camera,
-      entities: [],
-    };
+    this.scene.camera = camera;
 
     const map = new GameMap(this.scene);
     this.entityManager.addEntity(map, 'map');
@@ -268,19 +276,27 @@ class Game {
     this.entityManager.addEntity(mapWall, 'mapWall');
     this.scene.entities.push(mapWall);
 
+    const bed = new BedEntity();
+    this.entityManager.addEntity(bed, 'bed');
+    this.scene.entities.push(bed);
+
     for (let j = 0; j < 5; j++) {
       const fire = new FireEntity(-70, 50 * (j + 1), 150, 150);
       this.scene.entities.push(fire);
+      this.entityManager.addEntity(fire);
     }
 
     for (let j = 0; j < 10; j++) {
       const fire = new FireEntity(j * 50, -70, 150, 150);
       this.scene.entities.push(fire);
+      this.entityManager.addEntity(fire);
     }
 
-    const slime = new EnemyEntity();
-    this.entityManager.addEntity(slime, 'slime');
-    this.scene.entities.push(slime);
+    for (let j = 0; j < 3; j++) {
+      const slime = new EnemyEntity(200 * Math.random() + 200, 200 * Math.random() + 200);
+      this.entityManager.addEntity(slime, 'slime');
+      this.scene.entities.push(slime);
+    }
 
     this.scene.entities.push(player);
 

@@ -6,6 +6,7 @@ import { IDrawableEntity } from '../Rendering/IDrawableEntity';
 
 export class Camera extends Entity {
   protected box: Box;
+  private filter = "";
 
   public constructor(width: number, height: number) {
     super();
@@ -14,6 +15,14 @@ export class Camera extends Entity {
       new Position(0, 0, 0),
       width, height
     );
+  }
+
+  public getFilter(): string {
+    return this.filter;
+  }
+
+  public setFilter(value: string): void {
+    this.filter = value;
   }
 
   public getBox(): Box {

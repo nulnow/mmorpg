@@ -66,7 +66,7 @@ export class PlayerEntity extends Entity implements IDrawableEntity, IEntityWith
     this.attackDamage = value;
   }
 
-  private attackRange = 80;
+  private attackRange = 65;
   public getAttackRange(): number {
     return this.attackRange
   }

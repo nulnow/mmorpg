@@ -45,7 +45,7 @@ export class EnemyEntity extends Entity implements IDrawableEntity, IEntityWithH
     this.attackDamage = value;
   }
 
-  private attackRange = 80;
+  private attackRange = 50;
   public getAttackRange(): number {
     return this.attackRange
   }
@@ -65,10 +65,10 @@ export class EnemyEntity extends Entity implements IDrawableEntity, IEntityWithH
     return this.gameObject;
   }
 
-  public constructor() {
+  public constructor(x: number, y: number) {
     super();
     this.finiteStateMachine = new EnemyStateMachine(this);
-    this.gameObject = new EnemyGameObject(this, this.finiteStateMachine)
+    this.gameObject = new EnemyGameObject(x, y, this, this.finiteStateMachine)
   }
 
   public update(timeElapsed: number) {

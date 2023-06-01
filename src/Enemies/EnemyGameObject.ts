@@ -12,11 +12,11 @@ export class EnemyGameObject extends GameObject {
   private attackCircle: AttackCircle;
   private healthBar: HealthBar;
 
-  public constructor(enemy: EnemyEntity, finiteStateMachine: EnemyStateMachine) {
+  public constructor(x: number, y: number, enemy: EnemyEntity, finiteStateMachine: EnemyStateMachine) {
     super(finiteStateMachine);
     this.enemy = enemy;
     this.box = new Box(
-      new Position(200, 200, 0),
+      new Position(x, y, 0),
       100, 100
     );
 

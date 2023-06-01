@@ -1,10 +1,14 @@
 import { Entity } from './Entity';
+import { Scene } from './types';
+import { IDrawableEntity } from './Rendering/IDrawableEntity';
 
 export class EntityManager {
   private ids = 0;
 
   private entitiesMap: Record<string, Entity> = {};
   private entities: Entity[] = [];
+
+  public constructor(private scene: Scene) {}
 
   private generateName(): string {
     this.ids += 1;
@@ -33,27 +37,38 @@ export class EntityManager {
     return this.entities.filter(callback);
   }
 
+  private lastSortTime = 0;
+  private sortIntervalSEC = 1.5;
+
+  private timePassed = 0;
+
   public update(timeElapsed: number): void {
-    const dead: Entity[] = [];
-    const alive: Entity[] = [];
+    this.lastSortTime += timeElapsed;
+    this.timePassed += timeElapsed;
+
+    if ((this.timePassed / 1000) > 4) {
+      this.scene.camera.setFilter("none");
+    } else {
+      this.scene.camera.setFilter(`grayscale(${(100 / (this.timePassed / 1000)) + 10}%)`);
+    }
+
+    if (this.lastSortTime >= (1000 / this.sortIntervalSEC)) {
+      this.lastSortTime = 0;
+      this.scene.entities.sort((a, b) => {
+        const pos1 = (a as any as IDrawableEntity)?.getGameObject?.()?.getBox?.()?.getTopLeft?.();
+        const pos2 = (b as any as IDrawableEntity)?.getGameObject?.()?.getBox?.()?.getTopLeft?.();
+
+        if (!pos1 || !pos2) {
+          return 0;
+        }
+
+        return pos1.y - pos2.y;
+      });
+    }
+
     for (let i = 0; i < this.entities.length; ++i) {
       const entity = this.entities[i];
-
       entity.update(timeElapsed);
-
-      if (entity.isDead()) {
-        dead.push(entity);
-      } else {
-        alive.push(entity);
-      }
     }
-
-    for (let i = 0; i < dead.length; ++i) {
-      const e = dead[i];
-      delete this.entitiesMap[e.getName()];
-      e.destroy();
-    }
-
-    this.entities = alive;
   }
 }

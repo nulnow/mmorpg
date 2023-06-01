@@ -28,7 +28,7 @@ export class MusicPlayer {
     if (this.getIsStepsPlaying()) {
       return;
     }
-    this.steps = this.createAudio(steps, { loop: true, volume: 0.5 });
+    this.steps = this.createAudio(steps, { loop: true, volume: 0.2 });
     this.steps.play()
   }
 
@@ -41,7 +41,7 @@ export class MusicPlayer {
   }
 
   public static playAttackOnce() {
-    const zap = this.createAudio(swordAttack, { loop: false, volume: 0.06 });
+    const zap = this.createAudio(swordAttack, { loop: false, volume: 0.03 });
     zap.addEventListener("timeupdate", function() {
       const currentTime = zap.currentTime;
       // const duration = zap.duration;

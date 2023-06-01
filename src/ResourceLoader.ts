@@ -47,6 +47,9 @@ import slimeAttack_4 from '../assets/Slime/Individual Sprites/slime-attack-4.png
 
 import fireSprite from '../assets/Fire_AnimatedPixel/Fire_Spreadsheet.png';
 
+import cobblestone from '../assets/cobblestone2.png';
+import bed from '../assets/bed.png';
+
 import flower from '../assets/flower.png'
 import { Sprite } from './Rendering/Sprite';
 
@@ -117,6 +120,8 @@ export class ResourceLoader {
     },
     fireSprite: fireSprite,
     flower: flower,
+    cobblestone: cobblestone,
+    bed: bed,
   };
   private static loadedAssets = {
     adventurer: {
@@ -134,6 +139,8 @@ export class ResourceLoader {
     },
     fireSprite: null as any as Sprite,
     flower: null as any,
+    cobblestone: null as any,
+    bed: null as any,
   };
   public static getLoadedAssets() {
     return this.loadedAssets;
@@ -177,6 +184,62 @@ export class ResourceLoader {
     });
   }
 
+  private static patternMap = new Map<HTMLImageElement, CanvasPattern>()
+  public static pattern(image: HTMLImageElement, context: CanvasRenderingContext2D): CanvasPattern {
+    if (this.patternMap.has(image)) {
+      return this.patternMap.get(image)!;
+    }
+
+    const pattern = context.createPattern(image, '')!;
+    this.patternMap.set(image, pattern);
+
+    return pattern;
+  }
+
+  private static compressedImagesMap = new Map<HTMLImageElement, HTMLImageElement>();
+  public static compressSquareImage(image: HTMLImageElement): HTMLImageElement {
+    if (this.compressedImagesMap.has(image)) {
+      return this.compressedImagesMap.get(image)!;
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = 100;
+    canvas.height = 100;
+    const context = canvas.getContext('2d')!;
+    context.imageSmoothingEnabled = false;
+    context.drawImage(image, 0, 0, 100, 100);
+    const compressedImage = new Image();
+    compressedImage.src = canvas.toDataURL();
+
+    this.compressedImagesMap.set(image, compressedImage);
+    return compressedImage;
+  }
+
+  public static getImageFromPattern(patternOrImage: CanvasPattern | HTMLImageElement, width: number, height: number): HTMLImageElement {
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext('2d')!;
+
+    let pattern: CanvasPattern;
+    if (patternOrImage instanceof CanvasPattern) {
+      pattern = patternOrImage;
+    } else {
+      pattern = this.pattern(patternOrImage as HTMLImageElement, context);
+    }
+    context.imageSmoothingEnabled = false;
+    context.fillStyle = pattern;
+    context.fillRect(
+      0,
+      0,
+      width,
+      height,
+    );
+    const image = new Image();
+    image.src = canvas.toDataURL();
+
+    return image;
+  }
+
   static async loadGameAssets() {
     this.loadedAssets.adventurer.idle = await Promise.all(this.rawAssets.adventurer.idle.map((src) => this.loadImage(src)));
     this.loadedAssets.adventurer.run = await Promise.all(this.rawAssets.adventurer.run.map((src) => this.loadImage(src)));
@@ -190,6 +253,8 @@ export class ResourceLoader {
     this.loadedAssets.slime.attack = await Promise.all(this.rawAssets.slime.attack.map((src) => this.loadImage(src)));
 
     this.loadedAssets.flower = await this.loadImage(this.rawAssets.flower)
+    this.loadedAssets.bed = await this.loadImage(this.rawAssets.bed)
+    this.loadedAssets.cobblestone = this.compressSquareImage(await this.loadImage(this.rawAssets.cobblestone))
     this.loadedAssets.fireSprite = new Sprite(await this.loadImage(this.rawAssets.fireSprite), { cols: 2, rows: 2, size: 4 });
   }
 }

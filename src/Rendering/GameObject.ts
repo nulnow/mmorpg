@@ -2,6 +2,7 @@ import { Box } from './Box';
 import { FiniteStateMachine } from '../StateMachine/FiniteStateMachine';
 import { Camera } from '../Camera/Camera';
 import { Rotation } from './Rotation';
+import { ResourceLoader } from '../ResourceLoader';
 // import { FireStateMachine } from '../Buildings/FireStateMachine';
 
 export class GameObject {
@@ -11,9 +12,26 @@ export class GameObject {
   protected rotation: Rotation = new Rotation(123);
   protected collidable: boolean = false;
   protected color: string | null = null;
+  protected patternImage: HTMLImageElement | null = null;
+  protected image: HTMLImageElement | null = null;
 
   public constructor(finiteStateMachine: FiniteStateMachine = new FiniteStateMachine()) {
     this.finiteStateMachine = finiteStateMachine;
+  }
+
+  public getImage(): HTMLImageElement | null {
+    return this.image;
+  }
+  public setImage(image: HTMLImageElement): void {
+    this.image = image;
+  }
+
+  public getPatternImage(): HTMLImageElement | null {
+    return this.patternImage;
+  }
+
+  public setPatternImage(patternImage: HTMLImageElement): void {
+    this.patternImage = patternImage;
   }
 
   public getColor(): string | null {
@@ -132,10 +150,11 @@ export class GameObject {
         context.restore();
       }
 
-      if (currentSprite instanceof HTMLImageElement) {
+      if (this.patternImage) {
+        const pattern = ResourceLoader.pattern(this.patternImage, context);
         context.save();
-        context.drawImage(
-          currentSprite,
+        context.fillStyle = pattern;
+        context.fillRect(
           relationalEntityCoordinates.left,
           relationalEntityCoordinates.top,
           relationalEntityCoordinates.width,
@@ -144,8 +163,24 @@ export class GameObject {
         context.restore();
       }
 
-      if (!this.color && !currentSprite) {
-        console.error('No color & no current sprite!');
+      if (this.image) {
+        context.drawImage(
+          this.image,
+          relationalEntityCoordinates.left,
+          relationalEntityCoordinates.top,
+          relationalEntityCoordinates.width,
+          relationalEntityCoordinates.height,
+        );
+      }
+
+      if (currentSprite instanceof HTMLImageElement) {
+        context.drawImage(
+          currentSprite,
+          relationalEntityCoordinates.left,
+          relationalEntityCoordinates.top,
+          relationalEntityCoordinates.width,
+          relationalEntityCoordinates.height,
+        );
       }
     }
 

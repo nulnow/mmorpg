@@ -3,6 +3,7 @@ import { Entity } from '../Entity';
 import { GameObject } from '../Rendering/GameObject';
 import { Box } from '../Rendering/Box';
 import { Position } from '../Rendering/Position';
+import { ResourceLoader } from '../ResourceLoader';
 
 export class MapWall extends Entity implements IDrawableEntity {
   private gameObject: GameObject;
@@ -16,6 +17,15 @@ export class MapWall extends Entity implements IDrawableEntity {
 
   private setUpWalls() {
     const wallColor = '#493420';
+
+    const floor = new GameObject();
+    floor.setBox(new Box(
+      new Position(0, 0, 0),
+      this.width, this.height
+    ));
+    floor.setImage(ResourceLoader.getImageFromPattern(ResourceLoader.getLoadedAssets().cobblestone, this.width, this.height));
+    floor.setIsCollidable(false);
+    this.gameObject.addChild(floor);
 
     const leftWall = new GameObject();
     leftWall.setBox(new Box(
@@ -31,11 +41,21 @@ export class MapWall extends Entity implements IDrawableEntity {
     rightWall.setBox(new Box(
       new Position(this.width - 20, 0, 0),
       20,
-      this.height
+      (this.height / 2) - 100
     ));
     rightWall.setColor(wallColor);
     rightWall.setIsCollidable(true);
     this.gameObject.addChild(rightWall);
+
+    const rightWall2 = new GameObject();
+    rightWall2.setBox(new Box(
+      new Position(this.width - 20, (this.height / 2) + 100, 0),
+      20,
+      (this.height / 2) - 100
+    ));
+    rightWall2.setColor(wallColor);
+    rightWall2.setIsCollidable(true);
+    this.gameObject.addChild(rightWall2);
 
     const topWall = new GameObject();
     topWall.setBox(new Box(
@@ -59,5 +79,4 @@ export class MapWall extends Entity implements IDrawableEntity {
   public getGameObject(): GameObject {
     return this.gameObject;
   }
-
 }
