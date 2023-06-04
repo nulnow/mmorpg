@@ -8,13 +8,19 @@ export class EventEmitter {
 
   public emit(topic: string, value: Data): void {
     const listeners = this.subs.get(topic);
-    if (!listeners) {
-      return;
+    const allTopicsListeners = this.subs.get('*');
+
+    if (allTopicsListeners) {
+      allTopicsListeners.forEach((fn) => {
+        fn(value);
+      });
     }
 
-    listeners.forEach((fn) => {
-      fn(value);
-    });
+    if (listeners) {
+      listeners.forEach((fn) => {
+        fn(value);
+      });
+    }
   }
 
   public subscribe(topic: string, fn: EventHandler): UnsubscribeFn {

@@ -24,7 +24,7 @@ export class Sprite {
     const { width, height } = this.sprites;
 
     const colWidth = width / this.config.cols;
-    const rowHeight = height / this.config.cols;
+    const rowHeight = height / this.config.rows;
 
     const canvas = document.createElement('canvas');
     canvas.width = colWidth;
@@ -38,7 +38,17 @@ export class Sprite {
     const xOffset = colIndex * colWidth;
     const yOffset = rowIndex * rowHeight;
 
-    canvasContext.drawImage(this.sprites, xOffset, yOffset, colWidth, rowHeight, 0, 0, colWidth, rowHeight);
+    canvasContext.drawImage(
+      this.sprites,
+      xOffset,
+      yOffset,
+      colWidth,
+      rowHeight,
+      0,
+      0,
+      colWidth,
+      rowHeight
+    );
     const image = new Image();
     image.src = canvas.toDataURL();
 

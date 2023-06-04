@@ -1,12 +1,11 @@
-import { IDrawableEntity } from '../Rendering/IDrawableEntity';
-import { Entity } from '../Entity';
 import { GameObject } from '../Rendering/GameObject';
 import { Box } from '../Rendering/Box';
 import { Position } from '../Rendering/Position';
 import { ResourceLoader } from '../ResourceLoader';
+import { DrawableEntity } from '../Rendering/DrawableEntity';
 
-export class MapWall extends Entity implements IDrawableEntity {
-  private gameObject: GameObject;
+export class MapWall extends DrawableEntity {
+  protected gameObject: GameObject;
   // protected color = '#000';
 
   public constructor(private width: number, private height: number) {

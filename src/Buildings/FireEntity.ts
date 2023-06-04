@@ -1,13 +1,12 @@
-import { Entity } from '../Entity';
 import { GameObject } from '../Rendering/GameObject';
-import { IDrawableEntity } from '../Rendering/IDrawableEntity';
 import { Position } from '../Rendering/Position';
 import { Box } from '../Rendering/Box';
 import { FireStateMachine } from './FireStateMachine';
+import { DrawableEntity } from '../Rendering/DrawableEntity';
 
-export class FireEntity extends Entity implements IDrawableEntity {
-  private readonly gameObject: GameObject;
-  private readonly finiteStateMachine: FireStateMachine;
+export class FireEntity extends DrawableEntity {
+  protected readonly gameObject: GameObject;
+  protected readonly finiteStateMachine: FireStateMachine;
 
   public constructor(
     private x: number,

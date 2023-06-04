@@ -1,13 +1,14 @@
-import { Entity } from '../Entity';
-import { IDrawableEntity } from '../Rendering/IDrawableEntity';
 import { GameObject } from '../Rendering/GameObject';
 import { EnemyGameObject } from './EnemyGameObject';
-import { EnemyDieState, EnemyIdleState, EnemyStateMachine } from './EnemyStateMachine';
+import { EnemyDieState, EnemyStateMachine } from './EnemyStateMachine';
 import { Health, IEntityWithHealth } from '../IEntityWithHealth';
 import { IEntityAbleToAttack } from '../IEntityAbleToAttack';
+import { DrawableEntity } from '../Rendering/DrawableEntity';
+import { Entity } from '../Entity';
+import { GAME_EVENTS } from '../GAME_EVENTS';
 
-export class EnemyEntity extends Entity implements IDrawableEntity, IEntityWithHealth, IEntityAbleToAttack {
-  private readonly gameObject: GameObject;
+export class EnemyEntity extends DrawableEntity implements IEntityWithHealth, IEntityAbleToAttack {
+  protected readonly gameObject: GameObject;
   private readonly finiteStateMachine: EnemyStateMachine;
   private speed = 0.02;
   private reactDistance = 300;
@@ -19,12 +20,13 @@ export class EnemyEntity extends Entity implements IDrawableEntity, IEntityWithH
   public setHealth(value: number): void {
     this.health.setValue(value);
   }
-  public damage(value: number): void {
+  public damage(value: number, from: Entity): void {
     let newHealth = this.getHealth().getValue() - value;
     if (newHealth <= 0) {
       newHealth = 0;
+      this.emitter.emit(GAME_EVENTS.KILLED_EVENT, { who: this, killer: from });
       // TODO
-      this.finiteStateMachine.setState(EnemyDieState as any)
+      this.finiteStateMachine.setState(EnemyDieState as any);
     }
     this.setHealth(newHealth)
   }

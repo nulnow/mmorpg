@@ -174,13 +174,17 @@ export class GameObject {
       }
 
       if (currentSprite instanceof HTMLImageElement) {
-        context.drawImage(
-          currentSprite,
-          relationalEntityCoordinates.left,
-          relationalEntityCoordinates.top,
-          relationalEntityCoordinates.width,
-          relationalEntityCoordinates.height,
-        );
+        try {
+          context.drawImage(
+            currentSprite,
+            relationalEntityCoordinates.left,
+            relationalEntityCoordinates.top,
+            relationalEntityCoordinates.width,
+            relationalEntityCoordinates.height,
+          );
+        } catch (error) {
+          debugger;
+        }
       }
     }
 

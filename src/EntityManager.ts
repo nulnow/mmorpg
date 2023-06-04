@@ -1,14 +1,22 @@
 import { Entity } from './Entity';
 import { Scene } from './types';
 import { IDrawableEntity } from './Rendering/IDrawableEntity';
+import { DrawableEntity } from './Rendering/DrawableEntity';
+import { EventEmitter } from './EventEmitter';
+import { GAME_EVENTS } from './GAME_EVENTS';
 
 export class EntityManager {
+  public emitter = new EventEmitter();
   private ids = 0;
 
   private entitiesMap: Record<string, Entity> = {};
   private entities: Entity[] = [];
 
   public constructor(private scene: Scene) {}
+
+  public addToScene(drawableEntity: DrawableEntity): void {
+    this.scene.entities.push(drawableEntity);
+  }
 
   private generateName(): string {
     this.ids += 1;
@@ -27,6 +35,27 @@ export class EntityManager {
     entity.setEntityManager(this);
     entity.setName(entityName);
     entity.initEntity();
+
+    entity.emitter.subscribe(GAME_EVENTS.KILLED_EVENT, (data) => {
+      this.emitter.emit(GAME_EVENTS.KILLED_EVENT, data);
+    });
+  }
+
+  public removeEntity(entity: Entity): void {
+    Object.entries(this.entitiesMap).forEach(([key, value]) => {
+      if (value === entity) {
+        delete this.entitiesMap[key];
+        this.scene.entities = this.scene.entities.filter(e => e !== entity);
+      }
+    });
+  }
+
+  public removeEntityByName(name: string): void {
+    const entity = this.getEntityByName(name);
+    if (entity) {
+      delete this.entitiesMap[name];
+      this.scene.entities = this.scene.entities.filter(e => e !== entity);
+    }
   }
 
   public getEntityByName(name: string): Entity {
@@ -38,7 +67,7 @@ export class EntityManager {
   }
 
   private lastSortTime = 0;
-  private sortIntervalSEC = 1.5;
+  private sortIntervalSEC = 10;
 
   private timePassed = 0;
 
@@ -46,11 +75,11 @@ export class EntityManager {
     this.lastSortTime += timeElapsed;
     this.timePassed += timeElapsed;
 
-    if ((this.timePassed / 1000) > 4) {
-      this.scene.camera.setFilter("none");
-    } else {
-      this.scene.camera.setFilter(`grayscale(${(100 / (this.timePassed / 1000)) + 10}%)`);
-    }
+    // if ((this.timePassed / 1000) > 4) {
+    //   this.scene.camera.setFilter("none");
+    // } else {
+    //   this.scene.camera.setFilter(`grayscale(${(100 / (this.timePassed / 1000)) + 10}%)`);
+    // }
 
     if (this.lastSortTime >= (1000 / this.sortIntervalSEC)) {
       this.lastSortTime = 0;

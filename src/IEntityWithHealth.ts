@@ -1,3 +1,5 @@
+import { Entity } from './Entity';
+
 export class Health {
   public constructor(
     private value: number,
@@ -26,5 +28,5 @@ export class Health {
 export interface IEntityWithHealth {
   getHealth(): Health;
   setHealth(value: number): void;
-  damage(value: number): void;
+  damage(value: number, from: Entity): void;
 }

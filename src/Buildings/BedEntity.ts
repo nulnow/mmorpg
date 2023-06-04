@@ -1,12 +1,13 @@
-import { IDrawableEntity } from '../Rendering/IDrawableEntity';
-import { Entity } from '../Entity';
 import { GameObject } from '../Rendering/GameObject';
 import { Box } from '../Rendering/Box';
 import { Position } from '../Rendering/Position';
 import { ResourceLoader } from '../ResourceLoader';
+import { DrawableEntity } from '../Rendering/DrawableEntity';
+import { PlayerEntity } from '../Player/PlayerEntity';
+import { UIEntity } from '../UI/UIEntity';
 
-export class BedEntity extends Entity implements IDrawableEntity {
-  private gameObject: GameObject;
+export class BedEntity extends DrawableEntity {
+  protected gameObject: GameObject;
   // protected color = '#000';
 
   public constructor() {
@@ -30,5 +31,34 @@ export class BedEntity extends Entity implements IDrawableEntity {
 
   public getGameObject(): GameObject {
     return this.gameObject;
+  }
+
+  private healed = false;
+  public update(timeElapsed: number) {
+    super.update(timeElapsed);
+    if (!this.healed) {
+      const player = this.getEntityManager().getEntityByName('player') as any as PlayerEntity;
+
+      const selfTopLeft = this.gameObject.getChildren()[0].getBox().getTopLeft();
+      const playerTopLeft = player.getGameObject().getBox().getTopLeft();
+
+
+      if (!selfTopLeft || !playerTopLeft) {
+        return;
+      }
+
+      const distanceToPlayer = selfTopLeft.distance(playerTopLeft);
+
+      if (distanceToPlayer < 150) {
+        player.setHealth(1000);
+        this.healed = true;
+        const uiEntity = this.getEntityManager().getEntityByName('ui') as UIEntity;
+        uiEntity.showModal({
+          title: 'You were healed!',
+          body: ''
+        })
+      }
+    }
+
   }
 }

@@ -1,26 +1,18 @@
-import { Entity } from '../Entity';
 import { InputController } from '../InputController';
-import { GameMap } from '../GameMap';
-import { Box } from '../Rendering/Box';
 import { UnsubscribeFn } from '../EventEmitter';
-import { PlayerDeadState, PlayerDieState, PlayerFiniteStateMachine } from './PlayerStateMachine';
-import { GameObject } from '../Rendering/GameObject';
+import { PlayerDieState, PlayerFiniteStateMachine } from './PlayerStateMachine';
 import { CharacterGameObject } from './CharacterGameObject';
 import { FiniteStateMachine } from '../StateMachine/FiniteStateMachine';
-import { IDrawableEntity } from '../Rendering/IDrawableEntity';
 import { Health, IEntityWithHealth } from '../IEntityWithHealth';
 import { IEntityAbleToAttack } from '../IEntityAbleToAttack';
+import { DrawableEntity } from '../Rendering/DrawableEntity';
+import { UIEntity } from '../UI/UIEntity';
 
-export class PlayerEntity extends Entity implements IDrawableEntity, IEntityWithHealth, IEntityAbleToAttack {
+export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, IEntityAbleToAttack {
   private readonly finiteStateMachine: PlayerFiniteStateMachine;
-  private readonly gameObject: GameObject;
 
   public getFiniteStateMachine(): FiniteStateMachine {
     return this.finiteStateMachine;
-  }
-
-  public getGameObject(): GameObject {
-    return this.gameObject;
   }
 
   public getInputController() {
@@ -45,7 +37,11 @@ export class PlayerEntity extends Entity implements IDrawableEntity, IEntityWith
     let newHealth = this.getHealth().getValue() - value;
     if (newHealth <= 0) {
       newHealth = 0;
-      this.finiteStateMachine.setState(PlayerDieState as any)
+      this.finiteStateMachine.setState(PlayerDieState as any);
+      (this.getEntityManager().getEntityByName('ui') as UIEntity).showModal({
+        title: 'ПОРАЖЕНИЕ',
+        body: 'О НЕТ! ПОСЛЕДНЯЯ НАДЕЖДА ИМПЕРИИ ПАЛА. ВЕСЬ МИР ВЗОРВАЛСЯ И ВСЕ УМЕРЛИ',
+      })
     }
     this.setHealth(newHealth)
   }

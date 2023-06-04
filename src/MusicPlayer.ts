@@ -1,4 +1,5 @@
-import mainTheme from '../assets/Main Theme.mp3';
+// import mainTheme from '../assets/Main Theme.mp3';
+import mainTheme from '../assets/ruapporangespace_Aim_To_Head_-_EMPeror_71070745.mp3';
 import swordAttack from '../assets/Sword Whooshes Medium - QuickSounds.com.mp3';
 import steps from '../assets/sneaker-shoe-on-concrete-floor-fast-pace-1-www.FesliyanStudios.com.mp3';
 
@@ -20,7 +21,7 @@ export class MusicPlayer {
   }
 
   public static playMainTheme() {
-    this.currentTrack = this.createAudio(mainTheme, { loop: true, volume: 0.06 });
+    this.currentTrack = this.createAudio(mainTheme, { loop: true, volume: 0.04 });
     this.play();
   }
 
@@ -28,7 +29,7 @@ export class MusicPlayer {
     if (this.getIsStepsPlaying()) {
       return;
     }
-    this.steps = this.createAudio(steps, { loop: true, volume: 0.2 });
+    this.steps = this.createAudio(steps, { loop: true, volume: 0.3 });
     this.steps.play()
   }
 
@@ -41,7 +42,7 @@ export class MusicPlayer {
   }
 
   public static playAttackOnce() {
-    const zap = this.createAudio(swordAttack, { loop: false, volume: 0.03 });
+    const zap = this.createAudio(swordAttack, { loop: false, volume: 0.04 });
     zap.addEventListener("timeupdate", function() {
       const currentTime = zap.currentTime;
       // const duration = zap.duration;
@@ -89,15 +90,15 @@ export class MusicPlayer {
   }
 
   public static createSlimeMovingPlayer(): MusicPlayer {
-    return this.createPlayer(movingSlime, { loop: true });
+    return this.createPlayer(movingSlime, { loop: true, volume: 0.001 });
   }
 
   public static createEvilSlimePlayer(): MusicPlayer {
-    return this.createPlayer(evilSlime, { loop: true });
+    return this.createPlayer(evilSlime, { loop: true, volume: 0.002 });
   }
 
   public static createNeutralSlimePlayer(): MusicPlayer {
-    return this.createPlayer(neutralSlime, { loop: true });
+    return this.createPlayer(neutralSlime, { loop: true, volume: 0.001 });
   }
 
   private audio: HTMLAudioElement;

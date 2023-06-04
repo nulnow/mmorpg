@@ -7,8 +7,6 @@ import { GameMap } from './GameMap';
 
 export class Entity {
   public readonly emitter = new EventEmitter();
-  // TODO
-  public COLOR = '#212121';
 
   private name = '';
   public getName() { return this.name };
@@ -20,13 +18,7 @@ export class Entity {
   public getEntityManager(): EntityManager { return this.entityManager!; }
   public setEntityManager(entityManager: EntityManager): void { this.entityManager = entityManager; }
 
-  public constructor() {
-
-  }
-
-  public isDead() {
-    return false;
-  }
+  public constructor() {}
 
   public initEntity(): void {
     for (const componentName in this.components) {
@@ -54,15 +46,5 @@ export class Entity {
     for (const componentName in this.components) {
       this.components[componentName].update(timeElapsed);
     }
-  }
-
-  public findCollisions(boxToFindCollisionsWith: Box): GameObject[] {
-    const gameMap = this.getEntityManager().getEntityByName('map') as any as GameMap;
-
-    const collidableGameObjects = gameMap.getCollidableGameObjects().filter(obj => obj !== this.getGameObject());
-
-    return collidableGameObjects.filter((gameObject) => {
-      return boxToFindCollisionsWith.isCollide(gameObject.getBox());
-    });
   }
 }

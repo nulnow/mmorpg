@@ -1,6 +1,6 @@
 import { Entity } from './Entity';
 import { NetworkController } from './NetworkController';
-import { UIController } from './UIController';
+import { UIController } from './UI/UIController';
 import { EntityManager } from './EntityManager';
 import { PlayerEntity } from './Player/PlayerEntity';
 import { InputController } from './InputController';
@@ -8,15 +8,17 @@ import { GameMap } from './GameMap';
 import { Scene } from './types';
 import { ResourceLoader } from './ResourceLoader';
 import { MusicPlayer } from './MusicPlayer';
-import { EnemyEntity } from './Enemies/EnemyEntity';
 import { MapWall } from './Buildings/MapWall';
 import { FollowPlayerCamera } from './Camera/FollowPlayerCamera';
 import { Position } from './Rendering/Position';
-import { FireEntity } from './Buildings/FireEntity';
 import { BedEntity } from './Buildings/BedEntity';
+import { SlimeEntity } from './Enemies/slime/SlimeEntity';
+import { QuestEntity } from './Quests/QuestEntity';
+import { UIEntity } from './UI/UIEntity';
+import { GuardEntity } from './Enemies/Guard/GuardEntity';
 
-const canvasWidth = 800;
-const canvasHeight = 600;
+const canvasWidth = window.innerWidth;
+const canvasHeight = window.innerHeight;
 
 const timeSpeedInput = document.getElementById('timeSpeedInput') as HTMLInputElement;
 let timeSpeed = 1;
@@ -38,8 +40,8 @@ document.getElementById('resetTimeButton')!.onclick = () => {
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const speedInput = document.getElementById('speedInput') as HTMLInputElement;
 const attackSpeedInput = document.getElementById('attackSpeedInput') as HTMLInputElement;
-canvas.width = canvasWidth;
-canvas.height = canvasHeight;
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 // const context = canvas.getContext("2d");
 
 const debug = document.getElementById("debug");
@@ -104,7 +106,7 @@ class Game {
     this.entityManager.update(timeElapsed);
   }
 
-  private draw(timeElapsed: number): void {
+  private draw(timeElapsed: number, timeElapsedReal: number): void {
     this.context.imageSmoothingEnabled = false;
     this.context.clearRect(0, 0, canvasWidth, canvasHeight);
     this.context.beginPath();
@@ -196,9 +198,22 @@ class Game {
         // this.context.fill();
       }
     });
+
+    if (this.i % 20 === 0) {
+      this.fps = Math.round(1000 / timeElapsedReal);
+    }
+
+    this.context.save();
+    this.context.fillStyle = '#ffffff';
+    this.context.font = "25px sans-serif";
+    this.context.fillText(`FPS: ${this.fps}`, 10, 30);
+    this.context.fillText('Attack: E, Move: WASD', 10, 70);
+
+    this.context.restore();
   }
 
   private i = 0;
+  private fps = 0;
   private prevDOMHighResTimeStamp = 0;
   public run(): void {
     if (!MusicPlayer.getIsPlaying()) {
@@ -213,12 +228,12 @@ class Game {
       const timeElapsedReal = timeStamp - this.prevDOMHighResTimeStamp
       const timeElapsed = timeElapsedReal * timeSpeed;
       this.prevDOMHighResTimeStamp = timeStamp;
-      this.draw(timeElapsed);
-      this.tick(timeElapsed);
+      this.draw(timeElapsed, timeElapsedReal);
+      this.tick(timeElapsed, timeElapsedReal);
 
-      if (debugMODE && debug && (this.i % 10 === 0)) {
-        debug.innerText = 'FPS: ' + String(Math.round(1000 / timeElapsedReal));
-      }
+      // if (debugMODE && debug && (this.i % 10 === 0)) {
+      //   debug.innerText = 'FPS: ' + String(Math.round(1000 / timeElapsedReal));
+      // }
 
       this.run();
     });
@@ -240,7 +255,7 @@ class Game {
     this.entityManager = new EntityManager(this.scene);
     await ResourceLoader.loadGameAssets();
 
-    const uiEntity = new Entity();
+    const uiEntity = new UIEntity();
     const uiController = new UIController();
     uiEntity.addComponent(uiController);
     this.entityManager.addEntity(uiEntity, 'ui');
@@ -249,6 +264,20 @@ class Game {
     const networkController = new NetworkController();
     networkEntity.addComponent(networkController);
     this.entityManager.addEntity(networkEntity, 'network');
+
+    const map = new GameMap(this.scene);
+    this.entityManager.addEntity(map, 'map');
+
+    const mapWall = new MapWall(800, 600);
+    this.entityManager.addEntity(mapWall, 'mapWall');
+    this.scene.entities.push(mapWall);
+
+    const bed = new BedEntity();
+    this.entityManager.addEntity(bed, 'bed');
+    this.scene.entities.push(bed);
+
+    const questEntity = new QuestEntity();
+    this.entityManager.addEntity(questEntity, 'quests');
 
     const player = new PlayerEntity();
     speedInput.value = player.getSpeed() + '';
@@ -269,33 +298,18 @@ class Game {
     this.entityManager.addEntity(camera, 'camera');
     this.scene.camera = camera;
 
-    const map = new GameMap(this.scene);
-    this.entityManager.addEntity(map, 'map');
+    // const fieldEntity = new Entity();
 
-    const mapWall = new MapWall(canvasWidth, canvasHeight);
-    this.entityManager.addEntity(mapWall, 'mapWall');
-    this.scene.entities.push(mapWall);
-
-    const bed = new BedEntity();
-    this.entityManager.addEntity(bed, 'bed');
-    this.scene.entities.push(bed);
-
-    for (let j = 0; j < 5; j++) {
-      const fire = new FireEntity(-70, 50 * (j + 1), 150, 150);
-      this.scene.entities.push(fire);
-      this.entityManager.addEntity(fire);
-    }
-
-    for (let j = 0; j < 10; j++) {
-      const fire = new FireEntity(j * 50, -70, 150, 150);
-      this.scene.entities.push(fire);
-      this.entityManager.addEntity(fire);
+    for (let j = 0; j < 3; j++) {
+      const slime = new SlimeEntity(200 * Math.random() + 200, 200 * Math.random() + 200);
+      this.entityManager.addEntity(slime);
+      this.scene.entities.push(slime);
     }
 
     for (let j = 0; j < 3; j++) {
-      const slime = new EnemyEntity(200 * Math.random() + 200, 200 * Math.random() + 200);
-      this.entityManager.addEntity(slime, 'slime');
-      this.scene.entities.push(slime);
+      const guard = new GuardEntity(200 * Math.random() + 600, 200 * Math.random() + 600);
+      this.entityManager.addEntity(guard);
+      this.scene.entities.push(guard);
     }
 
     this.scene.entities.push(player);
@@ -349,8 +363,11 @@ startButton.onclick = async function () {
   if (!game.getIsSetUp()) {
     await game.setUp();
   }
-  MusicPlayer.playMainTheme();
   game.run();
+  document.getElementById('start-stop-buttons')!.style.top = '0px';
+  document.getElementById('start-stop-buttons')!.style.right = '0px';
+  startButton.classList.add('none');
+  stopButton.classList.remove('none');
 }
 stopButton.onclick = function () {
   state.innerText = 'stopped';
@@ -358,4 +375,8 @@ stopButton.onclick = function () {
   debug!.innerText = '';
   MusicPlayer.pause();
   game.stop();
+  startButton.classList.remove('none');
+  stopButton.classList.add('none');
 }
+state.innerText = 'stopped';
+state.style.color = '#ff0000';

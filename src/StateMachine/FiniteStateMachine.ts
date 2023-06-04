@@ -4,23 +4,24 @@ import { EventEmitter } from '../EventEmitter';
 // TODO
 export type FSMActionPayload = any;
 
-export type FSMAction= {
+export type FSMAction = {
   type: string;
   payload: FSMActionPayload;
 }
 
-type FSMStateConstructor = { new (fsm: FiniteStateMachine): State };
+// TODO
+type FSMStateConstructor = any;
 
 export class FiniteStateMachine {
   private emitter = new EventEmitter();
   private state!: State;
-  private states: Record<string, FSMStateConstructor> = {};
+  protected states: Record<string, FSMStateConstructor> = {};
 
-  public constructor() {
-  }
+  public constructor() {}
+  public start(): void {}
 
-  protected addState(fsmConstructor: FSMStateConstructor): void {
-    this.states[fsmConstructor.name] = fsmConstructor;
+  protected addState(name: string, fsmConstructor: FSMStateConstructor): void {
+    this.states[name] = fsmConstructor;
   }
 
   public setState(NewStateConstructor: FSMStateConstructor): void {
@@ -36,6 +37,8 @@ export class FiniteStateMachine {
   public getCurrentState(): State {
     return this.state;
   }
+
+  public send(action: { type: string, data?: any }): void {}
 
   public update(timeElapsed: number) {
     if (this.state) {

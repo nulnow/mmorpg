@@ -24,6 +24,11 @@ import advendurerDie_4 from '../assets/Adventurer/Individual Sprites/adventurer-
 import advendurerDie_5 from '../assets/Adventurer/Individual Sprites/adventurer-die-05.png';
 import advendurerDie_6 from '../assets/Adventurer/Individual Sprites/adventurer-die-06.png';
 
+import guardIdle from '../assets/Medieval Warrior Pack 3/Sprites/Idle.png';
+import guardAttack from '../assets/Medieval Warrior Pack 3/Sprites/Attack1.png';
+import guardRun from '../assets/Medieval Warrior Pack 3/Sprites/Run.png';
+import guardDeath from '../assets/Medieval Warrior Pack 3/Sprites/Death.png';
+
 import slimeIdle_0 from '../assets/Slime/Individual Sprites/slime-idle-0.png';
 import slimeIdle_1 from '../assets/Slime/Individual Sprites/slime-idle-1.png';
 import slimeIdle_2 from '../assets/Slime/Individual Sprites/slime-idle-2.png';
@@ -118,6 +123,12 @@ export class ResourceLoader {
         slimeDie_3,
       ],
     },
+    guard: {
+      idle: guardIdle,
+      attack: guardAttack,
+      run: guardRun,
+      death: guardDeath,
+    },
     fireSprite: fireSprite,
     flower: flower,
     cobblestone: cobblestone,
@@ -136,6 +147,12 @@ export class ResourceLoader {
       move: [] as HTMLImageElement[],
       die: [] as HTMLImageElement[],
       attack: [] as HTMLImageElement[],
+    },
+    guard: {
+      idle: null as any as Sprite,
+      attack: null as any as Sprite,
+      run: null as any as Sprite,
+      death: null as any as Sprite,
     },
     fireSprite: null as any as Sprite,
     flower: null as any,
@@ -256,5 +273,58 @@ export class ResourceLoader {
     this.loadedAssets.bed = await this.loadImage(this.rawAssets.bed)
     this.loadedAssets.cobblestone = this.compressSquareImage(await this.loadImage(this.rawAssets.cobblestone))
     this.loadedAssets.fireSprite = new Sprite(await this.loadImage(this.rawAssets.fireSprite), { cols: 2, rows: 2, size: 4 });
+
+    this.loadedAssets.guard.idle = new Sprite(await this.loadImage(this.rawAssets.guard.idle), { cols: 10, rows: 1, size: 10 });
+    this.loadedAssets.guard.attack = new Sprite(await this.loadImage(this.rawAssets.guard.attack), { cols: 4, rows: 1, size: 4 });
+    this.loadedAssets.guard.run = new Sprite(await this.loadImage(this.rawAssets.guard.run), { cols: 6, rows: 1, size: 6 });
+    this.loadedAssets.guard.death = new Sprite(await this.loadImage(this.rawAssets.guard.death), { cols: 9, rows: 1, size: 9 });
+  }
+}
+
+class ImageProcessor {
+  private static getNewCanvas(): [HTMLCanvasElement, CanvasRenderingContext2D] {
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d")!;
+
+    return [canvas, context];
+  }
+
+  private static zoomMap = new Map<HTMLImageElement, Map<number, HTMLImageElement>>()
+  public static zoom(image: HTMLImageElement, zoom: number): HTMLImageElement {
+    if (this.zoomMap.has(image) && this.zoomMap.get(image)!.has(zoom)) {
+      return this.zoomMap.get(image)!.get(zoom)!
+    }
+
+    const [canvas, context] = this.getNewCanvas();
+    const { width, height } = image;
+
+    const newWidth = width - zoom * 2;
+    const newHeight = height - zoom * 2;
+
+    canvas.width = newWidth;
+    canvas.height = newHeight;
+
+    context.drawImage(
+      image,
+      zoom,
+      zoom,
+      width,
+      height,
+      0,
+      0,
+      width,
+      height,
+    );
+
+    const newImage = new Image();
+    newImage.src = canvas.toDataURL();
+
+    if (!this.zoomMap.has(image)) {
+      this.zoomMap.set(image, new Map());
+    }
+
+    this.zoomMap.get(image)!.set(zoom, newImage);
+
+    return newImage;
   }
 }

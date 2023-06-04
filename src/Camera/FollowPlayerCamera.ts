@@ -14,8 +14,8 @@ export class FollowPlayerCamera extends Camera {
     const topLeft = this.getBox().getTopLeft();
     const playerCenter = this.player.getGameObject().getBox().getCenter();
 
-    topLeft.x = playerCenter.x - (rect.width / 2)
-    topLeft.y = playerCenter.y - (rect.height / 2)
+    topLeft.x = playerCenter.x - (window.innerWidth / 2)
+    topLeft.y = playerCenter.y - (window.innerHeight / 2)
   }
 
   public initEntity(): void {

@@ -1,0 +1,3 @@
+export const GAME_EVENTS = {
+  KILLED_EVENT: 'KILLED_EVENT',
+}

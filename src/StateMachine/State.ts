@@ -3,10 +3,12 @@ import { Animator } from '../Rendering/Animator';
 import { GameObject } from '../Rendering/GameObject';
 import { Sprite } from '../Rendering/Sprite';
 
+export type StateSprites = HTMLImageElement[] | Sprite;
+
 export abstract class State {
   protected fsm: FiniteStateMachine;
   protected animator: Animator = new Animator();
-  protected sprites: HTMLImageElement[] | Sprite = [];
+  protected sprites: StateSprites = [];
   protected speed: number = 0;
   protected gameObject: GameObject;
 

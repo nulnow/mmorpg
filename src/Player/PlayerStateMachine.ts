@@ -7,6 +7,7 @@ import { PlayerEntity } from './PlayerEntity';
 import { InputController } from '../InputController';
 import { GameMap } from '../GameMap';
 import { IEntityWithHealth } from '../IEntityWithHealth';
+import { EnemyEntity } from '../Enemies/EnemyEntity';
 
 export class PlayerIdleState extends State {
   protected sprites = ResourceLoader.getLoadedAssets().adventurer.idle;
@@ -151,7 +152,7 @@ export class PlayerAttackState extends State {
     const damage = this.player.getAttackDamage() * this.player.getAttackSpeed() * (timeElapsed / 1000);
 
     entities.forEach(e => {
-      (e as any).damage(damage);
+      (e as EnemyEntity).damage(damage, this.player);
     });
   }
 }

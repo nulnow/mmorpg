@@ -5,19 +5,69 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="./src/css/button.css">
     <title>Game</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
         html {
             font-family: system-ui;
             color: white;
+            margin: 0;
+            padding: 0;
         }
         body {
             background-color: black;
+            margin: 0;
+            padding: 0;
+        }
+        .none {
+            display: none;
+        }
+
+        #ui {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #ui .modal {
+            position: fixed;
+            top: 100px;
+            right: 100px;
+
+            width: 500px;
+            min-height: 250px;
+            padding: 50px;
+
+            background-color: black;
+            border: 4px solid crimson;
+
+            /*transform: translate(-50%, 0);*/
+        }
+
+        #ui .modal p,
+        #ui .modal h1 {
+            font-size: 15px;
+            line-height: 150%;
+        }
+
+        #start-stop-buttons button {
+
+        }
+        .gameButton {
+            width: 100px;
+            height: 30px;
+            background-color: black;
+            color: white;
         }
     </style>
 </head>
 <body>
-    <div id="debug" style="
+    <div class="none" id="debug" style="
         position: fixed;
         top: 0;
         right: 0;
@@ -28,7 +78,7 @@
         color: greenyellow;
         overflow: scroll;
     "></div>
-    <div id="cameraPos" style="
+    <div class="none" id="cameraPos" style="
         position: fixed;
         top: 120px;
         right: 0;
@@ -39,7 +89,7 @@
         color: greenyellow;
         overflow: scroll;
     "></div>
-    <div id="playerPos" style="
+    <div class="none" id="playerPos" style="
         position: fixed;
         top: 320px;
         right: 0;
@@ -51,28 +101,70 @@
         overflow: scroll;
     "></div>
 
-    <canvas id="canvas" style="border: 4px solid #212121; border-radius: 16px"></canvas>
-    <div>
-        <label>
-            Player speed:
-            <input type="range" id="speedInput" min="0" value="100" max="1000">
-        </label>
-        <label>
-            Attack speed:
-            <input type="range" id="attackSpeedInput" min="0" value="10" max="25">
-        </label>
-        <button id="resetTimeButton">reset time</button>
-        <label>
-            Time speed
-            <input type="range" id="timeSpeedInput" min="0" step="0.2" value="1" max="10">
-            (<span id="timeSpeedValue">1</span>)
-        </label>
+    <div id="ui">
+        <div class="none">
+            <label>
+                Player speed:
+                <input type="range" id="speedInput" min="0" value="100" max="1000">
+            </label>
+            <label>
+                Attack speed:
+                <input type="range" id="attackSpeedInput" min="0" value="10" max="25">
+            </label>
+            <button id="resetTimeButton">reset time</button>
+            <label>
+                Time speed
+                <input type="range" id="timeSpeedInput" min="0" step="0.2" value="1" max="10">
+                (<span id="timeSpeedValue">1</span>)
+            </label>
+        </div>
+        <div style="position: fixed; top: 50%; right: 50%" id="start-stop-buttons">
+            <h1>Dead empire game</h1>
+            <div>state: <span id="state"></span></div>
+<!--            <button id="start" class="gameButton">start</button>-->
+<!--            <button id="stop" class="none gameButton">stop</button>-->
+
+            <div class="container">
+                <button id="start" class="button">
+                    <div class="plate"></div>
+                    <div class="plate"></div>
+                    <div class="plate"></div>
+                    <div class="plate"></div>
+                    <div class="plate"></div>
+                    <div class="button__wrapper">
+                        <span class="button__text">START</span>
+                    </div>
+                    <div class="button__box">
+                        <div class="inner inner__top"></div>
+                        <div class="inner inner__front"></div>
+                        <div class="inner inner__bottom"></div>
+                        <div class="inner inner__back"></div>
+                        <div class="inner inner__left"></div>
+                        <div class="inner inner__right"></div>
+                    </div>
+                </button>
+                <button id="stop" class="button none">
+                    <div class="plate"></div>
+                    <div class="plate"></div>
+                    <div class="plate"></div>
+                    <div class="plate"></div>
+                    <div class="plate"></div>
+                    <div class="button__wrapper">
+                        <span class="button__text">STOP</span>
+                    </div>
+                    <div class="button__box">
+                        <div class="inner inner__top"></div>
+                        <div class="inner inner__front"></div>
+                        <div class="inner inner__bottom"></div>
+                        <div class="inner inner__back"></div>
+                        <div class="inner inner__left"></div>
+                        <div class="inner inner__right"></div>
+                    </div>
+                </button>
+            </div>
+        </div>
     </div>
-    <div>
-        <div>state: <span id="state"></span></div>
-        <button id="start">start</button>
-        <button id="stop">stop</button>
-    </div>
+    <canvas id="canvas"></canvas>
     <script type="module" src="src/main.ts"></script>
 </body>
 </html>

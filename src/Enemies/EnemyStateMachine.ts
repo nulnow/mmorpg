@@ -246,7 +246,6 @@ export class EnemyAttackPlayerState extends State {
     const player: PlayerEntity | null = (players.length ? players[0] : null) as PlayerEntity | null;
 
     if (!player) {
-      console.log('here');
       this.fsm.setState(EnemyIdleState as any)
     } else {
       const damage = this.enemy.getAttackDamage() * this.enemy.getAttackSpeed() * (timeElapsed / 1000);

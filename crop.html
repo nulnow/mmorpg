@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <h1>hello</h1>
+    <h2>Original</h2>
+    <img id="img" src="./assets/Medieval%20Warrior%20Pack%203/Sprites/Attack1.png" alt="">
+    <h2>Canvas</h2>
+    <canvas id="canvas"></canvas>
+    <script>
+        /** @type HTMLCanvasElement  */
+        const canvas = document.getElementById("canvas");
+
+        const DESTINATION_WIDTH = 50;
+        const DESTINATION_HEIGHT = DESTINATION_WIDTH;
+
+        const baseWidth = 540;
+        const baseHeight = 135;
+
+        const spriteCount = 4;
+
+        canvas.width = 540;
+        canvas.height = 135;
+
+        const image = new Image();
+        image.src = "./assets/Medieval%20Warrior%20Pack%203/Sprites/Attack1.png";
+        image.onload = () => {
+            const context = canvas.getContext('2d');
+
+            context.fillStyle = '#e8e8e8'
+            context.fillRect(0,0, 1050, 1050)
+
+            context.fillStyle = '#c7c7c7'
+            context.fillRect(0,0, 50, 50)
+
+            /**
+             * drawImage(image, sourceX, sourceY, sourceW, sourceH,
+             *     destinationX,destinationY, destinationW, destinationH)
+             */
+
+            const crop = 40;
+
+            context.drawImage(
+                image,
+                20,
+                20,
+                image.width,
+                image.height,
+                0,
+                0,
+                image.width,
+                image.height
+            );
+        };
+    </script>
+</body>
+</html>
