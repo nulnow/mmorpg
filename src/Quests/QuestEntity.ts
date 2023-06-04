@@ -64,7 +64,7 @@ export class QuestEntity extends Entity {
 
     uiEntity.showModal({
       title: 'Congrats!',
-      body: 'You have done the quests! Fire is down',
+      body: 'You have done the quests! Fire is down. Империя спасена! Good shape хороший Color и fabric',
     });
 
     this.fires.forEach(fire => {

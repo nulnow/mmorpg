@@ -30,10 +30,10 @@ export class PlayerIdleState extends State {
 
   public update(timeElapsed: number): void {
     super.update(timeElapsed);
-    if (this.fsm.getInputController().isAttack1Pressed()) {
+    if (this.fsm.getPlayer().getInputController().isAttack1Pressed()) {
       return this.fsm.setState(PlayerAttackState as any);
     }
-    if (this.fsm.getInputController().isOneOfMovementKeysIsPressed()) {
+    if (this.fsm.getPlayer().getInputController().isOneOfMovementKeysIsPressed()) {
       return this.fsm.setState(PlayerRunState as any);
     }
   }
@@ -204,11 +204,6 @@ export class PlayerFiniteStateMachine extends FiniteStateMachine {
   public constructor(player: PlayerEntity) {
     super();
     this.player = player;
-    this.addState(PlayerRunState as any);
-    this.addState(PlayerIdleState as any);
-    this.addState(PlayerAttackState as any);
-    this.addState(PlayerDieState as any);
-    this.addState(PlayerDeadState as any);
 
     this.setState(PlayerIdleState as any);
   }

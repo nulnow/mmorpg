@@ -16,6 +16,7 @@ import { SlimeEntity } from './Enemies/slime/SlimeEntity';
 import { QuestEntity } from './Quests/QuestEntity';
 import { UIEntity } from './UI/UIEntity';
 import { GuardEntity } from './Enemies/Guard/GuardEntity';
+import { FireEntity } from './Buildings/FireEntity';
 
 const canvasWidth = window.innerWidth;
 const canvasHeight = window.innerHeight;
@@ -290,6 +291,7 @@ class Game {
       player.emitter.emit('attack_speed_change', event.target.value)
     };
 
+
     const inputController = new InputController();
     player.addComponent(inputController);
     this.entityManager.addEntity(player, 'player');
@@ -299,6 +301,29 @@ class Game {
     this.scene.camera = camera;
 
     // const fieldEntity = new Entity();
+
+    for (let j = -1000; j < 1000; j++) {
+      if (j % 50 !== 0) continue;
+      const fire1 = new FireEntity(j, -1000, 150, 150);
+      fire1.getGameObject().setIsCollidable(true);
+      this.entityManager.addEntity(fire1);
+      this.scene.entities.push(fire1);
+
+      const fire2 = new FireEntity(j, 1000, 150, 150);
+      fire2.getGameObject().setIsCollidable(true);
+      this.entityManager.addEntity(fire2);
+      this.scene.entities.push(fire2);
+
+      const fire3 = new FireEntity(-1000, j, 150, 150);
+      fire3.getGameObject().setIsCollidable(true);
+      this.entityManager.addEntity(fire3);
+      this.scene.entities.push(fire3);
+
+      const fire4 = new FireEntity(1000, j, 150, 150);
+      fire4.getGameObject().setIsCollidable(true);
+      this.entityManager.addEntity(fire4);
+      this.scene.entities.push(fire4);
+    }
 
     for (let j = 0; j < 3; j++) {
       const slime = new SlimeEntity(200 * Math.random() + 200, 200 * Math.random() + 200);

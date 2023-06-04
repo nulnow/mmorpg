@@ -10,6 +10,7 @@ import { UIEntity } from '../UI/UIEntity';
 
 export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, IEntityAbleToAttack {
   private readonly finiteStateMachine: PlayerFiniteStateMachine;
+  private inputController!: InputController;
 
   public getFiniteStateMachine(): FiniteStateMachine {
     return this.finiteStateMachine;
@@ -70,9 +71,7 @@ export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, I
     this.attackRange = value;
   }
 
-
-  private inputController!: InputController;
-  private speed = 100;
+  private speed = 130;
   public getSpeed(): number {
     return this.speed;
   }
@@ -82,7 +81,9 @@ export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, I
   private unsubscribeFromSpeedChange!: UnsubscribeFn;
 
   public initEntity(): void {
+    console.log('init player entity')
     this.inputController = this.getComponentByName('InputController') as any as InputController;
+    console.log('input controller', this.inputController);
 
     this.unsubscribeFromSpeedChange = this.emitter.subscribe('speed_change', (value) => {
       this.speed = value;
