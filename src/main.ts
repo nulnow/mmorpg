@@ -427,6 +427,7 @@ class Game {
     startButton.classList.add('none');
     stopButton.classList.remove('none');
     document.getElementById('quests')!.classList.remove('none');
+    document.getElementById('mobile-controls')!.classList.remove('none');
     document.getElementById('heroes')!.classList.add('none');
   }
   stopButton.onclick = function () {

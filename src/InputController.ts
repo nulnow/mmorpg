@@ -22,6 +22,24 @@ export class InputController extends Component {
   public init(): void {
     super.init();
     document.addEventListener('keydown', this.keyDownHandler);
+    Array.from(document.querySelectorAll('#mobile-controls [data-key]')).forEach(div => {
+      div.addEventListener('mousedown', () => {
+        this.pressedKeys.set(div.getAttribute("data-key")!, true);
+      });
+
+      div.addEventListener('mouseup', () => {
+        this.pressedKeys.set(div.getAttribute("data-key")!, false);
+      });
+
+      div.addEventListener('touchstart', () => {
+        this.pressedKeys.set(div.getAttribute("data-key")!, true);
+      });
+
+      div.addEventListener('touchend', () => {
+        this.pressedKeys.set(div.getAttribute("data-key")!, false);
+      });
+    });
+
     document.addEventListener('keyup', this.keyUpHandler);
     document.addEventListener('focusout', this.windowFocusOutHandler);
   }

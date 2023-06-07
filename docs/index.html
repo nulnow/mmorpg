@@ -42,8 +42,10 @@
             top: 100px;
             left: 100px;
 
-            max-width: 400px;
+            max-width: 350px;
             /*min-height: 250px;*/
+            max-height: 50vh;
+            overflow: scroll;
             padding: 15px;
             border-radius: 8px;
 
@@ -129,8 +131,36 @@
         .quest-list-item--done:hover {
             background-color: #3a413a;
         }
+
+        #mobile-controls {
+            position: fixed;
+            bottom: 0;
+            width: 100vw;
+            height: 250px;
+        }
+        .mobile-button {
+            display: flex;
+            flex-flow: column nowrap;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            border: 2px solid rgba(101, 92, 92, 0.27);
+            background-color: rgba(0, 0, 0, 0.42);
+        }
+        .mobile-button.false {
+            opacity: 0;
+        }
+        .mobile-button:hover {
+            background-color: #9b9b9b;
+        }
+        @media screen and (min-width: 800px) {
+            #mobile-controls {
+                bottom: -1000px;
+            }
+        }
     </style>
-  <script type="module" crossorigin src="./assets/index-45bac2a0.js"></script>
+  <script type="module" crossorigin src="./assets/index-c0754210.js"></script>
 </head>
 <body>
     <div
@@ -234,6 +264,37 @@
             <div class="quests__list">
 
             </div>
+        </div>
+
+        <div id="mobile-controls" class="none" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr">
+            <div class="mobile-button false"></div>
+            <div class="mobile-button" data-key="KeyW">W</div>
+            <div class="mobile-button false"></div>
+
+            <div class="mobile-button false"></div>
+            <div class="mobile-button false"></div>
+            <div class="mobile-button false"></div>
+
+
+
+
+            <div class="mobile-button" data-key="KeyA">A</div>
+            <div class="mobile-button false"></div>
+            <div class="mobile-button" data-key="KeyD">D</div>
+
+            <div class="mobile-button false"></div>
+            <div class="mobile-button" data-key="KeyE">E</div>
+            <div class="mobile-button false"></div>
+
+
+
+            <div class="mobile-button false"></div>
+            <div class="mobile-button" data-key="KeyS">S</div>
+            <div class="mobile-button false"></div>
+
+            <div class="mobile-button false"></div>
+            <div class="mobile-button false"></div>
+            <div class="mobile-button false"></div>
         </div>
     </div>
     <div class="inventory">

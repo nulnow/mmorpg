@@ -1719,6 +1719,20 @@ class InputController extends Component {
   init() {
     super.init();
     document.addEventListener("keydown", this.keyDownHandler);
+    Array.from(document.querySelectorAll("#mobile-controls [data-key]")).forEach((div) => {
+      div.addEventListener("mousedown", () => {
+        this.pressedKeys.set(div.getAttribute("data-key"), true);
+      });
+      div.addEventListener("mouseup", () => {
+        this.pressedKeys.set(div.getAttribute("data-key"), false);
+      });
+      div.addEventListener("touchstart", () => {
+        this.pressedKeys.set(div.getAttribute("data-key"), true);
+      });
+      div.addEventListener("touchend", () => {
+        this.pressedKeys.set(div.getAttribute("data-key"), false);
+      });
+    });
     document.addEventListener("keyup", this.keyUpHandler);
     document.addEventListener("focusout", this.windowFocusOutHandler);
   }
@@ -3095,6 +3109,7 @@ class Game {
     startButton.classList.add("none");
     stopButton.classList.remove("none");
     document.getElementById("quests").classList.remove("none");
+    document.getElementById("mobile-controls").classList.remove("none");
     document.getElementById("heroes").classList.add("none");
   };
   stopButton.onclick = function() {
