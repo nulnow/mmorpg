@@ -51,14 +51,18 @@ import slimeAttack_3 from '../assets/Slime/Individual Sprites/slime-attack-3.png
 import slimeAttack_4 from '../assets/Slime/Individual Sprites/slime-attack-4.png';
 
 import fireSprite from '../assets/Fire_AnimatedPixel/Fire_Spreadsheet.png';
+import deathSprite from '../assets/death/death-idle-weapon.png';
 
 import cobblestone from '../assets/cobblestone2.png';
 import bed from '../assets/bed.png';
 
 import flower from '../assets/flower.png'
 import { Sprite } from './Rendering/Sprite';
+import { EventEmitter } from './EventEmitter';
 
 export class ResourceLoader {
+  public static readonly emitter = new EventEmitter();
+
   private static rawAssets = {
     adventurer: {
       idle: [
@@ -130,6 +134,7 @@ export class ResourceLoader {
       death: guardDeath,
     },
     fireSprite: fireSprite,
+    deathSprite: deathSprite,
     flower: flower,
     cobblestone: cobblestone,
     bed: bed,
@@ -155,10 +160,28 @@ export class ResourceLoader {
       death: null as any as Sprite,
     },
     fireSprite: null as any as Sprite,
+    deathSprite: null as any as Sprite,
     flower: null as any,
     cobblestone: null as any,
     bed: null as any,
   };
+  public static getResourceCount() {
+    const getCountRecursive = (o: any): number => {
+      return Object.entries(o).reduce((acc, [, value]) => {
+        if (Array.isArray(value)) {
+          return acc + 1;
+        }
+
+        if (typeof value === 'object') {
+          return acc + getCountRecursive(value);
+        }
+
+        return acc + 1;
+      }, 0);
+    };
+
+    return getCountRecursive(this.rawAssets);
+  }
   public static getLoadedAssets() {
     return this.loadedAssets;
   }
@@ -257,27 +280,73 @@ export class ResourceLoader {
     return image;
   }
 
-  static async loadGameAssets() {
-    this.loadedAssets.adventurer.idle = await Promise.all(this.rawAssets.adventurer.idle.map((src) => this.loadImage(src)));
-    this.loadedAssets.adventurer.run = await Promise.all(this.rawAssets.adventurer.run.map((src) => this.loadImage(src)));
-    this.loadedAssets.adventurer.attack1 = await Promise.all(this.rawAssets.adventurer.attack1.map((src) => this.loadImage(src)));
-    this.loadedAssets.adventurer.die = await Promise.all(this.rawAssets.adventurer.die.map((src) => this.loadImage(src)));
-    this.loadedAssets.adventurer.dead = await Promise.all(this.rawAssets.adventurer.dead.map((src) => this.loadImage(src)));
+  public static async loadGameAssets() {
+    const sleep = (ms: number): Promise<void> => new Promise(r => setTimeout(r, ms));
 
-    this.loadedAssets.slime.idle = await Promise.all(this.rawAssets.slime.idle.map((src) => this.loadImage(src)));
-    this.loadedAssets.slime.move = await Promise.all(this.rawAssets.slime.move.map((src) => this.loadImage(src)));
-    this.loadedAssets.slime.die = await Promise.all(this.rawAssets.slime.die.map((src) => this.loadImage(src)));
-    this.loadedAssets.slime.attack = await Promise.all(this.rawAssets.slime.attack.map((src) => this.loadImage(src)));
+    const withLogging = async (name: string, fn: () => Promise<void>): Promise<void> => {
+      const delay =  10;
+      await sleep(delay);
+      this.emitter.emit('logs', { status: 'loading', name: name });
+      await fn();
+      await sleep(delay);
+      this.emitter.emit('logs', { status: 'loaded', name: name });
+      await sleep(delay);
+    };
 
-    this.loadedAssets.flower = await this.loadImage(this.rawAssets.flower)
-    this.loadedAssets.bed = await this.loadImage(this.rawAssets.bed)
-    this.loadedAssets.cobblestone = this.compressSquareImage(await this.loadImage(this.rawAssets.cobblestone))
-    this.loadedAssets.fireSprite = new Sprite(await this.loadImage(this.rawAssets.fireSprite), { cols: 2, rows: 2, size: 4 });
-
-    this.loadedAssets.guard.idle = new Sprite(await this.loadImage(this.rawAssets.guard.idle), { cols: 10, rows: 1, size: 10 });
-    this.loadedAssets.guard.attack = new Sprite(await this.loadImage(this.rawAssets.guard.attack), { cols: 4, rows: 1, size: 4 });
-    this.loadedAssets.guard.run = new Sprite(await this.loadImage(this.rawAssets.guard.run), { cols: 6, rows: 1, size: 6 });
-    this.loadedAssets.guard.death = new Sprite(await this.loadImage(this.rawAssets.guard.death), { cols: 9, rows: 1, size: 9 });
+    await withLogging('adventurer.idle', async () => {
+      this.loadedAssets.adventurer.idle = await Promise.all(this.rawAssets.adventurer.idle.map((src) => this.loadImage(src)));
+    });
+    await withLogging('adventurer.run', async () => {
+      this.loadedAssets.adventurer.run = await Promise.all(this.rawAssets.adventurer.run.map((src) => this.loadImage(src)));
+    });
+    await withLogging('adventurer.attack1', async () => {
+      this.loadedAssets.adventurer.attack1 = await Promise.all(this.rawAssets.adventurer.attack1.map((src) => this.loadImage(src)));
+    });
+    await withLogging('adventurer.die', async () => {
+      this.loadedAssets.adventurer.die = await Promise.all(this.rawAssets.adventurer.die.map((src) => this.loadImage(src)));
+    });
+    await withLogging('adventurer.dead', async () => {
+      this.loadedAssets.adventurer.dead = await Promise.all(this.rawAssets.adventurer.dead.map((src) => this.loadImage(src)));
+    });
+    await withLogging('slime.idle', async () => {
+      this.loadedAssets.slime.idle = await Promise.all(this.rawAssets.slime.idle.map((src) => this.loadImage(src)));
+    });
+    await withLogging('slime.move', async () => {
+      this.loadedAssets.slime.move = await Promise.all(this.rawAssets.slime.move.map((src) => this.loadImage(src)));
+    });
+    await withLogging('slime.die', async () => {
+      this.loadedAssets.slime.die = await Promise.all(this.rawAssets.slime.die.map((src) => this.loadImage(src)));
+    });
+    await withLogging('slime.attack', async () => {
+      this.loadedAssets.slime.attack = await Promise.all(this.rawAssets.slime.attack.map((src) => this.loadImage(src)));
+    });
+    await withLogging('flower', async () => {
+      this.loadedAssets.flower = await this.loadImage(this.rawAssets.flower)
+    });
+    await withLogging('bed', async () => {
+      this.loadedAssets.bed = await this.loadImage(this.rawAssets.bed)
+    });
+    await withLogging('cobblestone', async () => {
+      this.loadedAssets.cobblestone = this.compressSquareImage(await this.loadImage(this.rawAssets.cobblestone))
+    });
+    await withLogging('fireSprite', async () => {
+      this.loadedAssets.fireSprite = new Sprite(await this.loadImage(this.rawAssets.fireSprite), { cols: 2, rows: 2, size: 4 });
+    });
+    await withLogging('death.idle', async () => {
+      this.loadedAssets.deathSprite = new Sprite(await this.loadImage(this.rawAssets.deathSprite), { cols: 4, rows: 1, size: 4 });
+    });
+    await withLogging('guard.idle', async () => {
+      this.loadedAssets.guard.idle = new Sprite(await this.loadImage(this.rawAssets.guard.idle), { cols: 10, rows: 1, size: 10 });
+    });
+    await withLogging('guard.attack', async () => {
+      this.loadedAssets.guard.attack = new Sprite(await this.loadImage(this.rawAssets.guard.attack), { cols: 4, rows: 1, size: 4 });
+    });
+    await withLogging('guard.run', async () => {
+      this.loadedAssets.guard.run = new Sprite(await this.loadImage(this.rawAssets.guard.run), { cols: 6, rows: 1, size: 6 });
+    });
+    await withLogging('guard.death', async () => {
+      this.loadedAssets.guard.death = new Sprite(await this.loadImage(this.rawAssets.guard.death), { cols: 9, rows: 1, size: 9 });
+    });
   }
 }
 

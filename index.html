@@ -5,16 +5,18 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="stylesheet" href="./src/css/button.css">
-    <title>Game</title>
+<!--    <link rel="stylesheet" href="./src/css/button.css">-->
+    <title>Dead Empire Game</title>
     <style>
         * {
             box-sizing: border-box;
             user-select: none;
         }
         html {
+            --base-color: #6c6c6c;
+            --base-color-hover: #414141;
             font-family: system-ui;
-            color: white;
+            color: #e7e7e7;
             margin: 0;
             padding: 0;
         }
@@ -38,37 +40,116 @@
         #ui .modal {
             position: fixed;
             top: 100px;
-            right: 100px;
+            left: 100px;
 
-            width: 500px;
-            min-height: 250px;
-            padding: 50px;
-            border-radius: 30px;
+            max-width: 400px;
+            /*min-height: 250px;*/
+            padding: 15px;
+            border-radius: 8px;
 
-            background-color: black;
-            border: 4px solid crimson;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            /*border: 1px solid var(--base-color);*/
 
             /*transform: translate(-50%, 0);*/
         }
 
         #ui .modal p,
         #ui .modal h1 {
-            font-size: 15px;
-            line-height: 150%;
+            font-size: 14px;
+            line-height: 170%;
+        }
+        #ui .modal .modal__okButton {
+
         }
 
         #start-stop-buttons button {
 
         }
+
         .gameButton {
             width: 100px;
             height: 30px;
-            background-color: black;
+            /*background-color: #ff3c00;*/
+            /*background-color: crimson;*/
+            background-color: var(--base-color);
             color: white;
+            border-radius: 4px;
+            transition: 0.1s ease-in-out;
+            border: 0;
+        }
+        .gameButton:hover {
+            background-color: var(--base-color-hover);
+            /*background-color: #b01534;*/
+        }
+        .center-container-row {
+
+        }
+        .center-container-row > * {
+            width: 100%;
+        }
+
+        #quests {
+            position: fixed;
+            top: 100px;
+            left: 0;
+            font-size: 12px;
+            background-color: rgba(56, 53, 53, 0.8);
+            backdrop-filter: blur(4px);
+            border-radius: 6px;
+            padding: 8px;
+        }
+        #quests h2 {
+            margin: 0;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        .quests__list {
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .quest-list-item {
+            width: 160px;
+            padding: 5px;
+
+            padding-left: 10px;
+            background-color: var(--base-color);
+
+            border-bottom: 1px solid #494949;
+        }
+        .quest-list-item p {
+            margin: 0;
+        }
+        .quest-list-item:hover {
+            background-color: var(--base-color-hover);
+        }
+        .quest-list-item--done {
+            background-color: #3a413a;
+        }
+        .quest-list-item--done:hover {
+            background-color: #3a413a;
         }
     </style>
 </head>
 <body>
+    <div
+            id="resource-loader"
+            style="position: fixed;
+                top: 0; left: 0;
+                width: 100vw; height: 100vh;
+                background-color: #000; color: white;
+                display: flex; flex-flow: column nowrap; justify-content: center; align-items: center;
+                z-index: 100;
+            "
+    >
+        <h1>DEAD EMPIRE GAME</h1>
+        <p style="font-family: monospace">loading <span data-percent>0</span>%</p>
+        <div
+                class="logs"
+                style="padding: 0px 5px; position: absolute; top: 0; left: 0; font-size: 9px; width: 200px; border: 2px solid var(--base-color); height: 300px; max-height: 300px; overflow-y: scroll">
+
+        </div>
+    </div>
     <div class="none" id="debug" style="
         position: fixed;
         top: 0;
@@ -120,50 +201,48 @@
                 (<span id="timeSpeedValue">1</span>)
             </label>
         </div>
-        <div style="position: fixed; top: 50%; right: 50%" id="start-stop-buttons">
-            <h1>Dead empire game</h1>
+        <div style="position: fixed; top: 30%; right: 50%" id="start-stop-buttons">
+            <h2 id="heroes">Heroes:</h2>
+            <div id="select-hero"></div>
+            <style>
+                #select-hero {
+                    width: 100px;
+                    transition: 0.1s ease-in-out;
+                    outline: 0px solid crimson;
+                }
+                #select-hero:hover {
+                    outline: 4px solid crimson;
+                }
+            </style>
+<!--            <h1>Dead empire game</h1>-->
             <div>state: <span id="state"></span></div>
 <!--            <button id="start" class="gameButton">start</button>-->
 <!--            <button id="stop" class="none gameButton">stop</button>-->
 
             <div class="container">
-                <button id="start" class="button">
-                    <div class="plate"></div>
-                    <div class="plate"></div>
-                    <div class="plate"></div>
-                    <div class="plate"></div>
-                    <div class="plate"></div>
-                    <div class="button__wrapper">
-                        <span class="button__text">START</span>
-                    </div>
-                    <div class="button__box">
-                        <div class="inner inner__top"></div>
-                        <div class="inner inner__front"></div>
-                        <div class="inner inner__bottom"></div>
-                        <div class="inner inner__back"></div>
-                        <div class="inner inner__left"></div>
-                        <div class="inner inner__right"></div>
-                    </div>
+                <button id="start" class="gameButton">
+                    START
                 </button>
-                <button id="stop" class="button none">
-                    <div class="plate"></div>
-                    <div class="plate"></div>
-                    <div class="plate"></div>
-                    <div class="plate"></div>
-                    <div class="plate"></div>
-                    <div class="button__wrapper">
-                        <span class="button__text">STOP</span>
-                    </div>
-                    <div class="button__box">
-                        <div class="inner inner__top"></div>
-                        <div class="inner inner__front"></div>
-                        <div class="inner inner__bottom"></div>
-                        <div class="inner inner__back"></div>
-                        <div class="inner inner__left"></div>
-                        <div class="inner inner__right"></div>
-                    </div>
+                <button id="stop" class="gameButton none">
+                    STOP
                 </button>
             </div>
+        </div>
+        <div id="quests" class="none">
+            <h2>Квесты:</h2>
+            <div class="quests__list">
+
+            </div>
+        </div>
+    </div>
+    <div class="inventory">
+        <div class="inventory__player-section">
+            <div id="hero-preview">
+
+            </div>
+        </div>
+        <div class="inventory__items-section">
+            <div class="item-template" style="display: none"></div>
         </div>
     </div>
     <canvas id="canvas"></canvas>

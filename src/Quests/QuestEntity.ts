@@ -6,6 +6,13 @@ import { SlimeEntity } from '../Enemies/slime/SlimeEntity';
 import { UIEntity } from '../UI/UIEntity';
 import { FireEntity } from '../Buildings/FireEntity';
 
+const TITLE = `Задача. Очистить дом`;
+const BODY = 'О нет! Наша великая империя находится в упадке! Демоны нападают со всех сторон, культы предателей возникают то тут, то там'
+  + 'Нам предстоит сделать выбор - мы герой или революционер. От нас зависит судьба империи - выберем ли мы разрушить её, либо отстроить из пепла и руин.'
+  + 'Вы - независимый герой, способный на многое! Перед вами открывается путь приключений доселе не слыханной широты! Доколе мы - простые люди империи'
+  +  'должны страдать от гнёта короля-тирана. Пора навести порядок и восстановить справедливость! <br />  <br />' +
+  ` убейте 3х водных сламов и потушите ваш дом. Тогда империя восстановится.`;
+
 export class QuestEntity extends Entity {
   public constructor() {
     super();
@@ -20,13 +27,16 @@ export class QuestEntity extends Entity {
   public initEntity() {
     super.initEntity();
     const uiEntity = (this.getEntityManager().getEntityByName('ui') as UIEntity);
+    uiEntity.addQuest('initial', TITLE, () => {
+      uiEntity.showModal({
+        title: TITLE,
+        body: BODY,
+      });
+    });
+
     this.closeStartModalFn = uiEntity.showModal({
-      title: 'Current Quest:',
-      body: 'О нет! Наша великая империя находится в упадке! Демоны нападают со всех сторон, культы предателей возникают то тут, то там'
-        + 'Нам предстоит сделать выбор - мы герой или революционер. От нас зависит судьба империи - выберем ли мы разрушить её, либо отстроить из пепла и руин.'
-       + 'Вы - независимый герой, способный на многое! Перед вами открывается путь приключений доселе не слыханной широты! Доколе мы - простые люди империи'
-      +  'должны страдать от гнёта короля-тирана. Пора навести порядок и восстановить справедливость! <br />  <br />' +
-      ` убейте 3х водных сламов и потушите ваш дом. Тогда империя восстановится.`,
+      title: TITLE,
+      body: BODY,
     });
 
     this.unsubscribeFromKilledEvent = this.getEntityManager().emitter.subscribe(GAME_EVENTS.KILLED_EVENT, ({ who, killer }) => {
@@ -61,6 +71,8 @@ export class QuestEntity extends Entity {
     }
 
     const uiEntity = (this.getEntityManager().getEntityByName('ui') as UIEntity);
+
+    uiEntity.markQuestDone('initial');
 
     uiEntity.showModal({
       title: 'Congrats!',

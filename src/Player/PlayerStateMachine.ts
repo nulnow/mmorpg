@@ -30,10 +30,10 @@ export class PlayerIdleState extends State {
 
   public update(timeElapsed: number): void {
     super.update(timeElapsed);
-    if (this.fsm.getPlayer().getInputController().isAttack1Pressed()) {
+    if (this.fsm.getPlayer().getInputController()?.isAttack1Pressed()) {
       return this.fsm.setState(PlayerAttackState as any);
     }
-    if (this.fsm.getPlayer().getInputController().isOneOfMovementKeysIsPressed()) {
+    if (this.fsm.getPlayer().getInputController()?.isOneOfMovementKeysIsPressed()) {
       return this.fsm.setState(PlayerRunState as any);
     }
   }
@@ -64,7 +64,10 @@ export class PlayerRunState extends State {
   public update(timeElapsed: number): void {
     super.update(timeElapsed);
     const inputController = this.fsm.getInputController();
-    if (!inputController.isOneOfMovementKeysIsPressed()) {
+    if (!inputController) {
+      return;
+    }
+    if (!inputController?.isOneOfMovementKeysIsPressed()) {
       this.fsm.setState(PlayerIdleState as any);
     } else {
       const length = (this.fsm.getPlayer().getSpeed() * timeElapsed) / 1000;

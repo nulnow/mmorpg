@@ -4,8 +4,33 @@ import { UnsubscribeFn } from '../EventEmitter';
 export class UIEntity extends Entity {
   private ui = document.getElementById('ui') as HTMLElement;
   private openModals: string[] = [];
+  private quests: { id: string, text: string, done?: boolean, onClick?: () => void }[] = [];
 
-  public showModal({ title, body }: { title: string, body: string }): UnsubscribeFn {
+  public addQuest(id: string, text: string, onClick?: () => void): void {
+    this.quests.push({id, text, onClick});
+    this.renderQuests();
+  }
+
+  public markQuestDone(id: string): void {
+    this.quests.find(q => q.id === id)!.done = true;
+    this.renderQuests();
+  }
+
+  public renderQuests() {
+    this.ui.querySelector('#quests .quests__list')!.innerHTML = this.quests.map(quest => {
+      return `
+        <div data-quest-id="${quest.id}" class="quest-list-item ${quest.done ? 'quest-list-item--done' : ''}"><p>${quest.text}</p></div>
+      `;
+    }).join('');
+    this.quests.forEach(quest => {
+      const questId = quest.id;
+      if (!quest.done) {
+        (this.ui.querySelector(`[data-quest-id="${questId}"]`) as HTMLDivElement)!.onclick = quest.onClick ?? null;
+      }
+    })
+  }
+
+  public showModal({ title, body, updater, onClose }: { title: string, body: string, updater?: (modal: HTMLElement) => void, onClose?: () => void }): UnsubscribeFn {
     const id = this.createModalId();
     const modal = this.createModal();
     const titleElem = modal.querySelector('.modal__title') as HTMLElement;
@@ -25,9 +50,15 @@ export class UIEntity extends Entity {
       if (prevLength !== newLength) {
         this.ui.removeChild(modal);
       }
+
+      onClose?.();
     }
 
     okButtonElem.onclick = close;
+
+    if (updater) {
+      updater(modal);
+    }
 
     return close;
   }
@@ -47,26 +78,7 @@ export class UIEntity extends Entity {
     const okButton = document.createElement('div');
     okButton.innerText = 'ok';
     okButton.classList.add('modal__okButton');
-    okButton.innerHTML = `
-<button id="start" class="button">
-                    <div class="plate"></div>
-                    <div class="plate"></div>
-                    <div class="plate"></div>
-                    <div class="plate"></div>
-                    <div class="plate"></div>
-                    <div class="button__wrapper">
-                        <span class="button__text">OK</span>
-                    </div>
-                    <div class="button__box">
-                        <div class="inner inner__top"></div>
-                        <div class="inner inner__front"></div>
-                        <div class="inner inner__bottom"></div>
-                        <div class="inner inner__back"></div>
-                        <div class="inner inner__left"></div>
-                        <div class="inner inner__right"></div>
-                    </div>
-                </button>
-    `;
+    okButton.innerHTML = `<button id="start" style="width: 100%; height: 35px" class="gameButton">OK</button>`;
     div.appendChild(okButton);
 
     return div;

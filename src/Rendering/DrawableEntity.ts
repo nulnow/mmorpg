@@ -24,4 +24,10 @@ export class DrawableEntity extends Entity implements IDrawableEntity {
       return boxToFindCollisionsWith.isCollide(gameObject.getBox());
     });
   }
+
+  public distance(entity: DrawableEntity): number {
+    return this.getGameObject().getBox().getTopLeft().distance(
+      entity.getGameObject().getBox().getTopLeft()
+    );
+  }
 }

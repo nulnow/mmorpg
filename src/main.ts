@@ -17,6 +17,9 @@ import { QuestEntity } from './Quests/QuestEntity';
 import { UIEntity } from './UI/UIEntity';
 import { GuardEntity } from './Enemies/Guard/GuardEntity';
 import { FireEntity } from './Buildings/FireEntity';
+import { EntityPreview } from './Rendering/EntityPreview';
+import { DeathEntity } from './Buildings/DeathEntity';
+import { DeathQuestEntity } from './Quests/DeathQuest/DeathQuestEntity';
 
 const canvasWidth = window.innerWidth;
 const canvasHeight = window.innerHeight;
@@ -206,9 +209,9 @@ class Game {
 
     this.context.save();
     this.context.fillStyle = '#ffffff';
-    this.context.font = "25px sans-serif";
+    this.context.font = "15px sans-serif";
     this.context.fillText(`FPS: ${this.fps}`, 10, 30);
-    this.context.fillText('Attack: E, Move: WASD', 10, 70);
+    this.context.fillText('Attack: E, Move: WASD', 10, 50);
 
     this.context.restore();
   }
@@ -254,7 +257,6 @@ class Game {
       entities: [],
     };
     this.entityManager = new EntityManager(this.scene);
-    await ResourceLoader.loadGameAssets();
 
     const uiEntity = new UIEntity();
     const uiController = new UIController();
@@ -277,10 +279,7 @@ class Game {
     this.entityManager.addEntity(bed, 'bed');
     this.scene.entities.push(bed);
 
-    const questEntity = new QuestEntity();
-    this.entityManager.addEntity(questEntity, 'quests');
-
-    const player = new PlayerEntity();
+    const player = new PlayerEntity(40, 40);
     speedInput.value = player.getSpeed() + '';
     attackSpeedInput.value = player.getAttackSpeed() + '';
 
@@ -339,6 +338,16 @@ class Game {
 
     this.scene.entities.push(player);
 
+    const death = new DeathEntity(-800, -200);
+    this.scene.entities.push(death);
+    this.entityManager.addEntity(death, 'death');
+
+    const questEntity = new QuestEntity();
+    this.entityManager.addEntity(questEntity, 'quests');
+
+    const deathQuest = new DeathQuestEntity();
+    this.entityManager.addEntity(deathQuest, 'deathQuest');
+
     // for (let j = 0; j < 5; j++) {
     //   if (j === 3 || j === 4) continue;
     //   const enemyEntity = new Entity();
@@ -371,37 +380,64 @@ class Game {
   }
 }
 
-const game = new Game(
-  canvas,
-  window.requestAnimationFrame.bind(window),
-  window.cancelAnimationFrame.bind(window),
-);
+(async () => {
+  const loading = document.getElementById('resource-loader')!;
+  const logs = loading.querySelector('.logs')!;
+  let count = ResourceLoader.getResourceCount();
+  let loaded = 0;
+  ResourceLoader.emitter.subscribe('logs', ({ status, name }) => {
+    if (status === 'loading') {
+      logs.innerHTML += `<p data-name="${name}" style="line-height: 10%;"><span data-status style="font-family: monospace"> <span style="color: yellow">LOADING</span> </span>: ${name}</p>`;
+      logs.scrollTo(0, logs.scrollHeight);
+    }
+    if (status === 'loaded') {
+      loaded++;
+      let percent = Math.floor((loaded / count) * 100);
+      logs.querySelector(`[data-name="${name}"] [data-status]`)!.innerHTML = ` <span style="color: lime">DONE&nbsp;&nbsp;&nbsp;</span> `;
+      loading.querySelector('[data-percent]')!.innerHTML = percent.toString();
+    }
+  });
+  await ResourceLoader.loadGameAssets();
+  loading.style.display = 'none';
 
-const state = document.getElementById('state')!;
-const startButton = document.getElementById('start')!;
-const stopButton = document.getElementById('stop')!;
+  const entityPreview = new EntityPreview(new PlayerEntity(0, 0));
+  entityPreview.mount('select-hero')
 
-state.innerText = 'started';
-startButton.onclick = async function () {
+  const game = new Game(
+    canvas,
+    window.requestAnimationFrame.bind(window),
+    window.cancelAnimationFrame.bind(window),
+  );
+
+  const state = document.getElementById('state')!;
+  const startButton = document.getElementById('start')!;
+  const stopButton = document.getElementById('stop')!;
+
   state.innerText = 'started';
-  state.style.color = '#22ff00';
-  if (!game.getIsSetUp()) {
-    await game.setUp();
+  startButton.onclick = async function () {
+    entityPreview.destroy();
+    state.innerText = 'started';
+    state.style.color = '#22ff00';
+    if (!game.getIsSetUp()) {
+      await game.setUp();
+    }
+    game.run();
+    document.getElementById('start-stop-buttons')!.style.top = '0px';
+    document.getElementById('start-stop-buttons')!.style.right = '0px';
+    startButton.classList.add('none');
+    stopButton.classList.remove('none');
+    document.getElementById('quests')!.classList.remove('none');
+    document.getElementById('heroes')!.classList.add('none');
   }
-  game.run();
-  document.getElementById('start-stop-buttons')!.style.top = '0px';
-  document.getElementById('start-stop-buttons')!.style.right = '0px';
-  startButton.classList.add('none');
-  stopButton.classList.remove('none');
-}
-stopButton.onclick = function () {
+  stopButton.onclick = function () {
+    state.innerText = 'stopped';
+    state.style.color = '#ff0000';
+    debug!.innerText = '';
+    MusicPlayer.pause();
+    game.stop();
+    startButton.classList.remove('none');
+    stopButton.classList.add('none');
+  }
   state.innerText = 'stopped';
   state.style.color = '#ff0000';
-  debug!.innerText = '';
-  MusicPlayer.pause();
-  game.stop();
-  startButton.classList.remove('none');
-  stopButton.classList.add('none');
-}
-state.innerText = 'stopped';
-state.style.color = '#ff0000';
+})();

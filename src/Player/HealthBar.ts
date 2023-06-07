@@ -24,7 +24,7 @@ export class HealthBar extends GameObject {
 
     context.save();
     context.fillStyle = 'rgba(152,0,0,0.57)';
-    context.fillRect(parentRelativeRect.left, parentRelativeRect.top, WIDTH * percent, HEIGHT)
+    context.fillRect(parentRelativeRect.left, parentRelativeRect.top, WIDTH * percent > WIDTH ? WIDTH : WIDTH * percent, HEIGHT)
 
     context.strokeStyle = processedHealth === 0 ? 'rgba(215,215,215,0.73)' : 'rgba(255,0,0,0.51)';
     context.beginPath();

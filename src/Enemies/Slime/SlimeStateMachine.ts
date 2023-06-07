@@ -24,7 +24,7 @@ class SlimeEnemyDieState extends BaseEnemyDieState {
 
 class SlimeEnemyDeadState extends BaseEnemyDeadState {
   protected speed = 1;
-  protected sprites = ResourceLoader.getLoadedAssets().slime.die;
+  protected sprites = ResourceLoader.getLoadedAssets().slime.die.slice(0, 2);
 }
 
 class SlimeEnemyChasingPlayerState extends BaseEnemyChasingPlayerState {

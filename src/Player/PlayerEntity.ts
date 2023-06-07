@@ -20,10 +20,10 @@ export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, I
     return this.inputController;
   }
 
-  public constructor() {
+  public constructor(x: number, y: number) {
     super();
     this.finiteStateMachine = new PlayerFiniteStateMachine(this);
-    this.gameObject = new CharacterGameObject(this, this.finiteStateMachine);
+    this.gameObject = new CharacterGameObject(x, y, this, this.finiteStateMachine);
   }
 
   private health: Health = new Health(100, 150);
@@ -71,7 +71,7 @@ export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, I
     this.attackRange = value;
   }
 
-  private speed = 130;
+  private speed = 180;
   public getSpeed(): number {
     return this.speed;
   }
