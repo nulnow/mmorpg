@@ -442,3 +442,10 @@ class Game {
   state.innerText = 'stopped';
   state.style.color = '#ff0000';
 })();
+
+document.body.addEventListener('touchstart', event => {
+  event.preventDefault();
+});
+document.body.addEventListener('touchend', event => {
+  event.preventDefault();
+});

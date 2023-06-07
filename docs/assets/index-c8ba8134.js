@@ -1720,16 +1720,20 @@ class InputController extends Component {
     super.init();
     document.addEventListener("keydown", this.keyDownHandler);
     Array.from(document.querySelectorAll("#mobile-controls [data-key]")).forEach((div) => {
-      div.addEventListener("mousedown", () => {
+      div.addEventListener("mousedown", (event) => {
+        event.preventDefault();
         this.pressedKeys.set(div.getAttribute("data-key"), true);
       });
-      div.addEventListener("mouseup", () => {
+      div.addEventListener("mouseup", (event) => {
+        event.preventDefault();
         this.pressedKeys.set(div.getAttribute("data-key"), false);
       });
-      div.addEventListener("touchstart", () => {
+      div.addEventListener("touchstart", (event) => {
+        event.preventDefault();
         this.pressedKeys.set(div.getAttribute("data-key"), true);
       });
-      div.addEventListener("touchend", () => {
+      div.addEventListener("touchend", (event) => {
+        event.preventDefault();
         this.pressedKeys.set(div.getAttribute("data-key"), false);
       });
     });
@@ -3124,3 +3128,9 @@ class Game {
   state.innerText = "stopped";
   state.style.color = "#ff0000";
 })();
+document.body.addEventListener("touchstart", (event) => {
+  event.preventDefault();
+});
+document.body.addEventListener("touchend", (event) => {
+  event.preventDefault();
+});
