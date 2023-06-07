@@ -3056,7 +3056,7 @@ class Game {
       this.scene.entities.push(guard);
     }
     this.scene.entities.push(player);
-    const death = new DeathEntity(-800, -200);
+    const death = new DeathEntity(800, 200);
     this.scene.entities.push(death);
     this.entityManager.addEntity(death, "death");
     const questEntity = new QuestEntity();
