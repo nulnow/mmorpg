@@ -258,10 +258,14 @@ export class ResourceLoader {
       audio.src = src;
       audio.addEventListener('canplay', () => {
         resolve(audio);
+        document.body.removeChild(audio);
       });
       audio.addEventListener('error', () => {
         reject();
-      })
+        document.body.removeChild(audio);
+      });
+      audio.controls = false;
+      document.body.appendChild(audio);
     });
   }
 
