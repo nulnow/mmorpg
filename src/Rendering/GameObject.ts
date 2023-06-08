@@ -3,6 +3,7 @@ import { FiniteStateMachine } from '../StateMachine/FiniteStateMachine';
 import { Camera } from '../Camera/Camera';
 import { Rotation } from './Rotation';
 import { ResourceLoader } from '../ResourceLoader';
+import { removeOnFromArray } from '../JSHACKS';
 // import { FireStateMachine } from '../Buildings/FireStateMachine';
 
 export class GameObject {
@@ -86,12 +87,13 @@ export class GameObject {
       boxes.push(this.box);
     }
 
-    this.children.forEach((child) => {
+    for (const child of this.children) {
       const childBoxes = child.getAllTheBoxes();
-      childBoxes.forEach(box => {
+
+      for (const box of childBoxes) {
         boxes.push(box);
-      });
-    });
+      }
+    }
 
     return boxes;
   }
@@ -106,12 +108,13 @@ export class GameObject {
       result.push(this);
     }
 
-    this.children.forEach(child => {
+    for (const child of this.children) {
       const collidable = child.getAllCollidables();
-      collidable.forEach(grandChild => {
+
+      for (const grandChild of collidable) {
         result.push(grandChild);
-      });
-    });
+      }
+    }
 
     return result;
   }
@@ -121,15 +124,15 @@ export class GameObject {
   }
 
   public removeChild(child: GameObject) {
-    this.children = this.children.filter(c => c !== child);
+    removeOnFromArray(this.children, c => c !== child);
   }
 
   public update(timeElapsed: number) {
     this.finiteStateMachine.update(timeElapsed);
 
-    this.getChildren().forEach(child => {
+    for (const child of this.children) {
       child.update(timeElapsed);
-    });
+    }
   }
 
   public getCurrentSprite(): HTMLImageElement | null {
@@ -192,14 +195,14 @@ export class GameObject {
       }
     }
 
-    this.getChildren().forEach((child) => {
+    for (const child of this.children) {
       child.draw(context, camera);
-    });
+    }
   }
 
   public destroy() {
-    this.getChildren().forEach(c => {
-      c.destroy();
-    });
+    for (const child of this.children) {
+      child.destroy();
+    }
   }
 }

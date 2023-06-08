@@ -18,7 +18,7 @@ export class GameMap extends Entity {
     this.scene.entities.push(entity);
   }
 
-  public findEntities(point: Position, maxDistance: number = GameMap.MAX_DISTANCE): Entity[] {
+  public findEntities(point: Position, maxDistance: number = GameMap.MAX_DISTANCE, filter: (e: Entity) => boolean = () => true): Entity[] {
     return this.scene.entities.filter((entity) => {
       // TODO!!!
       const center = entity.getGameObject?.()?.getBox()?.getCenter();
@@ -26,7 +26,7 @@ export class GameMap extends Entity {
         return false;
       }
       const distance = Math.sqrt((center.x - point.x) ** 2 + (center.y - point.y) ** 2);
-      return distance <= maxDistance;
+      return distance <= maxDistance && filter(entity);
     });
   }
 

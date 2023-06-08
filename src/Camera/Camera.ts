@@ -8,6 +8,13 @@ export class Camera extends Entity {
   protected box: Box;
   private filter = "";
 
+  private resizeHandler = () => {
+    this.box = new Box(
+      new Position(0, 0, 0),
+      window.innerWidth, window.innerHeight,
+    );
+  };
+
   public constructor(width: number, height: number) {
     super();
 
@@ -15,6 +22,17 @@ export class Camera extends Entity {
       new Position(0, 0, 0),
       width, height
     );
+  }
+
+  public initEntity() {
+    super.initEntity();
+    // todo
+    window.addEventListener('resize', this.resizeHandler);
+  }
+
+  public destroy() {
+    super.destroy();
+    window.removeEventListener('resize', this.resizeHandler);
   }
 
   public getFilter(): string {

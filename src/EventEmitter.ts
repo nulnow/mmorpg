@@ -1,4 +1,6 @@
 // TODO
+import { removeOnFromArray } from './JSHACKS';
+
 type Data = any;
 export type EventHandler = (data: Data) => void;
 export type UnsubscribeFn = () => void;
@@ -11,15 +13,15 @@ export class EventEmitter {
     const allTopicsListeners = this.subs.get('*');
 
     if (allTopicsListeners) {
-      allTopicsListeners.forEach((fn) => {
+      for (const fn of allTopicsListeners) {
         fn(value);
-      });
+      }
     }
 
     if (listeners) {
-      listeners.forEach((fn) => {
+      for (const fn of listeners) {
         fn(value);
-      });
+      }
     }
   }
 
@@ -31,7 +33,7 @@ export class EventEmitter {
     this.subs.get(topic)!.push(fn);
 
     return () => {
-      this.subs.set(topic, this.subs.get(topic)!.filter(f => f !== fn));
+      removeOnFromArray(this.subs.get(topic)!, f => f !== fn);
     };
   }
 

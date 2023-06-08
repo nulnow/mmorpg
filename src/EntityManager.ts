@@ -4,6 +4,7 @@ import { IDrawableEntity } from './Rendering/IDrawableEntity';
 import { DrawableEntity } from './Rendering/DrawableEntity';
 import { EventEmitter } from './EventEmitter';
 import { GAME_EVENTS } from './GAME_EVENTS';
+import { removeOnFromArray } from './JSHACKS';
 
 export class EntityManager {
   public emitter = new EventEmitter();
@@ -41,7 +42,7 @@ export class EntityManager {
     });
   }
 
-  public removeEntity(entity: Entity): void {
+  public removeEntity(entity: Entity, destroy = true): void {
     Object.entries(this.entitiesMap).forEach(([key, value]) => {
       if (value === entity) {
         delete this.entitiesMap[key];
@@ -49,8 +50,10 @@ export class EntityManager {
       }
     });
     this.entities = this.entities.filter(e => e !== entity);
-    entity.destroy();
-    (entity as any as DrawableEntity).getGameObject().destroy();
+    if (destroy) {
+      entity.destroy();
+      (entity as any as DrawableEntity).getGameObject().destroy();
+    }
   }
 
   public removeEntityByName(name: string): void {
@@ -60,6 +63,28 @@ export class EntityManager {
       this.scene.entities = this.scene.entities.filter(e => e !== entity);
     }
   }
+
+  // public removeEntity(entity: Entity): void {
+  //   for (const key in this.entitiesMap) {
+  //     const e = this.entitiesMap[key];
+  //     if (e === entity) {
+  //       delete this.entitiesMap[key];
+  //       removeOnFromArray(this.scene.entities, e => e !== entity)
+  //       break;
+  //     }
+  //   }
+  //   removeOnFromArray(this.entities, e => e !== entity)
+  //   entity.destroy();
+  //   (entity as any as DrawableEntity).getGameObject().destroy();
+  // }
+  //
+  // public removeEntityByName(name: string): void {
+  //   const entity = this.getEntityByName(name);
+  //   if (entity) {
+  //     delete this.entitiesMap[name];
+  //     removeOnFromArray(this.scene.entities, e => e !== entity)
+  //   }
+  // }
 
   public getEntityByName(name: string): Entity {
     return this.entitiesMap[name];
@@ -95,8 +120,7 @@ export class EntityManager {
       });
     }
 
-    for (let i = 0; i < this.entities.length; ++i) {
-      const entity = this.entities[i];
+    for (const entity of this.entities) {
       entity.update(timeElapsed);
     }
   }

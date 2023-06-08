@@ -58,6 +58,14 @@ import bed from '../assets/bed.png';
 import treeSprite from '../assets/trees.gif';
 
 import flower from '../assets/flower.png'
+
+import mainTheme from '../assets/ruapporangespace_Aim_To_Head_-_EMPeror_71070745.mp3';
+import steps from '../assets/sneaker-shoe-on-concrete-floor-fast-pace-1-www.FesliyanStudios.com.mp3';
+import evilSlime from '../assets/evil-slime.mp3';
+import movingSlime from '../assets/moving-slime.mp3';
+import neutralSlime from '../assets/neutral-slime.mp3';
+import sword from '../assets/Sword Whooshes Medium - QuickSounds.com.mp3';
+
 import { Sprite } from './Rendering/Sprite';
 import { EventEmitter } from './EventEmitter';
 
@@ -140,6 +148,14 @@ export class ResourceLoader {
     flower: flower,
     cobblestone: cobblestone,
     bed: bed,
+    sounds: {
+      evilSlime: evilSlime,
+      movingSlime: movingSlime,
+      neutralSlime: neutralSlime,
+      sword: sword,
+      steps: steps,
+      mainTheme: mainTheme,
+    },
   };
   private static loadedAssets = {
     adventurer: {
@@ -167,6 +183,14 @@ export class ResourceLoader {
     flower: null as any,
     cobblestone: null as any,
     bed: null as any,
+    sounds: {
+      evilSlime: null as any as HTMLAudioElement,
+      movingSlime: null as any as HTMLAudioElement,
+      neutralSlime: null as any as HTMLAudioElement,
+      sword: null as any as HTMLAudioElement,
+      steps: null as any as HTMLAudioElement,
+      mainTheme: null as any as HTMLAudioElement,
+    },
   };
   public static getResourceCount() {
     const getCountRecursive = (o: any): number => {
@@ -225,6 +249,19 @@ export class ResourceLoader {
         });
       };
       image.onerror = reject;
+    });
+  }
+
+  static async loadAudio(src: string): Promise<HTMLAudioElement> {
+    return new Promise<HTMLAudioElement>((resolve, reject) => {
+      const audio = new Audio();
+      audio.src = src;
+      audio.addEventListener('canplay', () => {
+        resolve(audio);
+      });
+      audio.addEventListener('error', () => {
+        reject();
+      })
     });
   }
 
@@ -354,53 +391,23 @@ export class ResourceLoader {
     await withLogging('treeSprite', async () => {
       this.loadedAssets.treeSprite = new Sprite(await this.loadImage(this.rawAssets.treeSprite), { cols: 3, rows: 5, size: 15 });
     });
-  }
-}
-
-class ImageProcessor {
-  private static getNewCanvas(): [HTMLCanvasElement, CanvasRenderingContext2D] {
-    const canvas = document.createElement("canvas");
-    const context = canvas.getContext("2d")!;
-
-    return [canvas, context];
-  }
-
-  private static zoomMap = new Map<HTMLImageElement, Map<number, HTMLImageElement>>()
-  public static zoom(image: HTMLImageElement, zoom: number): HTMLImageElement {
-    if (this.zoomMap.has(image) && this.zoomMap.get(image)!.has(zoom)) {
-      return this.zoomMap.get(image)!.get(zoom)!
-    }
-
-    const [canvas, context] = this.getNewCanvas();
-    const { width, height } = image;
-
-    const newWidth = width - zoom * 2;
-    const newHeight = height - zoom * 2;
-
-    canvas.width = newWidth;
-    canvas.height = newHeight;
-
-    context.drawImage(
-      image,
-      zoom,
-      zoom,
-      width,
-      height,
-      0,
-      0,
-      width,
-      height,
-    );
-
-    const newImage = new Image();
-    newImage.src = canvas.toDataURL();
-
-    if (!this.zoomMap.has(image)) {
-      this.zoomMap.set(image, new Map());
-    }
-
-    this.zoomMap.get(image)!.set(zoom, newImage);
-
-    return newImage;
+    await withLogging('evilSlime', async () => {
+      this.loadedAssets.sounds.evilSlime = await this.loadAudio(this.rawAssets.sounds.evilSlime);
+    });
+    await withLogging('neutralSlime', async () => {
+      this.loadedAssets.sounds.neutralSlime = await this.loadAudio(this.rawAssets.sounds.neutralSlime);
+    });
+    await withLogging('movingSlime', async () => {
+      this.loadedAssets.sounds.movingSlime = await this.loadAudio(this.rawAssets.sounds.movingSlime);
+    });
+    await withLogging('sword', async () => {
+      this.loadedAssets.sounds.sword = await this.loadAudio(this.rawAssets.sounds.sword);
+    });
+    await withLogging('steps', async () => {
+      this.loadedAssets.sounds.steps = await this.loadAudio(this.rawAssets.sounds.steps);
+    });
+    await withLogging('mainTheme', async () => {
+      this.loadedAssets.sounds.mainTheme = await this.loadAudio(this.rawAssets.sounds.mainTheme);
+    });
   }
 }

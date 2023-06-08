@@ -18,10 +18,10 @@ export class DrawableEntity extends Entity implements IDrawableEntity {
   public findCollisions(boxToFindCollisionsWith: Box): GameObject[] {
     const gameMap = this.getEntityManager().getEntityByName('map') as any as GameMap;
 
-    const collidableGameObjects = gameMap.getCollidableGameObjects().filter(obj => obj !== this.getGameObject());
+    const collidableGameObjects = gameMap.getCollidableGameObjects();
 
-    return collidableGameObjects.filter((gameObject) => {
-      return boxToFindCollisionsWith.isCollide(gameObject.getBox());
+    return collidableGameObjects.filter((obj) => {
+      return obj !== this.getGameObject() && boxToFindCollisionsWith.isCollide(obj.getBox());
     });
   }
 

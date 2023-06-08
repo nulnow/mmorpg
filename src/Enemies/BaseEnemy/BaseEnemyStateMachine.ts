@@ -41,9 +41,10 @@ export class BaseEnemyIdleState extends State {
 
     const gameMap = this.fsm.getEnemy().getEntityManager().getEntityByName('map') as GameMap;
 
-    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), 200).filter(e => e instanceof PlayerEntity)
-      // TODO
-      .filter((player) => ((player as any as IEntityWithHealth).getHealth().getValue() > 0));
+    // TODO
+    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), 200, (entity) => (
+      entity instanceof PlayerEntity && ((entity as any as IEntityWithHealth).getHealth().getValue() > 0)
+    ));
 
     if (players.length > 0) {
       this.fsm.setChasingPlayerState();
@@ -177,7 +178,7 @@ export class BaseEnemyChasingPlayerState extends State {
     this.player.tuneSoundByDistance(distance);
 
     const gameMap = this.fsm.getEnemy().getEntityManager().getEntityByName('map') as GameMap;
-    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance()).filter(e => e instanceof PlayerEntity);
+    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance(), e => e instanceof PlayerEntity)
 
     if (players.length > 0) {
       const playerToChaise = players[0] as PlayerEntity;
@@ -243,9 +244,10 @@ export class BaseEnemyAttackPlayerState extends State {
     this.player.tuneSoundByDistance(distance);
 
     const gameMap = this.fsm.getEnemy().getEntityManager().getEntityByName('map') as GameMap;
-    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance()).filter(e => e instanceof PlayerEntity)
-      // TODO
-      .filter((player) => ((player as any as IEntityWithHealth).getHealth().getValue() > 0));
+    // TODO
+    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance(), (entity) => (
+      entity instanceof PlayerEntity && ((entity as any as IEntityWithHealth).getHealth().getValue() > 0)
+    ));
 
     const player: PlayerEntity | null = (players.length ? players[0] : null) as PlayerEntity | null;
 

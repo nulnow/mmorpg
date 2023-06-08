@@ -22,8 +22,8 @@ import { DeathEntity } from './Buildings/DeathEntity';
 import { DeathQuestEntity } from './Quests/DeathQuest/DeathQuestEntity';
 import { TreeEntity } from './Buildings/TreeEntity';
 
-const canvasWidth = window.innerWidth;
-const canvasHeight = window.innerHeight;
+let canvasWidth = window.innerWidth;
+let canvasHeight = window.innerHeight;
 
 const timeSpeedInput = document.getElementById('timeSpeedInput') as HTMLInputElement;
 let timeSpeed = 1;
@@ -43,6 +43,14 @@ document.getElementById('resetTimeButton')!.onclick = () => {
 }
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+window.addEventListener('reset', () => {
+  canvasWidth = window.innerWidth;
+  canvasHeight = window.innerHeight;
+
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
+});
+
 const speedInput = document.getElementById('speedInput') as HTMLInputElement;
 const attackSpeedInput = document.getElementById('attackSpeedInput') as HTMLInputElement;
 canvas.width = window.innerWidth;
@@ -94,8 +102,8 @@ class Game {
 
   private flowersMap = (() => {
     const flowers: {i: number, j: number}[] = [];
-    for (let i = -canvasWidth; i < canvasWidth * 2; i++) {
-      for (let j = -canvasHeight; j < canvasHeight*2; j++) {
+    for (let i = -1000; i < 1000 * 2; i++) {
+      for (let j = -1000; j < 1000*2; j++) {
         if (Math.random() < 0.000025) {
           flowers.push({
             i, j
@@ -130,7 +138,7 @@ class Game {
     const camera = this.scene.camera;
     this.context.filter = camera.getFilter();
 
-    this.flowersMap.forEach(({i: x, j: y}) => {
+    for (const {i: x, j: y} of this.flowersMap) {
       const relativePosition = camera.getRelativePosition(new Position(x, y, 0));
       this.context.drawImage(
         ResourceLoader.getLoadedAssets().flower,
@@ -138,7 +146,7 @@ class Game {
         relativePosition.y,
         20, 20
       );
-    });
+    }
 
     for (let j = 0; j < this.scene.entities.length; j++) {
       const entity = this.scene.entities[j];
@@ -253,6 +261,9 @@ class Game {
     this.scene.entities.push(bed);
 
     const player = new PlayerEntity(40, 40);
+    player.emitter.subscribe('dead_and_modal_closed', () => {
+      player.respawn();
+    });
     speedInput.value = player.getSpeed() + '';
     attackSpeedInput.value = player.getAttackSpeed() + '';
 
@@ -274,32 +285,66 @@ class Game {
 
     // const fieldEntity = new Entity();
 
-    for (let i = 0; i < 1; i++) {
-      for (let j = -1000; j < 1000; j++) {
-        if (j % 50 !== 0) continue;
+    // for (let i = 0; i < 1; i++) {
+    //   for (let j = -1000; j < 1000; j++) {
+    //     if (j % 50 !== 0) continue;
+    //     // TOP
+    //     const fire1 = new FireEntity(j, -1000 - ((i + 1) * 30), 150, 150);
+    //     // fire1.getGameObject().setIsCollidable(true);
+    //     this.entityManager.addEntity(fire1);
+    //     this.scene.entities.push(fire1);
+    //
+    //     // BOTTOM
+    //     const fire2 = new FireEntity(j, 1000  + ((i + 1) * 30), 150, 150);
+    //     // fire2.getGameObject().setIsCollidable(true);
+    //     this.entityManager.addEntity(fire2);
+    //     this.scene.entities.push(fire2);
+    //
+    //     // LEFT
+    //     const fire3 = new FireEntity(-1000  - ((i + 1) * 30), j, 150, 150);
+    //     // fire3.getGameObject().setIsCollidable(true);
+    //     this.entityManager.addEntity(fire3);
+    //     this.scene.entities.push(fire3);
+    //
+    //     // RIGHT
+    //     const fire4 = new FireEntity(1000 + ((i + 1) * 30), j, 150, 150);
+    //     // fire4.getGameObject().setIsCollidable(true);
+    //     this.entityManager.addEntity(fire4);
+    //     this.scene.entities.push(fire4);
+    //   }
+    // }
+
+    const getRandomDiff = () => (0.5 - Math.random()) * 500;
+
+    for (let i = 0; i < 10; i++) {
+      for (let j = -2000; j < 2000; j++) {
+        if (j % 500 !== 0) continue;
+        const MULT = 200;
         // TOP
-        const fire1 = new FireEntity(j, -1000 - ((i + 1) * 30), 150, 150);
+        const tree1 = new TreeEntity(j + getRandomDiff(), -1000 - ((i + 1) * MULT) + getRandomDiff(), 0, true, 2);
         // fire1.getGameObject().setIsCollidable(true);
-        this.entityManager.addEntity(fire1);
-        this.scene.entities.push(fire1);
+        this.entityManager.addEntity(tree1);
+        this.scene.entities.push(tree1);
 
         // BOTTOM
-        const fire2 = new FireEntity(j, 1000  + ((i + 1) * 30), 150, 150);
+        const tree2 = new TreeEntity(j + getRandomDiff(), 1000  + ((i + 1) * MULT) + getRandomDiff(), 0, true, 2);
         // fire2.getGameObject().setIsCollidable(true);
-        this.entityManager.addEntity(fire2);
-        this.scene.entities.push(fire2);
+        this.entityManager.addEntity(tree2);
+        this.scene.entities.push(tree2);
 
-        // LEFT
-        const fire3 = new FireEntity(-1000  - ((i + 1) * 30), j, 150, 150);
-        // fire3.getGameObject().setIsCollidable(true);
-        this.entityManager.addEntity(fire3);
-        this.scene.entities.push(fire3);
+        if (j > -1000 && j < 1000) {
+          // LEFT
+          const tree3 = new TreeEntity(-1000  - ((i + 1) * MULT) + getRandomDiff(), j + getRandomDiff(), 0, true, 2);
+          // fire3.getGameObject().setIsCollidable(true);
+          this.entityManager.addEntity(tree3);
+          this.scene.entities.push(tree3);
 
-        // RIGHT
-        const fire4 = new FireEntity(1000 + ((i + 1) * 30), j, 150, 150);
-        // fire4.getGameObject().setIsCollidable(true);
-        this.entityManager.addEntity(fire4);
-        this.scene.entities.push(fire4);
+          // RIGHT
+          const tree4 = new TreeEntity(1000 + ((i + 1) * MULT) + getRandomDiff(), j + getRandomDiff(), 0, true, 2);
+          // fire4.getGameObject().setIsCollidable(true);
+          this.entityManager.addEntity(tree4);
+          this.scene.entities.push(tree4);
+        }
       }
     }
 

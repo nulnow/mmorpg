@@ -41,14 +41,14 @@ export class UIEntity extends Entity {
     bodyElem.innerHTML = body;
 
     this.openModals.push(id);
-    this.ui.appendChild(modal);
+    this.ui.querySelector('#modals')!.appendChild(modal);
 
     const close = () => {
       const prevLength = this.openModals.length;
       this.openModals = this.openModals.filter(modalId => modalId !== id);
       const newLength = this.openModals.length;
       if (prevLength !== newLength) {
-        this.ui.removeChild(modal);
+        document.getElementById('modals')!.removeChild(modal);
       }
 
       onClose?.();
@@ -80,6 +80,8 @@ export class UIEntity extends Entity {
     okButton.classList.add('modal__okButton');
     okButton.innerHTML = `<button id="start" style="width: 100%; height: 35px" class="gameButton">OK</button>`;
     div.appendChild(okButton);
+
+    div.style.animation = 'loadevent ease-in-out .55s';
 
     return div;
   }

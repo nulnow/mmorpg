@@ -150,16 +150,17 @@ export class PlayerAttackState extends State {
 
     const gameMap = this.fsm.getPlayer().getEntityManager().getEntityByName('map') as GameMap;
     const entities = gameMap
-      .findEntities(this.player.getGameObject().getBox().getCenter(), this.player.getAttackRange())
-      .filter(entity => entity !== this.player)
-      .filter(entity => !!(entity as any).getHealth)
-      .filter(entity => (entity as any as IEntityWithHealth).getHealth().getValue() > 0);
+      .findEntities(this.player.getGameObject().getBox().getCenter(), this.player.getAttackRange(), entity => (
+        (entity !== this.player)
+        && (!!(entity as any).getHealth)
+        && ((entity as any as IEntityWithHealth).getHealth().getValue() > 0)
+      ));
 
     const damage = this.player.getAttackDamage() * this.player.getAttackSpeed() * (timeElapsed / 1000);
 
-    entities.forEach(e => {
+    for (const e of entities) {
       (e as EnemyEntity).damage(damage, this.player);
-    });
+    }
   }
 }
 

@@ -46,10 +46,10 @@ export class SceneRenderer {
       const timeElapsed = timestamp - this.prevDOMHighResTimeStamp;
       this.prevDOMHighResTimeStamp = timestamp;
       this.context?.clearRect(0, 0, this.width, this.height);
-      this.scene.entities.forEach(entity => {
+      for (const entity of this.scene.entities) {
         const drawableEntity = entity as any as IDrawableEntity;
         drawableEntity.getGameObject().draw(this.context!, this.scene.camera)
-      });
+      }
       this.entityManager.update(timeElapsed);
       this.run();
     });

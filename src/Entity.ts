@@ -1,9 +1,6 @@
 import { Component } from './Component';
 import { EntityManager } from './EntityManager';
 import { EventEmitter } from './EventEmitter';
-import { Box } from './Rendering/Box';
-import { GameObject } from './Rendering/GameObject';
-import { GameMap } from './GameMap';
 
 export class Entity {
   public readonly emitter = new EventEmitter();

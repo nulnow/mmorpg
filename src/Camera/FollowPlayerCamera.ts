@@ -9,11 +9,11 @@ export class FollowPlayerCamera extends Camera {
     super(width, height);
   }
 
-  private syncWithPlayer(): void {
-    const rect = this.getBox().getRect();
+  private syncWithPlayer = (): void => {
     const topLeft = this.getBox().getTopLeft();
     const playerCenter = this.player.getGameObject().getBox().getCenter();
 
+    // TODO
     topLeft.x = playerCenter.x - (window.innerWidth / 2)
     topLeft.y = playerCenter.y - (window.innerHeight / 2)
   }
@@ -21,15 +21,17 @@ export class FollowPlayerCamera extends Camera {
   public initEntity(): void {
     super.initEntity();
     this.syncWithPlayer();
-    this.unsubscribeFromPlayerMoveEventFn = this.player.emitter.subscribe('player_move', (newPlayerBox) => {
+    this.unsubscribeFromPlayerMoveEventFn = this.player.emitter.subscribe('player_move', () => {
       this.syncWithPlayer();
       document.getElementById('cameraPos')!.innerHTML = `camera center x ${this.getBox().getCenter().x} y ${this.getBox().getCenter().y} <br />`;
       document.getElementById('cameraPos')!.innerHTML += `camera corner x ${this.getBox().getRect().left} y ${this.getBox().getRect().top} <br />`;
     });
+    window.addEventListener('resize', this.syncWithPlayer);
   }
 
   public destroy(): void {
     super.destroy();
+    window.removeEventListener('resize', this.syncWithPlayer);
     if (this.unsubscribeFromPlayerMoveEventFn) {
       this.unsubscribeFromPlayerMoveEventFn();
     }

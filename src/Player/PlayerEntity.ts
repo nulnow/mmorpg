@@ -1,6 +1,6 @@
 import { InputController } from '../InputController';
 import { UnsubscribeFn } from '../EventEmitter';
-import { PlayerDieState, PlayerFiniteStateMachine } from './PlayerStateMachine';
+import { PlayerDieState, PlayerFiniteStateMachine, PlayerIdleState } from './PlayerStateMachine';
 import { CharacterGameObject } from './CharacterGameObject';
 import { FiniteStateMachine } from '../StateMachine/FiniteStateMachine';
 import { Health, IEntityWithHealth } from '../IEntityWithHealth';
@@ -8,6 +8,8 @@ import { IEntityAbleToAttack } from '../IEntityAbleToAttack';
 import { DrawableEntity } from '../Rendering/DrawableEntity';
 import { UIEntity } from '../UI/UIEntity';
 import { FireAttackEntity } from '../Buildings/FireAttackEntity';
+import { Position } from '../Rendering/Position';
+import { Entity } from '../Entity';
 
 export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, IEntityAbleToAttack {
   private readonly finiteStateMachine: PlayerFiniteStateMachine;
@@ -35,6 +37,14 @@ export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, I
   public setHealth(value: number): void {
     this.health.setValue(value);
   }
+
+  public respawn(): void {
+    this.finiteStateMachine.setState(PlayerIdleState);
+    this.setHealth(this.getHealth().getMaxValue());
+    this.gameObject.getBox().setTopLeft(new Position(40, 40, 0));
+    this.emitter.emit('player_move', null);
+  }
+
   public damage(value: number): void {
     let newHealth = this.getHealth().getValue() - value;
     if (newHealth <= 0) {
@@ -43,23 +53,44 @@ export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, I
       (this.getEntityManager().getEntityByName('ui') as UIEntity).showModal({
         title: 'ПОРАЖЕНИЕ',
         body: 'О НЕТ! ПОСЛЕДНЯЯ НАДЕЖДА ИМПЕРИИ ПАЛА. ВЕСЬ МИР ВЗОРВАЛСЯ И ВСЕ УМЕРЛИ',
+        onClose: () => {
+          this.emitter.emit('dead_and_modal_closed', null);
+        }
       })
     }
     this.setHealth(newHealth)
   }
-  private FIRE_ATTACK_DELAY_MS = 500;
+  private FIRE_ATTACK_DELAY_MS = 1200;
   private timeFromLastFireAttack = 0;
 
+  // private particlesCache: FireAttackEntity[] = [];
   public fireAttack(): void {
     if (this.timeFromLastFireAttack < this.FIRE_ATTACK_DELAY_MS) {
       return;
     }
     this.timeFromLastFireAttack = 0;
+    const center = this.getGameObject().getBox().getCenter();
+
+    // TODO
+    // if (this.particlesCache.length) {
+    //   for (const fireBall of this.particlesCache) {
+    //     fireBall.reset();
+    //     const topLeft = fireBall.getGameObject().getBox().getTopLeft();
+    //     topLeft.x = center.x;
+    //     topLeft.y = center.y;
+    //     this.getEntityManager().addToScene(fireBall);
+    //     this.getEntityManager().addEntity(fireBall);
+    //   }
+    //
+    //   return;
+    // }
+
     for (let i = 0.1; i < Math.PI * 2; i += 0.05) {
-      const center = this.getGameObject().getBox().getCenter();
-      const fireBall = new FireAttackEntity(center.x, center.y, i);
+
+      const fireBall = new FireAttackEntity(center.x, center.y, i + (0.5 - Math.random()) / 2);
       this.getEntityManager().addToScene(fireBall);
       this.getEntityManager().addEntity(fireBall);
+      // this.particlesCache.push(fireBall)
     }
   }
 

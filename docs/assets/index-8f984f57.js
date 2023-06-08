@@ -45,6 +45,13 @@ var __publicField = (obj, key, value) => {
     fetch(link.href, fetchOpts);
   }
 })();
+const removeOnFromArray = (array, callback) => {
+  const index = array.findIndex(callback);
+  if (index !== -1) {
+    array.splice(index, 1);
+  }
+  return array;
+};
 class EventEmitter {
   constructor() {
     __publicField(this, "subs", /* @__PURE__ */ new Map());
@@ -53,14 +60,14 @@ class EventEmitter {
     const listeners = this.subs.get(topic);
     const allTopicsListeners = this.subs.get("*");
     if (allTopicsListeners) {
-      allTopicsListeners.forEach((fn) => {
+      for (const fn of allTopicsListeners) {
         fn(value);
-      });
+      }
     }
     if (listeners) {
-      listeners.forEach((fn) => {
+      for (const fn of listeners) {
         fn(value);
-      });
+      }
     }
   }
   subscribe(topic, fn) {
@@ -69,7 +76,7 @@ class EventEmitter {
     }
     this.subs.get(topic).push(fn);
     return () => {
-      this.subs.set(topic, this.subs.get(topic).filter((f) => f !== fn));
+      removeOnFromArray(this.subs.get(topic), (f) => f !== fn);
     };
   }
   once(topic, fn) {
@@ -187,7 +194,7 @@ class EntityManager {
       this.emitter.emit(GAME_EVENTS.KILLED_EVENT, data);
     });
   }
-  removeEntity(entity) {
+  removeEntity(entity, destroy = true) {
     Object.entries(this.entitiesMap).forEach(([key, value]) => {
       if (value === entity) {
         delete this.entitiesMap[key];
@@ -195,8 +202,10 @@ class EntityManager {
       }
     });
     this.entities = this.entities.filter((e) => e !== entity);
-    entity.destroy();
-    entity.getGameObject().destroy();
+    if (destroy) {
+      entity.destroy();
+      entity.getGameObject().destroy();
+    }
   }
   removeEntityByName(name) {
     const entity = this.getEntityByName(name);
@@ -205,6 +214,27 @@ class EntityManager {
       this.scene.entities = this.scene.entities.filter((e) => e !== entity);
     }
   }
+  // public removeEntity(entity: Entity): void {
+  //   for (const key in this.entitiesMap) {
+  //     const e = this.entitiesMap[key];
+  //     if (e === entity) {
+  //       delete this.entitiesMap[key];
+  //       removeOnFromArray(this.scene.entities, e => e !== entity)
+  //       break;
+  //     }
+  //   }
+  //   removeOnFromArray(this.entities, e => e !== entity)
+  //   entity.destroy();
+  //   (entity as any as DrawableEntity).getGameObject().destroy();
+  // }
+  //
+  // public removeEntityByName(name: string): void {
+  //   const entity = this.getEntityByName(name);
+  //   if (entity) {
+  //     delete this.entitiesMap[name];
+  //     removeOnFromArray(this.scene.entities, e => e !== entity)
+  //   }
+  // }
   getEntityByName(name) {
     return this.entitiesMap[name];
   }
@@ -223,8 +253,7 @@ class EntityManager {
         return posY1 - posY2;
       });
     }
-    for (let i = 0; i < this.entities.length; ++i) {
-      const entity = this.entities[i];
+    for (const entity of this.entities) {
       entity.update(timeElapsed);
     }
   }
@@ -278,6 +307,12 @@ const cobblestone = "" + new URL("cobblestone2.png", import.meta.url).href;
 const bed = "" + new URL("bed.png", import.meta.url).href;
 const treeSprite = "" + new URL("trees.gif", import.meta.url).href;
 const flower = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAALCAYAAACprHcmAAAAAXNSR0IArs4c6QAAAS9JREFUKFNFkT1OAzEQhd8UKFeApSQ1DZEQTbr1bAoKRE6w2gpxA7Yj3AClCuQABAmJIra3o4pEGkQJlCycIRSDxvZCY3v88+a9zwQQiACIIC0g0FpPwtRthzoOoHDAnItIFHDOERFBklAsICABDBuxS4vPRY3d8RWKEcM5TxSEJHkQgI2Rt7MtPG32oQLaZth7QX/6kx4kBxwUHdr7GuXsGfZiBZ4cYV4NsDOeoBgV8F47QNuzzKsDqNds+zr4VZ/t93lIU87W/5eZWay1aO9qlDdr2HqF4vIQt9UAmSoXBVzTqHcK4XJj5L3znJANe6/oTzdonA8hqAOnL0zOYt0SX4sa2Wmk4Z0niWz/EEf6gTNL5Ap4p60FEkNEZSIJ4SJNYO/hWD5OHsMv6W73lb8l6IsZYs2glgAAAABJRU5ErkJggg==";
+const mainTheme = "" + new URL("ruapporangespace_Aim_To_Head_-_EMPeror_71070745.mp3", import.meta.url).href;
+const steps = "" + new URL("sneaker-shoe-on-concrete-floor-fast-pace-1-www.FesliyanStudios.com.mp3", import.meta.url).href;
+const evilSlime = "" + new URL("evil-slime.mp3", import.meta.url).href;
+const movingSlime = "" + new URL("moving-slime.mp3", import.meta.url).href;
+const neutralSlime = "" + new URL("neutral-slime.mp3", import.meta.url).href;
+const swordAttack = "" + new URL("Sword Whooshes Medium - QuickSounds.com.mp3", import.meta.url).href;
 class Sprite {
   constructor(sprites, config) {
     __publicField(this, "cache", /* @__PURE__ */ new Map());
@@ -367,6 +402,18 @@ class ResourceLoader {
         });
       };
       image.onerror = reject;
+    });
+  }
+  static async loadAudio(src) {
+    return new Promise((resolve, reject) => {
+      const audio = new Audio();
+      audio.src = src;
+      audio.addEventListener("canplay", () => {
+        resolve(audio);
+      });
+      audio.addEventListener("error", () => {
+        reject();
+      });
     });
   }
   static pattern(image, context) {
@@ -483,6 +530,24 @@ class ResourceLoader {
     await withLogging("treeSprite", async () => {
       this.loadedAssets.treeSprite = new Sprite(await this.loadImage(this.rawAssets.treeSprite), { cols: 3, rows: 5, size: 15 });
     });
+    await withLogging("evilSlime", async () => {
+      this.loadedAssets.sounds.evilSlime = await this.loadAudio(this.rawAssets.sounds.evilSlime);
+    });
+    await withLogging("neutralSlime", async () => {
+      this.loadedAssets.sounds.neutralSlime = await this.loadAudio(this.rawAssets.sounds.neutralSlime);
+    });
+    await withLogging("movingSlime", async () => {
+      this.loadedAssets.sounds.movingSlime = await this.loadAudio(this.rawAssets.sounds.movingSlime);
+    });
+    await withLogging("sword", async () => {
+      this.loadedAssets.sounds.sword = await this.loadAudio(this.rawAssets.sounds.sword);
+    });
+    await withLogging("steps", async () => {
+      this.loadedAssets.sounds.steps = await this.loadAudio(this.rawAssets.sounds.steps);
+    });
+    await withLogging("mainTheme", async () => {
+      this.loadedAssets.sounds.mainTheme = await this.loadAudio(this.rawAssets.sounds.mainTheme);
+    });
   }
 }
 __publicField(ResourceLoader, "emitter", new EventEmitter());
@@ -561,7 +626,15 @@ __publicField(ResourceLoader, "rawAssets", {
   treeSprite,
   flower,
   cobblestone,
-  bed
+  bed,
+  sounds: {
+    evilSlime,
+    movingSlime,
+    neutralSlime,
+    sword: swordAttack,
+    steps,
+    mainTheme
+  }
 });
 __publicField(ResourceLoader, "loadedAssets", {
   adventurer: {
@@ -588,7 +661,15 @@ __publicField(ResourceLoader, "loadedAssets", {
   treeSprite: null,
   flower: null,
   cobblestone: null,
-  bed: null
+  bed: null,
+  sounds: {
+    evilSlime: null,
+    movingSlime: null,
+    neutralSlime: null,
+    sword: null,
+    steps: null,
+    mainTheme: null
+  }
 });
 __publicField(ResourceLoader, "flippedImagesMap", /* @__PURE__ */ new Map());
 __publicField(ResourceLoader, "patternMap", /* @__PURE__ */ new Map());
@@ -787,12 +868,12 @@ class GameObject {
     if (this.box) {
       boxes.push(this.box);
     }
-    this.children.forEach((child) => {
+    for (const child of this.children) {
       const childBoxes = child.getAllTheBoxes();
-      childBoxes.forEach((box) => {
+      for (const box of childBoxes) {
         boxes.push(box);
-      });
-    });
+      }
+    }
     return boxes;
   }
   getChildren() {
@@ -803,25 +884,25 @@ class GameObject {
     if (this.isCollidable()) {
       result.push(this);
     }
-    this.children.forEach((child) => {
+    for (const child of this.children) {
       const collidable = child.getAllCollidables();
-      collidable.forEach((grandChild) => {
+      for (const grandChild of collidable) {
         result.push(grandChild);
-      });
-    });
+      }
+    }
     return result;
   }
   addChild(child) {
     this.children.push(child);
   }
   removeChild(child) {
-    this.children = this.children.filter((c) => c !== child);
+    removeOnFromArray(this.children, (c) => c !== child);
   }
   update(timeElapsed) {
     this.finiteStateMachine.update(timeElapsed);
-    this.getChildren().forEach((child) => {
+    for (const child of this.children) {
       child.update(timeElapsed);
-    });
+    }
   }
   getCurrentSprite() {
     var _a;
@@ -877,14 +958,14 @@ class GameObject {
         }
       }
     }
-    this.getChildren().forEach((child) => {
+    for (const child of this.children) {
       child.draw(context, camera);
-    });
+    }
   }
   destroy() {
-    this.getChildren().forEach((c) => {
-      c.destroy();
-    });
+    for (const child of this.children) {
+      child.destroy();
+    }
   }
 }
 class State {
@@ -911,12 +992,6 @@ class State {
     this.animator.update(timeElapsed);
   }
 }
-const mainTheme = "" + new URL("ruapporangespace_Aim_To_Head_-_EMPeror_71070745.mp3", import.meta.url).href;
-const swordAttack = "" + new URL("Sword Whooshes Medium - QuickSounds.com.mp3", import.meta.url).href;
-const steps = "" + new URL("sneaker-shoe-on-concrete-floor-fast-pace-1-www.FesliyanStudios.com.mp3", import.meta.url).href;
-const evilSlime = "" + new URL("evil-slime.mp3", import.meta.url).href;
-const neutralSlime = "" + new URL("neutral-slime.mp3", import.meta.url).href;
-const movingSlime = "" + new URL("moving-slime.mp3", import.meta.url).href;
 const _MusicPlayer = class {
   constructor(audio) {
     __publicField(this, "audio");
@@ -1147,11 +1222,11 @@ class PlayerAttackState extends State {
   update(timeElapsed) {
     super.update(timeElapsed);
     const gameMap = this.fsm.getPlayer().getEntityManager().getEntityByName("map");
-    const entities = gameMap.findEntities(this.player.getGameObject().getBox().getCenter(), this.player.getAttackRange()).filter((entity) => entity !== this.player).filter((entity) => !!entity.getHealth).filter((entity) => entity.getHealth().getValue() > 0);
+    const entities = gameMap.findEntities(this.player.getGameObject().getBox().getCenter(), this.player.getAttackRange(), (entity) => entity !== this.player && !!entity.getHealth && entity.getHealth().getValue() > 0);
     const damage = this.player.getAttackDamage() * this.player.getAttackSpeed() * (timeElapsed / 1e3);
-    entities.forEach((e) => {
+    for (const e of entities) {
       e.damage(damage, this.player);
-    });
+    }
   }
 }
 class PlayerDieState extends State {
@@ -1377,7 +1452,7 @@ class EnemyIdleState extends State {
     const distance = this.fsm.getEnemy().getGameObject().getBox().getCenter().distance(currentPlayer.getGameObject().getBox().getCenter());
     this.player.tuneSoundByDistance(distance);
     const gameMap = this.fsm.getEnemy().getEntityManager().getEntityByName("map");
-    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), 200).filter((e) => e instanceof PlayerEntity).filter((player) => player.getHealth().getValue() > 0);
+    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), 200, (e) => e instanceof PlayerEntity && e.getHealth().getValue() > 0);
     if (players.length > 0) {
       this.fsm.setState(EnemyChasingPlayerState);
     } else {
@@ -1449,7 +1524,7 @@ class EnemyChasingPlayerState extends State {
     const distance = this.fsm.getEnemy().getGameObject().getBox().getCenter().distance(currentPlayer.getGameObject().getBox().getCenter());
     this.player.tuneSoundByDistance(distance);
     const gameMap = this.fsm.getEnemy().getEntityManager().getEntityByName("map");
-    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance()).filter((e) => e instanceof PlayerEntity);
+    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance(), (e) => e instanceof PlayerEntity);
     if (players.length > 0) {
       const playerToChaise = players[0];
       const distanceToPlayer = playerToChaise.getGameObject().getBox().getCenter().distance(this.fsm.getEnemy().getGameObject().getBox().getCenter());
@@ -1496,7 +1571,11 @@ class EnemyAttackPlayerState extends State {
     const distance = this.fsm.getEnemy().getGameObject().getBox().getCenter().distance(currentPlayer.getGameObject().getBox().getCenter());
     this.player.tuneSoundByDistance(distance);
     const gameMap = this.fsm.getEnemy().getEntityManager().getEntityByName("map");
-    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance()).filter((e) => e instanceof PlayerEntity).filter((player2) => player2.getHealth().getValue() > 0);
+    const players = gameMap.findEntities(
+      this.fsm.getEnemy().getGameObject().getBox().getCenter(),
+      this.fsm.getEnemy().getReactDistance(),
+      (e) => e instanceof PlayerEntity && e.getHealth().getValue() > 0
+    );
     const player = players.length ? players[0] : null;
     if (!player) {
       this.fsm.setState(EnemyIdleState);
@@ -1610,9 +1689,9 @@ class DrawableEntity extends Entity {
   }
   findCollisions(boxToFindCollisionsWith) {
     const gameMap = this.getEntityManager().getEntityByName("map");
-    const collidableGameObjects = gameMap.getCollidableGameObjects().filter((obj) => obj !== this.getGameObject());
-    return collidableGameObjects.filter((gameObject) => {
-      return boxToFindCollisionsWith.isCollide(gameObject.getBox());
+    const collidableGameObjects = gameMap.getCollidableGameObjects();
+    return collidableGameObjects.filter((obj) => {
+      return obj !== this.getGameObject() && boxToFindCollisionsWith.isCollide(obj.getBox());
     });
   }
   distance(entity) {
@@ -1696,6 +1775,10 @@ class FireAttackEntity extends FireEntity {
   getAttackSpeed() {
     return 1;
   }
+  reset() {
+    this.travelledDistance = 0;
+    this.stoppedAtCollisionTimeMs = 0;
+  }
   update(timeElapsed) {
     super.update(timeElapsed);
     const length = this.speed * timeElapsed / 1e3;
@@ -1718,11 +1801,15 @@ class FireAttackEntity extends FireEntity {
       this.getEntityManager().removeEntity(this);
     }
     const gameMap = this.getEntityManager().getEntityByName("map");
-    const entities = gameMap.findEntities(this.getGameObject().getBox().getCenter(), this.getAttackRange()).filter((entity) => entity !== player).filter((entity) => !!entity.getHealth).filter((entity) => entity.getHealth().getValue() > 0);
+    const entities = gameMap.findEntities(
+      this.getGameObject().getBox().getCenter(),
+      this.getAttackRange(),
+      (entity) => entity !== player && !!entity.getHealth && entity.getHealth().getValue() > 0
+    );
     const damage = this.getAttackDamage() * this.getAttackSpeed() * (timeElapsed / 1e3);
-    entities.forEach((e) => {
+    for (const e of entities) {
       e.damage(damage, player);
-    });
+    }
   }
 }
 class PlayerEntity extends DrawableEntity {
@@ -1731,7 +1818,7 @@ class PlayerEntity extends DrawableEntity {
     __publicField(this, "finiteStateMachine");
     __publicField(this, "inputController");
     __publicField(this, "health", new Health(100, 150));
-    __publicField(this, "FIRE_ATTACK_DELAY_MS", 500);
+    __publicField(this, "FIRE_ATTACK_DELAY_MS", 1200);
     __publicField(this, "timeFromLastFireAttack", 0);
     __publicField(this, "attackSpeed", 15);
     __publicField(this, "attackDamage", 20);
@@ -1754,6 +1841,12 @@ class PlayerEntity extends DrawableEntity {
   setHealth(value) {
     this.health.setValue(value);
   }
+  respawn() {
+    this.finiteStateMachine.setState(PlayerIdleState);
+    this.setHealth(this.getHealth().getMaxValue());
+    this.gameObject.getBox().setTopLeft(new Position(40, 40, 0));
+    this.emitter.emit("player_move", null);
+  }
   damage(value) {
     let newHealth = this.getHealth().getValue() - value;
     if (newHealth <= 0) {
@@ -1761,19 +1854,23 @@ class PlayerEntity extends DrawableEntity {
       this.finiteStateMachine.setState(PlayerDieState);
       this.getEntityManager().getEntityByName("ui").showModal({
         title: "ПОРАЖЕНИЕ",
-        body: "О НЕТ! ПОСЛЕДНЯЯ НАДЕЖДА ИМПЕРИИ ПАЛА. ВЕСЬ МИР ВЗОРВАЛСЯ И ВСЕ УМЕРЛИ"
+        body: "О НЕТ! ПОСЛЕДНЯЯ НАДЕЖДА ИМПЕРИИ ПАЛА. ВЕСЬ МИР ВЗОРВАЛСЯ И ВСЕ УМЕРЛИ",
+        onClose: () => {
+          this.emitter.emit("dead_and_modal_closed", null);
+        }
       });
     }
     this.setHealth(newHealth);
   }
+  // private particlesCache: FireAttackEntity[] = [];
   fireAttack() {
     if (this.timeFromLastFireAttack < this.FIRE_ATTACK_DELAY_MS) {
       return;
     }
     this.timeFromLastFireAttack = 0;
+    const center = this.getGameObject().getBox().getCenter();
     for (let i = 0.1; i < Math.PI * 2; i += 0.05) {
-      const center = this.getGameObject().getBox().getCenter();
-      const fireBall = new FireAttackEntity(center.x, center.y, i);
+      const fireBall = new FireAttackEntity(center.x, center.y, i + (0.5 - Math.random()) / 2);
       this.getEntityManager().addToScene(fireBall);
       this.getEntityManager().addEntity(fireBall);
     }
@@ -1898,7 +1995,7 @@ const _GameMap = class extends Entity {
   add(entity) {
     this.scene.entities.push(entity);
   }
-  findEntities(point, maxDistance = _GameMap.MAX_DISTANCE) {
+  findEntities(point, maxDistance = _GameMap.MAX_DISTANCE, filter = () => true) {
     return this.scene.entities.filter((entity) => {
       var _a, _b, _c;
       const center = (_c = (_b = (_a = entity.getGameObject) == null ? void 0 : _a.call(entity)) == null ? void 0 : _b.getBox()) == null ? void 0 : _c.getCenter();
@@ -1906,7 +2003,7 @@ const _GameMap = class extends Entity {
         return false;
       }
       const distance = Math.sqrt((center.x - point.x) ** 2 + (center.y - point.y) ** 2);
-      return distance <= maxDistance;
+      return distance <= maxDistance && filter(entity);
     });
   }
   getCollidableGameObjects() {
@@ -2001,11 +2098,26 @@ class Camera extends Entity {
     super();
     __publicField(this, "box");
     __publicField(this, "filter", "");
+    __publicField(this, "resizeHandler", () => {
+      this.box = new Box(
+        new Position(0, 0, 0),
+        window.innerWidth,
+        window.innerHeight
+      );
+    });
     this.box = new Box(
       new Position(0, 0, 0),
       width,
       height
     );
+  }
+  initEntity() {
+    super.initEntity();
+    window.addEventListener("resize", this.resizeHandler);
+  }
+  destroy() {
+    super.destroy();
+    window.removeEventListener("resize", this.resizeHandler);
   }
   getFilter() {
     return this.filter;
@@ -2054,26 +2166,27 @@ class FollowPlayerCamera extends Camera {
   constructor(width, height, player) {
     super(width, height);
     __publicField(this, "unsubscribeFromPlayerMoveEventFn", null);
+    __publicField(this, "syncWithPlayer", () => {
+      const topLeft = this.getBox().getTopLeft();
+      const playerCenter = this.player.getGameObject().getBox().getCenter();
+      topLeft.x = playerCenter.x - window.innerWidth / 2;
+      topLeft.y = playerCenter.y - window.innerHeight / 2;
+    });
     this.player = player;
-  }
-  syncWithPlayer() {
-    this.getBox().getRect();
-    const topLeft = this.getBox().getTopLeft();
-    const playerCenter = this.player.getGameObject().getBox().getCenter();
-    topLeft.x = playerCenter.x - window.innerWidth / 2;
-    topLeft.y = playerCenter.y - window.innerHeight / 2;
   }
   initEntity() {
     super.initEntity();
     this.syncWithPlayer();
-    this.unsubscribeFromPlayerMoveEventFn = this.player.emitter.subscribe("player_move", (newPlayerBox) => {
+    this.unsubscribeFromPlayerMoveEventFn = this.player.emitter.subscribe("player_move", () => {
       this.syncWithPlayer();
       document.getElementById("cameraPos").innerHTML = `camera center x ${this.getBox().getCenter().x} y ${this.getBox().getCenter().y} <br />`;
       document.getElementById("cameraPos").innerHTML += `camera corner x ${this.getBox().getRect().left} y ${this.getBox().getRect().top} <br />`;
     });
+    window.addEventListener("resize", this.syncWithPlayer);
   }
   destroy() {
     super.destroy();
+    window.removeEventListener("resize", this.syncWithPlayer);
     if (this.unsubscribeFromPlayerMoveEventFn) {
       this.unsubscribeFromPlayerMoveEventFn();
     }
@@ -2172,7 +2285,7 @@ class BaseEnemyIdleState extends State {
     const distance = this.fsm.getEnemy().getGameObject().getBox().getCenter().distance(currentPlayer.getGameObject().getBox().getCenter());
     this.player.tuneSoundByDistance(distance);
     const gameMap = this.fsm.getEnemy().getEntityManager().getEntityByName("map");
-    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), 200).filter((e) => e instanceof PlayerEntity).filter((player) => player.getHealth().getValue() > 0);
+    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), 200, (entity) => entity instanceof PlayerEntity && entity.getHealth().getValue() > 0);
     if (players.length > 0) {
       this.fsm.setChasingPlayerState();
     } else {
@@ -2280,7 +2393,7 @@ class BaseEnemyChasingPlayerState extends State {
     const distance = this.fsm.getEnemy().getGameObject().getBox().getCenter().distance(currentPlayer.getGameObject().getBox().getCenter());
     this.player.tuneSoundByDistance(distance);
     const gameMap = this.fsm.getEnemy().getEntityManager().getEntityByName("map");
-    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance()).filter((e) => e instanceof PlayerEntity);
+    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance(), (e) => e instanceof PlayerEntity);
     if (players.length > 0) {
       const playerToChaise = players[0];
       const distanceToPlayer = playerToChaise.getGameObject().getBox().getCenter().distance(this.fsm.getEnemy().getGameObject().getBox().getCenter());
@@ -2331,7 +2444,7 @@ class BaseEnemyAttackPlayerState extends State {
     const distance = this.fsm.getEnemy().getGameObject().getBox().getCenter().distance(currentPlayer.getGameObject().getBox().getCenter());
     this.player.tuneSoundByDistance(distance);
     const gameMap = this.fsm.getEnemy().getEntityManager().getEntityByName("map");
-    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance()).filter((e) => e instanceof PlayerEntity).filter((player2) => player2.getHealth().getValue() > 0);
+    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance(), (entity) => entity instanceof PlayerEntity && entity.getHealth().getValue() > 0);
     const player = players.length ? players[0] : null;
     if (!player) {
       this.fsm.setIdleState();
@@ -2623,13 +2736,13 @@ class UIEntity extends Entity {
     titleElem.innerHTML = title;
     bodyElem.innerHTML = body;
     this.openModals.push(id);
-    this.ui.appendChild(modal);
+    this.ui.querySelector("#modals").appendChild(modal);
     const close = () => {
       const prevLength = this.openModals.length;
       this.openModals = this.openModals.filter((modalId) => modalId !== id);
       const newLength = this.openModals.length;
       if (prevLength !== newLength) {
-        this.ui.removeChild(modal);
+        document.getElementById("modals").removeChild(modal);
       }
       onClose == null ? void 0 : onClose();
     };
@@ -2653,6 +2766,7 @@ class UIEntity extends Entity {
     okButton.classList.add("modal__okButton");
     okButton.innerHTML = `<button id="start" style="width: 100%; height: 35px" class="gameButton">OK</button>`;
     div.appendChild(okButton);
+    div.style.animation = "loadevent ease-in-out .55s";
     return div;
   }
   createModalId() {
@@ -2764,10 +2878,10 @@ class SceneRenderer {
       const timeElapsed = timestamp - this.prevDOMHighResTimeStamp;
       this.prevDOMHighResTimeStamp = timestamp;
       (_a = this.context) == null ? void 0 : _a.clearRect(0, 0, this.width, this.height);
-      this.scene.entities.forEach((entity) => {
+      for (const entity of this.scene.entities) {
         const drawableEntity = entity;
         drawableEntity.getGameObject().draw(this.context, this.scene.camera);
-      });
+      }
       this.entityManager.update(timeElapsed);
       this.run();
     });
@@ -2986,8 +3100,8 @@ class TreeEntity extends DrawableEntity {
     this.gameObject = tree;
   }
 }
-const canvasWidth = window.innerWidth;
-const canvasHeight = window.innerHeight;
+let canvasWidth = window.innerWidth;
+let canvasHeight = window.innerHeight;
 const timeSpeedInput = document.getElementById("timeSpeedInput");
 let timeSpeed = 1;
 function setTimeSpeed(ts) {
@@ -3003,6 +3117,12 @@ document.getElementById("resetTimeButton").onclick = () => {
   setTimeSpeed(1);
 };
 const canvas = document.getElementById("canvas");
+window.addEventListener("reset", () => {
+  canvasWidth = window.innerWidth;
+  canvasHeight = window.innerHeight;
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
+});
 const speedInput = document.getElementById("speedInput");
 const attackSpeedInput = document.getElementById("attackSpeedInput");
 canvas.width = window.innerWidth;
@@ -3020,8 +3140,8 @@ class Game {
     __publicField(this, "interval", -1);
     __publicField(this, "flowersMap", (() => {
       const flowers = [];
-      for (let i = -canvasWidth; i < canvasWidth * 2; i++) {
-        for (let j = -canvasHeight; j < canvasHeight * 2; j++) {
+      for (let i = -1e3; i < 1e3 * 2; i++) {
+        for (let j = -1e3; j < 1e3 * 2; j++) {
           if (Math.random() < 25e-6) {
             flowers.push({
               i,
@@ -3055,7 +3175,7 @@ class Game {
     this.context.fill();
     const camera = this.scene.camera;
     this.context.filter = camera.getFilter();
-    this.flowersMap.forEach(({ i: x, j: y }) => {
+    for (const { i: x, j: y } of this.flowersMap) {
       const relativePosition = camera.getRelativePosition(new Position(x, y, 0));
       this.context.drawImage(
         ResourceLoader.getLoadedAssets().flower,
@@ -3064,7 +3184,7 @@ class Game {
         20,
         20
       );
-    });
+    }
     for (let j = 0; j < this.scene.entities.length; j++) {
       const entity = this.scene.entities[j];
       if (this.scene.camera.isVisibleDrawableEntity(entity)) {
@@ -3151,6 +3271,9 @@ class Game {
     this.entityManager.addEntity(bed2, "bed");
     this.scene.entities.push(bed2);
     const player = new PlayerEntity(40, 40);
+    player.emitter.subscribe("dead_and_modal_closed", () => {
+      player.respawn();
+    });
     speedInput.value = player.getSpeed() + "";
     attackSpeedInput.value = player.getAttackSpeed() + "";
     speedInput.oninput = (event) => {
@@ -3165,22 +3288,26 @@ class Game {
     const camera = new FollowPlayerCamera(canvasWidth, canvasHeight, player);
     this.entityManager.addEntity(camera, "camera");
     this.scene.camera = camera;
-    for (let i = 0; i < 1; i++) {
-      for (let j = -1e3; j < 1e3; j++) {
-        if (j % 50 !== 0)
+    const getRandomDiff = () => (0.5 - Math.random()) * 500;
+    for (let i = 0; i < 10; i++) {
+      for (let j = -2e3; j < 2e3; j++) {
+        if (j % 500 !== 0)
           continue;
-        const fire1 = new FireEntity(j, -1e3 - (i + 1) * 30, 150, 150);
-        this.entityManager.addEntity(fire1);
-        this.scene.entities.push(fire1);
-        const fire2 = new FireEntity(j, 1e3 + (i + 1) * 30, 150, 150);
-        this.entityManager.addEntity(fire2);
-        this.scene.entities.push(fire2);
-        const fire3 = new FireEntity(-1e3 - (i + 1) * 30, j, 150, 150);
-        this.entityManager.addEntity(fire3);
-        this.scene.entities.push(fire3);
-        const fire4 = new FireEntity(1e3 + (i + 1) * 30, j, 150, 150);
-        this.entityManager.addEntity(fire4);
-        this.scene.entities.push(fire4);
+        const MULT = 200;
+        const tree1 = new TreeEntity(j + getRandomDiff(), -1e3 - (i + 1) * MULT + getRandomDiff(), 0, true, 2);
+        this.entityManager.addEntity(tree1);
+        this.scene.entities.push(tree1);
+        const tree2 = new TreeEntity(j + getRandomDiff(), 1e3 + (i + 1) * MULT + getRandomDiff(), 0, true, 2);
+        this.entityManager.addEntity(tree2);
+        this.scene.entities.push(tree2);
+        if (j > -1e3 && j < 1e3) {
+          const tree3 = new TreeEntity(-1e3 - (i + 1) * MULT + getRandomDiff(), j + getRandomDiff(), 0, true, 2);
+          this.entityManager.addEntity(tree3);
+          this.scene.entities.push(tree3);
+          const tree4 = new TreeEntity(1e3 + (i + 1) * MULT + getRandomDiff(), j + getRandomDiff(), 0, true, 2);
+          this.entityManager.addEntity(tree4);
+          this.scene.entities.push(tree4);
+        }
       }
     }
     for (let j = 0; j < 3; j++) {

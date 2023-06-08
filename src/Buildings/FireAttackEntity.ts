@@ -31,6 +31,11 @@ export class FireAttackEntity extends FireEntity {
     return 1;
   }
 
+  public reset(): void {
+    this.travelledDistance = 0;
+    this.stoppedAtCollisionTimeMs = 0;
+  }
+
   private travelledDistance = 0;
   private stoppedAtCollisionTimeMs = 0;
   private MAX_FIRE_TIME_MS = 1000;
@@ -65,15 +70,16 @@ export class FireAttackEntity extends FireEntity {
 
     const gameMap = this.getEntityManager().getEntityByName('map') as GameMap;
     const entities = gameMap
-      .findEntities(this.getGameObject().getBox().getCenter(), this.getAttackRange())
-      .filter(entity => entity !== player)
-      .filter(entity => !!(entity as any).getHealth)
-      .filter(entity => (entity as any as IEntityWithHealth).getHealth().getValue() > 0);
+      .findEntities(this.getGameObject().getBox().getCenter(), this.getAttackRange(), entity =>
+        (entity !== player)
+        && !!(entity as any).getHealth
+        && ((entity as any as IEntityWithHealth).getHealth().getValue() > 0)
+      )
 
     const damage = this.getAttackDamage() * this.getAttackSpeed() * (timeElapsed / 1000);
 
-    entities.forEach(e => {
+    for (const e of entities) {
       (e as EnemyEntity).damage(damage, player);
-    });
+    }
   }
 }
