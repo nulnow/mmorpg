@@ -165,7 +165,7 @@ class Game {
     this.context.fillStyle = '#ffffff';
     this.context.font = "15px sans-serif";
     this.context.fillText(`FPS: ${this.fps}`, 10, 30);
-    this.context.fillText('Attack: E, Move: WASD', 10, 50);
+    this.context.fillText('Attack: E, Q. Move: WASD', 10, 50);
 
     this.context.restore();
   }
