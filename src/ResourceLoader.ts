@@ -256,6 +256,7 @@ export class ResourceLoader {
     return new Promise<HTMLAudioElement>((resolve, reject) => {
       const audio = new Audio();
       audio.src = src;
+      audio.preload = "auto";
       audio.addEventListener('canplay', () => {
         resolve(audio);
         document.body.removeChild(audio);
