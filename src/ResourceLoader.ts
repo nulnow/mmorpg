@@ -68,6 +68,7 @@ import sword from '../assets/Sword Whooshes Medium - QuickSounds.com.mp3';
 
 import { Sprite } from './Rendering/Sprite';
 import { EventEmitter } from './EventEmitter';
+import { isMobileOrTablet } from './JSHACKS';
 
 export class ResourceLoader {
   public static readonly emitter = new EventEmitter();
@@ -396,23 +397,27 @@ export class ResourceLoader {
     await withLogging('treeSprite', async () => {
       this.loadedAssets.treeSprite = new Sprite(await this.loadImage(this.rawAssets.treeSprite), { cols: 3, rows: 5, size: 15 });
     });
-    await withLogging('evilSlime', async () => {
-      this.loadedAssets.sounds.evilSlime = await this.loadAudio(this.rawAssets.sounds.evilSlime);
-    });
-    await withLogging('neutralSlime', async () => {
-      this.loadedAssets.sounds.neutralSlime = await this.loadAudio(this.rawAssets.sounds.neutralSlime);
-    });
-    await withLogging('movingSlime', async () => {
-      this.loadedAssets.sounds.movingSlime = await this.loadAudio(this.rawAssets.sounds.movingSlime);
-    });
-    await withLogging('sword', async () => {
-      this.loadedAssets.sounds.sword = await this.loadAudio(this.rawAssets.sounds.sword);
-    });
-    await withLogging('steps', async () => {
-      this.loadedAssets.sounds.steps = await this.loadAudio(this.rawAssets.sounds.steps);
-    });
-    await withLogging('mainTheme', async () => {
-      this.loadedAssets.sounds.mainTheme = await this.loadAudio(this.rawAssets.sounds.mainTheme);
-    });
+
+    // TODO: FIX MOBILE SOUNDS
+    if (!isMobileOrTablet()) {
+      await withLogging('evilSlime', async () => {
+        this.loadedAssets.sounds.evilSlime = await this.loadAudio(this.rawAssets.sounds.evilSlime);
+      });
+      await withLogging('neutralSlime', async () => {
+        this.loadedAssets.sounds.neutralSlime = await this.loadAudio(this.rawAssets.sounds.neutralSlime);
+      });
+      await withLogging('movingSlime', async () => {
+        this.loadedAssets.sounds.movingSlime = await this.loadAudio(this.rawAssets.sounds.movingSlime);
+      });
+      await withLogging('sword', async () => {
+        this.loadedAssets.sounds.sword = await this.loadAudio(this.rawAssets.sounds.sword);
+      });
+      await withLogging('steps', async () => {
+        this.loadedAssets.sounds.steps = await this.loadAudio(this.rawAssets.sounds.steps);
+      });
+      await withLogging('mainTheme', async () => {
+        this.loadedAssets.sounds.mainTheme = await this.loadAudio(this.rawAssets.sounds.mainTheme);
+      });
+    }
   }
 }
