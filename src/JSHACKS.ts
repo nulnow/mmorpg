@@ -20,21 +20,34 @@ isMobileOrTablet.result = null;
 
 // TODO
 export const addScreenOrientationChangeEventHandler = (fn: () => void) => {
-  if (window.screen.orientation) {
-    window.screen.orientation.addEventListener('change', fn)
-    return;
-  }
+  try {
+    if (window.screen.orientation) {
+      window.screen.orientation.addEventListener('change', fn)
+      return;
+    }
 
-  if (window.onorientationchange) {
-    window.addEventListener('orientationchange', fn);
-    return;
+    if (window.onorientationchange) {
+      window.addEventListener('orientationchange', fn);
+      return;
+    }
+  } catch (error) {
+    // TODO logging errors
   }
 };
 
 // TODO
 export const removeScreenOrientationChangeEventHandler = (fn: () => void) => {
-  if (window.onorientationchange) {
-    window.removeEventListener('orientationchange', fn);
-    return;
+  try {
+    if (window.screen.orientation) {
+      window.screen.orientation.removeEventListener('change', fn)
+      return;
+    }
+
+    if (window.onorientationchange) {
+      window.removeEventListener('orientationchange', fn);
+      return;
+    }
+  } catch (error) {
+    // TODO logging errors
   }
 };

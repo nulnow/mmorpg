@@ -66,19 +66,29 @@ const isMobileOrTablet = () => {
 };
 isMobileOrTablet.result = null;
 const addScreenOrientationChangeEventHandler = (fn) => {
-  if (window.screen.orientation) {
-    window.screen.orientation.addEventListener("change", fn);
-    return;
-  }
-  if (window.onorientationchange) {
-    window.addEventListener("orientationchange", fn);
-    return;
+  try {
+    if (window.screen.orientation) {
+      window.screen.orientation.addEventListener("change", fn);
+      return;
+    }
+    if (window.onorientationchange) {
+      window.addEventListener("orientationchange", fn);
+      return;
+    }
+  } catch (error) {
   }
 };
 const removeScreenOrientationChangeEventHandler = (fn) => {
-  if (window.onorientationchange) {
-    window.removeEventListener("orientationchange", fn);
-    return;
+  try {
+    if (window.screen.orientation) {
+      window.screen.orientation.removeEventListener("change", fn);
+      return;
+    }
+    if (window.onorientationchange) {
+      window.removeEventListener("orientationchange", fn);
+      return;
+    }
+  } catch (error) {
   }
 };
 class EventEmitter {
