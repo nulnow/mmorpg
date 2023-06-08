@@ -252,7 +252,7 @@ class Game {
     this.entityManager.addEntity(bed, 'bed');
     this.scene.entities.push(bed);
 
-    const player = new PlayerEntity(-400, -400);
+    const player = new PlayerEntity(40, 40);
     speedInput.value = player.getSpeed() + '';
     attackSpeedInput.value = player.getAttackSpeed() + '';
 

@@ -3150,7 +3150,7 @@ class Game {
     const bed2 = new BedEntity();
     this.entityManager.addEntity(bed2, "bed");
     this.scene.entities.push(bed2);
-    const player = new PlayerEntity(-400, -400);
+    const player = new PlayerEntity(40, 40);
     speedInput.value = player.getSpeed() + "";
     attackSpeedInput.value = player.getAttackSpeed() + "";
     speedInput.oninput = (event) => {
