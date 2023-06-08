@@ -6,7 +6,7 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 <!--    <link rel="stylesheet" href="./src/css/button.css">-->
-    <title>Dead Empire Game 1.0.2</title>
+    <title>Dead Empire Game 1.0.3</title>
     <style>
         * {
             box-sizing: border-box;
@@ -43,12 +43,12 @@
 
         #ui .modal {
             position: fixed;
-            top: 100px;
-            left: 100px;
+            top: min(100px, 5vh);
+            left: min(100px, 5vw);
 
-            max-width: 350px;
+            max-width: min(500px, 90vw);
             /*min-height: 250px;*/
-            max-height: 50vh;
+            max-height: 90vh;
             overflow: scroll;
             padding: 15px;
             border-radius: 8px;
@@ -165,7 +165,7 @@
             }
         }
     </style>
-  <script type="module" crossorigin src="./assets/index-edf37a6f.js"></script>
+  <script type="module" crossorigin src="./assets/index-31a82a60.js"></script>
 </head>
 <body>
     <div
@@ -288,7 +288,7 @@
 
             <button class="mobile-button false"></button>
             <button class="mobile-button" data-key="KeyE" style="background-color: rgba(255,0,0,0.6)"></button>
-            <button class="mobile-button false"></button>
+            <button class="mobile-button" data-key="KeyQ" style="background-color: rgba(255,115,0,0.76)"></button>
 
 
 
@@ -312,7 +312,7 @@
         </div>
     </div>
     <canvas id="canvas"></canvas>
-
+    
 <script>
     console.log('version mobile support fix');
 </script>

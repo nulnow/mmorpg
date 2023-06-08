@@ -2,6 +2,9 @@ export type SpriteConfig = {
   rows: number;
   cols: number;
   size: number;
+
+  from?: number;
+  to?: number;
 }
 
 export class Sprite {

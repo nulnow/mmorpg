@@ -48,6 +48,9 @@ export class EntityManager {
         this.scene.entities = this.scene.entities.filter(e => e !== entity);
       }
     });
+    this.entities = this.entities.filter(e => e !== entity);
+    entity.destroy();
+    (entity as any as DrawableEntity).getGameObject().destroy();
   }
 
   public removeEntityByName(name: string): void {
@@ -67,7 +70,7 @@ export class EntityManager {
   }
 
   private lastSortTime = 0;
-  private sortIntervalSEC = 10;
+  private sortIntervalSEC = 0.5;
 
   private timePassed = 0;
 
@@ -81,17 +84,14 @@ export class EntityManager {
     //   this.scene.camera.setFilter(`grayscale(${(100 / (this.timePassed / 1000)) + 10}%)`);
     // }
 
-    if (this.lastSortTime >= (1000 / this.sortIntervalSEC)) {
+
+    if ((this.lastSortTime) >= (this.sortIntervalSEC * 1000)) {
       this.lastSortTime = 0;
       this.scene.entities.sort((a, b) => {
-        const pos1 = (a as any as IDrawableEntity)?.getGameObject?.()?.getBox?.()?.getTopLeft?.();
-        const pos2 = (b as any as IDrawableEntity)?.getGameObject?.()?.getBox?.()?.getTopLeft?.();
+        const posY1 = (a as any as IDrawableEntity)?.getGameObject?.()?.getBox?.()?.getBottom?.() ?? -Infinity;
+        const posY2 = (b as any as IDrawableEntity)?.getGameObject?.()?.getBox?.()?.getBottom?.() ?? -Infinity;
 
-        if (!pos1 || !pos2) {
-          return 0;
-        }
-
-        return pos1.y - pos2.y;
+        return posY1 - posY2;
       });
     }
 

@@ -28,7 +28,7 @@ export class BaseEnemyGameObject extends GameObject {
     this.addChild(this.healthBar);
   }
 
-  public isRightToLeft(): boolean {
+  public getIsRightToLeft(): boolean {
     return false;
   }
 }

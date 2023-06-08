@@ -50,8 +50,12 @@ export class GameObject {
     this.collidable = value;
   }
 
-  public isRightToLeft(): boolean {
-    return true;
+  private rightToLeft = true;
+  public getIsRightToLeft(): boolean {
+    return this.rightToLeft;
+  }
+  public setIsRightToLeft(val: boolean): void {
+    this.rightToLeft = val;
   }
 
   public getBox(): Box {
@@ -190,6 +194,12 @@ export class GameObject {
 
     this.getChildren().forEach((child) => {
       child.draw(context, camera);
+    });
+  }
+
+  public destroy() {
+    this.getChildren().forEach(c => {
+      c.destroy();
     });
   }
 }

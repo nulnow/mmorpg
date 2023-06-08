@@ -33,6 +33,9 @@ export class PlayerIdleState extends State {
     if (this.fsm.getPlayer().getInputController()?.isAttack1Pressed()) {
       return this.fsm.setState(PlayerAttackState as any);
     }
+    if (this.fsm.getPlayer().getInputController()?.isAttack2Pressed()) {
+      return this.fsm.getPlayer().fireAttack();
+    }
     if (this.fsm.getPlayer().getInputController()?.isOneOfMovementKeysIsPressed()) {
       return this.fsm.setState(PlayerRunState as any);
     }

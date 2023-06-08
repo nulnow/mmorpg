@@ -7,6 +7,7 @@ import { Health, IEntityWithHealth } from '../IEntityWithHealth';
 import { IEntityAbleToAttack } from '../IEntityAbleToAttack';
 import { DrawableEntity } from '../Rendering/DrawableEntity';
 import { UIEntity } from '../UI/UIEntity';
+import { FireAttackEntity } from '../Buildings/FireAttackEntity';
 
 export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, IEntityAbleToAttack {
   private readonly finiteStateMachine: PlayerFiniteStateMachine;
@@ -46,6 +47,21 @@ export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, I
     }
     this.setHealth(newHealth)
   }
+  private FIRE_ATTACK_DELAY_MS = 500;
+  private timeFromLastFireAttack = 0;
+
+  public fireAttack(): void {
+    if (this.timeFromLastFireAttack < this.FIRE_ATTACK_DELAY_MS) {
+      return;
+    }
+    this.timeFromLastFireAttack = 0;
+    for (let i = 0.1; i < Math.PI * 2; i += 0.05) {
+      const center = this.getGameObject().getBox().getCenter();
+      const fireBall = new FireAttackEntity(center.x, center.y, i);
+      this.getEntityManager().addToScene(fireBall);
+      this.getEntityManager().addEntity(fireBall);
+    }
+  }
 
   private attackSpeed = 15;
   public getAttackSpeed(): number {
@@ -71,7 +87,7 @@ export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, I
     this.attackRange = value;
   }
 
-  private speed = 180;
+  private speed = 350;
   public getSpeed(): number {
     return this.speed;
   }
@@ -103,6 +119,7 @@ export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, I
 
   public update(timeElapsed: number): void {
     super.update(timeElapsed);
+    this.timeFromLastFireAttack += timeElapsed;
     this.finiteStateMachine.update(timeElapsed);
   }
 }

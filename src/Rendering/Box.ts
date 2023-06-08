@@ -21,6 +21,10 @@ export class Box {
     return this.topLeft;
   }
 
+  public getBottom(): number {
+    return this.topLeft.y + this.height;
+  }
+
   public setTopLeft(position: Position): void {
     this.topLeft = position;
   }

@@ -22,6 +22,7 @@ export class FireEntity extends DrawableEntity {
       width,
       height,
     ));
+    this.gameObject.setIsCollidable(false);
   }
 
   public getGameObject(): GameObject {

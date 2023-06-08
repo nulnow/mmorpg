@@ -42,7 +42,7 @@ export class Animator {
       this.timeSpent = 0;
     }
     // TODO Refactor
-    if (!this.gameObject || this.gameObject.isRightToLeft()) {
+    if (!this.gameObject || this.gameObject.getIsRightToLeft()) {
       if (this.sprites instanceof Sprite) {
         if (this.gameObject && this.gameObject.getRotation().isLeft()) {
           const box = this.gameObject.getBox();

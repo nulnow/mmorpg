@@ -163,7 +163,7 @@ class EntityManager {
     __publicField(this, "entitiesMap", {});
     __publicField(this, "entities", []);
     __publicField(this, "lastSortTime", 0);
-    __publicField(this, "sortIntervalSEC", 10);
+    __publicField(this, "sortIntervalSEC", 0.5);
     __publicField(this, "timePassed", 0);
     this.scene = scene;
   }
@@ -194,6 +194,9 @@ class EntityManager {
         this.scene.entities = this.scene.entities.filter((e) => e !== entity);
       }
     });
+    this.entities = this.entities.filter((e) => e !== entity);
+    entity.destroy();
+    entity.getGameObject().destroy();
   }
   removeEntityByName(name) {
     const entity = this.getEntityByName(name);
@@ -211,16 +214,13 @@ class EntityManager {
   update(timeElapsed) {
     this.lastSortTime += timeElapsed;
     this.timePassed += timeElapsed;
-    if (this.lastSortTime >= 1e3 / this.sortIntervalSEC) {
+    if (this.lastSortTime >= this.sortIntervalSEC * 1e3) {
       this.lastSortTime = 0;
       this.scene.entities.sort((a, b) => {
         var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
-        const pos1 = (_e = (_d = (_c = (_b = (_a = a == null ? void 0 : a.getGameObject) == null ? void 0 : _a.call(a)) == null ? void 0 : _b.getBox) == null ? void 0 : _c.call(_b)) == null ? void 0 : _d.getTopLeft) == null ? void 0 : _e.call(_d);
-        const pos2 = (_j = (_i = (_h = (_g = (_f = b == null ? void 0 : b.getGameObject) == null ? void 0 : _f.call(b)) == null ? void 0 : _g.getBox) == null ? void 0 : _h.call(_g)) == null ? void 0 : _i.getTopLeft) == null ? void 0 : _j.call(_i);
-        if (!pos1 || !pos2) {
-          return 0;
-        }
-        return pos1.y - pos2.y;
+        const posY1 = ((_e = (_d = (_c = (_b = (_a = a == null ? void 0 : a.getGameObject) == null ? void 0 : _a.call(a)) == null ? void 0 : _b.getBox) == null ? void 0 : _c.call(_b)) == null ? void 0 : _d.getBottom) == null ? void 0 : _e.call(_d)) ?? -Infinity;
+        const posY2 = ((_j = (_i = (_h = (_g = (_f = b == null ? void 0 : b.getGameObject) == null ? void 0 : _f.call(b)) == null ? void 0 : _g.getBox) == null ? void 0 : _h.call(_g)) == null ? void 0 : _i.getBottom) == null ? void 0 : _j.call(_i)) ?? -Infinity;
+        return posY1 - posY2;
       });
     }
     for (let i = 0; i < this.entities.length; ++i) {
@@ -276,6 +276,7 @@ const fireSprite = "" + new URL("Fire_Spreadsheet.png", import.meta.url).href;
 const deathSprite = "data:image/png;base64,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";
 const cobblestone = "" + new URL("cobblestone2.png", import.meta.url).href;
 const bed = "" + new URL("bed.png", import.meta.url).href;
+const treeSprite = "" + new URL("trees.gif", import.meta.url).href;
 const flower = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAALCAYAAACprHcmAAAAAXNSR0IArs4c6QAAAS9JREFUKFNFkT1OAzEQhd8UKFeApSQ1DZEQTbr1bAoKRE6w2gpxA7Yj3AClCuQABAmJIra3o4pEGkQJlCycIRSDxvZCY3v88+a9zwQQiACIIC0g0FpPwtRthzoOoHDAnItIFHDOERFBklAsICABDBuxS4vPRY3d8RWKEcM5TxSEJHkQgI2Rt7MtPG32oQLaZth7QX/6kx4kBxwUHdr7GuXsGfZiBZ4cYV4NsDOeoBgV8F47QNuzzKsDqNds+zr4VZ/t93lIU87W/5eZWay1aO9qlDdr2HqF4vIQt9UAmSoXBVzTqHcK4XJj5L3znJANe6/oTzdonA8hqAOnL0zOYt0SX4sa2Wmk4Z0niWz/EEf6gTNL5Ap4p60FEkNEZSIJ4SJNYO/hWD5OHsMv6W73lb8l6IsZYs2glgAAAABJRU5ErkJggg==";
 class Sprite {
   constructor(sprites, config) {
@@ -479,6 +480,9 @@ class ResourceLoader {
     await withLogging("guard.death", async () => {
       this.loadedAssets.guard.death = new Sprite(await this.loadImage(this.rawAssets.guard.death), { cols: 9, rows: 1, size: 9 });
     });
+    await withLogging("treeSprite", async () => {
+      this.loadedAssets.treeSprite = new Sprite(await this.loadImage(this.rawAssets.treeSprite), { cols: 3, rows: 5, size: 15 });
+    });
   }
 }
 __publicField(ResourceLoader, "emitter", new EventEmitter());
@@ -554,6 +558,7 @@ __publicField(ResourceLoader, "rawAssets", {
   },
   fireSprite,
   deathSprite,
+  treeSprite,
   flower,
   cobblestone,
   bed
@@ -580,6 +585,7 @@ __publicField(ResourceLoader, "loadedAssets", {
   },
   fireSprite: null,
   deathSprite: null,
+  treeSprite: null,
   flower: null,
   cobblestone: null,
   bed: null
@@ -624,7 +630,7 @@ class Animator {
       this.currentAnimationId %= length;
       this.timeSpent = 0;
     }
-    if (!this.gameObject || this.gameObject.isRightToLeft()) {
+    if (!this.gameObject || this.gameObject.getIsRightToLeft()) {
       if (this.sprites instanceof Sprite) {
         if (this.gameObject && this.gameObject.getRotation().isLeft()) {
           const box = this.gameObject.getBox();
@@ -726,6 +732,7 @@ class GameObject {
     __publicField(this, "color", null);
     __publicField(this, "patternImage", null);
     __publicField(this, "image", null);
+    __publicField(this, "rightToLeft", true);
     this.finiteStateMachine = finiteStateMachine;
   }
   getImage() {
@@ -752,8 +759,11 @@ class GameObject {
   setIsCollidable(value) {
     this.collidable = value;
   }
-  isRightToLeft() {
-    return true;
+  getIsRightToLeft() {
+    return this.rightToLeft;
+  }
+  setIsRightToLeft(val) {
+    this.rightToLeft = val;
   }
   getBox() {
     return this.box;
@@ -869,6 +879,11 @@ class GameObject {
     }
     this.getChildren().forEach((child) => {
       child.draw(context, camera);
+    });
+  }
+  destroy() {
+    this.getChildren().forEach((c) => {
+      c.destroy();
     });
   }
 }
@@ -1001,12 +1016,12 @@ const _MusicPlayer = class {
     this.audio.volume = volume;
   }
   tuneSoundByDistance(distance) {
-    const MAX_DISTANCE = 400;
-    if (distance > MAX_DISTANCE) {
+    const MAX_DISTANCE2 = 400;
+    if (distance > MAX_DISTANCE2) {
       this.setVolume(0);
     } else {
       const MAX_VOLUME = 0.3;
-      const volume = MAX_VOLUME - distance / MAX_DISTANCE * MAX_VOLUME;
+      const volume = MAX_VOLUME - distance / MAX_DISTANCE2 * MAX_VOLUME;
       this.setVolume(volume);
     }
   }
@@ -1032,12 +1047,15 @@ class PlayerIdleState extends State {
     super.onExit();
   }
   update(timeElapsed) {
-    var _a, _b;
+    var _a, _b, _c;
     super.update(timeElapsed);
     if ((_a = this.fsm.getPlayer().getInputController()) == null ? void 0 : _a.isAttack1Pressed()) {
       return this.fsm.setState(PlayerAttackState);
     }
-    if ((_b = this.fsm.getPlayer().getInputController()) == null ? void 0 : _b.isOneOfMovementKeysIsPressed()) {
+    if ((_b = this.fsm.getPlayer().getInputController()) == null ? void 0 : _b.isAttack2Pressed()) {
+      return this.fsm.getPlayer().fireAttack();
+    }
+    if ((_c = this.fsm.getPlayer().getInputController()) == null ? void 0 : _c.isOneOfMovementKeysIsPressed()) {
       return this.fsm.setState(PlayerRunState);
     }
   }
@@ -1248,6 +1266,9 @@ class Box {
   }
   getTopLeft() {
     return this.topLeft;
+  }
+  getBottom() {
+    return this.topLeft.y + this.height;
   }
   setTopLeft(position) {
     this.topLeft = position;
@@ -1600,16 +1621,122 @@ class DrawableEntity extends Entity {
     );
   }
 }
+class FireBurningState extends State {
+  constructor(fsm) {
+    super(fsm);
+    __publicField(this, "sprites", ResourceLoader.getLoadedAssets().fireSprite);
+    __publicField(this, "speed", 6);
+    __publicField(this, "fsm");
+    this.fsm = fsm;
+    this.gameObject = this.fsm.getFire().getGameObject();
+  }
+  onEnter() {
+    this.speed += 3 * Math.random();
+    super.onEnter();
+  }
+  update(timeElapsed) {
+    super.update(timeElapsed);
+  }
+}
+class FireStateMachine extends FiniteStateMachine {
+  constructor(fire) {
+    super();
+    __publicField(this, "fire");
+    this.fire = fire;
+    this.addState(FireBurningState);
+    this.setState(FireBurningState);
+  }
+  getFire() {
+    return this.fire;
+  }
+}
+class FireEntity extends DrawableEntity {
+  constructor(x, y, width, height) {
+    super();
+    __publicField(this, "gameObject");
+    __publicField(this, "finiteStateMachine");
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.finiteStateMachine = new FireStateMachine(this);
+    this.gameObject = new GameObject(this.finiteStateMachine);
+    this.gameObject.setBox(new Box(
+      new Position(x, y, 0),
+      width,
+      height
+    ));
+    this.gameObject.setIsCollidable(false);
+  }
+  getGameObject() {
+    return this.gameObject;
+  }
+  update(timeElapsed) {
+    super.update(timeElapsed);
+    this.finiteStateMachine.update(timeElapsed);
+  }
+}
+const MAX_DISTANCE = 300;
+class FireAttackEntity extends FireEntity {
+  constructor(x, y, rotation = 0, speed = 500, width = 30, height = 30) {
+    super(x, y, width, height);
+    __publicField(this, "travelledDistance", 0);
+    __publicField(this, "stoppedAtCollisionTimeMs", 0);
+    __publicField(this, "MAX_FIRE_TIME_MS", 1e3);
+    this.rotation = rotation;
+    this.speed = speed;
+    this.gameObject.setIsCollidable(false);
+  }
+  getAttackRange() {
+    return 30;
+  }
+  getAttackDamage() {
+    return 50;
+  }
+  getAttackSpeed() {
+    return 1;
+  }
+  update(timeElapsed) {
+    super.update(timeElapsed);
+    const length = this.speed * timeElapsed / 1e3;
+    const x = length * Math.cos(this.rotation);
+    const y = length * Math.sin(this.rotation);
+    const nextBox = this.getGameObject().getBox().copy();
+    nextBox.move(x, y);
+    const collisions = this.findCollisions(nextBox);
+    if (!collisions.length) {
+      this.getGameObject().getBox().move(x, y);
+      this.travelledDistance += length;
+    } else {
+      this.stoppedAtCollisionTimeMs += timeElapsed;
+      if (this.stoppedAtCollisionTimeMs >= this.MAX_FIRE_TIME_MS) {
+        this.getEntityManager().removeEntity(this);
+      }
+    }
+    const player = this.getEntityManager().getEntityByName("player");
+    if (this.travelledDistance >= MAX_DISTANCE) {
+      this.getEntityManager().removeEntity(this);
+    }
+    const gameMap = this.getEntityManager().getEntityByName("map");
+    const entities = gameMap.findEntities(this.getGameObject().getBox().getCenter(), this.getAttackRange()).filter((entity) => entity !== player).filter((entity) => !!entity.getHealth).filter((entity) => entity.getHealth().getValue() > 0);
+    const damage = this.getAttackDamage() * this.getAttackSpeed() * (timeElapsed / 1e3);
+    entities.forEach((e) => {
+      e.damage(damage, player);
+    });
+  }
+}
 class PlayerEntity extends DrawableEntity {
   constructor(x, y) {
     super();
     __publicField(this, "finiteStateMachine");
     __publicField(this, "inputController");
     __publicField(this, "health", new Health(100, 150));
+    __publicField(this, "FIRE_ATTACK_DELAY_MS", 500);
+    __publicField(this, "timeFromLastFireAttack", 0);
     __publicField(this, "attackSpeed", 15);
     __publicField(this, "attackDamage", 20);
     __publicField(this, "attackRange", 65);
-    __publicField(this, "speed", 180);
+    __publicField(this, "speed", 350);
     __publicField(this, "COLOR", "rgba(255,0,98,0)");
     __publicField(this, "unsubscribeFromSpeedChange");
     this.finiteStateMachine = new PlayerFiniteStateMachine(this);
@@ -1638,6 +1765,18 @@ class PlayerEntity extends DrawableEntity {
       });
     }
     this.setHealth(newHealth);
+  }
+  fireAttack() {
+    if (this.timeFromLastFireAttack < this.FIRE_ATTACK_DELAY_MS) {
+      return;
+    }
+    this.timeFromLastFireAttack = 0;
+    for (let i = 0.1; i < Math.PI * 2; i += 0.05) {
+      const center = this.getGameObject().getBox().getCenter();
+      const fireBall = new FireAttackEntity(center.x, center.y, i);
+      this.getEntityManager().addToScene(fireBall);
+      this.getEntityManager().addEntity(fireBall);
+    }
   }
   getAttackSpeed() {
     return this.attackSpeed;
@@ -1679,6 +1818,7 @@ class PlayerEntity extends DrawableEntity {
   }
   update(timeElapsed) {
     super.update(timeElapsed);
+    this.timeFromLastFireAttack += timeElapsed;
     this.finiteStateMachine.update(timeElapsed);
   }
 }
@@ -1715,6 +1855,9 @@ class InputController extends Component {
   }
   isAttack1Pressed() {
     return !!this.pressedKeys.get("KeyE");
+  }
+  isAttack2Pressed() {
+    return !!this.pressedKeys.get("KeyQ");
   }
   init() {
     super.init();
@@ -2000,7 +2143,7 @@ class BaseEnemyGameObject extends GameObject {
     this.healthBar = new HealthBar(this.enemy);
     this.addChild(this.healthBar);
   }
-  isRightToLeft() {
+  getIsRightToLeft() {
     return false;
   }
 }
@@ -2358,7 +2501,7 @@ class SlimeStateMachine extends BaseEnemyStateMachine {
   }
 }
 class SlimeGameObject extends BaseEnemyGameObject {
-  isRightToLeft() {
+  getIsRightToLeft() {
     return false;
   }
 }
@@ -2374,60 +2517,6 @@ class SlimeEntity extends BaseEnemyEntity {
   }
   setHealth(value) {
     this.health.setValue(value);
-  }
-}
-class FireBurningState extends State {
-  constructor(fsm) {
-    super(fsm);
-    __publicField(this, "sprites", ResourceLoader.getLoadedAssets().fireSprite);
-    __publicField(this, "speed", 6);
-    __publicField(this, "fsm");
-    this.fsm = fsm;
-    this.gameObject = this.fsm.getFire().getGameObject();
-  }
-  onEnter() {
-    this.speed += 3 * Math.random();
-    super.onEnter();
-  }
-  update(timeElapsed) {
-    super.update(timeElapsed);
-  }
-}
-class FireStateMachine extends FiniteStateMachine {
-  constructor(fire) {
-    super();
-    __publicField(this, "fire");
-    this.fire = fire;
-    this.addState(FireBurningState);
-    this.setState(FireBurningState);
-  }
-  getFire() {
-    return this.fire;
-  }
-}
-class FireEntity extends DrawableEntity {
-  constructor(x, y, width, height) {
-    super();
-    __publicField(this, "gameObject");
-    __publicField(this, "finiteStateMachine");
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
-    this.finiteStateMachine = new FireStateMachine(this);
-    this.gameObject = new GameObject(this.finiteStateMachine);
-    this.gameObject.setBox(new Box(
-      new Position(x, y, 0),
-      width,
-      height
-    ));
-  }
-  getGameObject() {
-    return this.gameObject;
-  }
-  update(timeElapsed) {
-    super.update(timeElapsed);
-    this.finiteStateMachine.update(timeElapsed);
   }
 }
 const TITLE = `Задача. Очистить дом`;
@@ -2867,6 +2956,36 @@ class DeathQuestEntity extends Entity {
     }
   }
 }
+const BASE_WIDTH = 112;
+const BASE_HEIGHT = 160;
+class TreeEntity extends DrawableEntity {
+  constructor(x, y, index = 0, isRightToLeft = true, scale = 1) {
+    super();
+    this.x = x;
+    this.y = y;
+    this.index = index;
+    this.isRightToLeft = isRightToLeft;
+    this.scale = scale;
+    const tree = new GameObject();
+    tree.setBox(new Box(
+      new Position(this.x, this.y, 0),
+      BASE_WIDTH * this.scale,
+      BASE_HEIGHT * this.scale
+    ));
+    tree.setImage(ResourceLoader.getLoadedAssets().treeSprite.getSpriteByIndex(this.index));
+    tree.setIsCollidable(false);
+    tree.setIsRightToLeft(this.isRightToLeft);
+    const collidableBox = new GameObject();
+    collidableBox.setIsCollidable(true);
+    collidableBox.setBox(new Box(
+      new Position(this.x + BASE_WIDTH * this.scale / 4, this.y + BASE_HEIGHT * this.scale * (3 / 4), 0),
+      BASE_WIDTH * this.scale / 2,
+      BASE_HEIGHT * this.scale / 4 / 5
+    ));
+    tree.addChild(collidableBox);
+    this.gameObject = tree;
+  }
+}
 const canvasWidth = window.innerWidth;
 const canvasHeight = window.innerHeight;
 const timeSpeedInput = document.getElementById("timeSpeedInput");
@@ -2946,14 +3065,14 @@ class Game {
         20
       );
     });
-    const visibleEntity = this.scene.entities.filter((entity) => {
-      return camera.isVisibleDrawableEntity(entity);
-    });
-    visibleEntity.forEach((entity) => {
-      if (entity.getGameObject) {
-        entity.getGameObject().draw(this.context, camera);
+    for (let j = 0; j < this.scene.entities.length; j++) {
+      const entity = this.scene.entities[j];
+      if (this.scene.camera.isVisibleDrawableEntity(entity)) {
+        if (entity.getGameObject) {
+          entity.getGameObject().draw(this.context, camera);
+        }
       }
-    });
+    }
     if (this.i % 20 === 0) {
       this.fps = Math.round(1e3 / timeElapsedReal);
     }
@@ -3004,13 +3123,34 @@ class Game {
     this.entityManager.addEntity(networkEntity, "network");
     const map = new GameMap(this.scene);
     this.entityManager.addEntity(map, "map");
+    {
+      const TREE_TYPE = 7;
+      let tree = new TreeEntity(-40, -300, TREE_TYPE, Math.random() > 0.5, 2);
+      this.entityManager.addEntity(tree, "tree");
+      this.scene.entities.push(tree);
+      tree = new TreeEntity(-210, 80, TREE_TYPE, Math.random() > 0.5, 2);
+      this.entityManager.addEntity(tree, "tree");
+      this.scene.entities.push(tree);
+      tree = new TreeEntity(-200, -180, TREE_TYPE, Math.random() > 0.5, 2);
+      this.entityManager.addEntity(tree, "tree");
+      this.scene.entities.push(tree);
+      tree = new TreeEntity(-200, -180, TREE_TYPE, Math.random() > 0.5, 2);
+      this.entityManager.addEntity(tree, "tree");
+      this.scene.entities.push(tree);
+      tree = new TreeEntity(300, -380, TREE_TYPE, Math.random() > 0.5, 2);
+      this.entityManager.addEntity(tree, "tree");
+      this.scene.entities.push(tree);
+      tree = new TreeEntity(600, -340, TREE_TYPE, Math.random() > 0.5, 2);
+      this.entityManager.addEntity(tree, "tree");
+      this.scene.entities.push(tree);
+    }
     const mapWall = new MapWall(800, 600);
     this.entityManager.addEntity(mapWall, "mapWall");
     this.scene.entities.push(mapWall);
     const bed2 = new BedEntity();
     this.entityManager.addEntity(bed2, "bed");
     this.scene.entities.push(bed2);
-    const player = new PlayerEntity(40, 40);
+    const player = new PlayerEntity(-400, -400);
     speedInput.value = player.getSpeed() + "";
     attackSpeedInput.value = player.getAttackSpeed() + "";
     speedInput.oninput = (event) => {
@@ -3025,25 +3165,23 @@ class Game {
     const camera = new FollowPlayerCamera(canvasWidth, canvasHeight, player);
     this.entityManager.addEntity(camera, "camera");
     this.scene.camera = camera;
-    for (let j = -1e3; j < 1e3; j++) {
-      if (j % 50 !== 0)
-        continue;
-      const fire1 = new FireEntity(j, -1e3, 150, 150);
-      fire1.getGameObject().setIsCollidable(true);
-      this.entityManager.addEntity(fire1);
-      this.scene.entities.push(fire1);
-      const fire2 = new FireEntity(j, 1e3, 150, 150);
-      fire2.getGameObject().setIsCollidable(true);
-      this.entityManager.addEntity(fire2);
-      this.scene.entities.push(fire2);
-      const fire3 = new FireEntity(-1e3, j, 150, 150);
-      fire3.getGameObject().setIsCollidable(true);
-      this.entityManager.addEntity(fire3);
-      this.scene.entities.push(fire3);
-      const fire4 = new FireEntity(1e3, j, 150, 150);
-      fire4.getGameObject().setIsCollidable(true);
-      this.entityManager.addEntity(fire4);
-      this.scene.entities.push(fire4);
+    for (let i = 0; i < 1; i++) {
+      for (let j = -1e3; j < 1e3; j++) {
+        if (j % 50 !== 0)
+          continue;
+        const fire1 = new FireEntity(j, -1e3 - (i + 1) * 30, 150, 150);
+        this.entityManager.addEntity(fire1);
+        this.scene.entities.push(fire1);
+        const fire2 = new FireEntity(j, 1e3 + (i + 1) * 30, 150, 150);
+        this.entityManager.addEntity(fire2);
+        this.scene.entities.push(fire2);
+        const fire3 = new FireEntity(-1e3 - (i + 1) * 30, j, 150, 150);
+        this.entityManager.addEntity(fire3);
+        this.scene.entities.push(fire3);
+        const fire4 = new FireEntity(1e3 + (i + 1) * 30, j, 150, 150);
+        this.entityManager.addEntity(fire4);
+        this.scene.entities.push(fire4);
+      }
     }
     for (let j = 0; j < 3; j++) {
       const slime = new SlimeEntity(200 * Math.random() + 200, 200 * Math.random() + 200);

@@ -9,6 +9,7 @@ export class InputController extends Component {
   public isBottomPressed(): boolean { return !!this.pressedKeys.get('KeyS') || !!this.pressedKeys.get('ArrowDown'); }
   public isLeftPressed(): boolean { return !!this.pressedKeys.get('KeyA') || !!this.pressedKeys.get('ArrowLeft'); }
   public isAttack1Pressed(): boolean { return !!this.pressedKeys.get('KeyE'); }
+  public isAttack2Pressed(): boolean { return !!this.pressedKeys.get('KeyQ'); }
 
   private keyDownHandler = (event: KeyboardEvent): void => { this.pressedKeys.set(event.code, true); };
   private keyUpHandler = (event: KeyboardEvent): void => { this.pressedKeys.set(event.code, false); };

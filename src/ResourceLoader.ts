@@ -55,6 +55,7 @@ import deathSprite from '../assets/death/death-idle-weapon.png';
 
 import cobblestone from '../assets/cobblestone2.png';
 import bed from '../assets/bed.png';
+import treeSprite from '../assets/trees.gif';
 
 import flower from '../assets/flower.png'
 import { Sprite } from './Rendering/Sprite';
@@ -135,6 +136,7 @@ export class ResourceLoader {
     },
     fireSprite: fireSprite,
     deathSprite: deathSprite,
+    treeSprite: treeSprite,
     flower: flower,
     cobblestone: cobblestone,
     bed: bed,
@@ -161,6 +163,7 @@ export class ResourceLoader {
     },
     fireSprite: null as any as Sprite,
     deathSprite: null as any as Sprite,
+    treeSprite: null as any as Sprite,
     flower: null as any,
     cobblestone: null as any,
     bed: null as any,
@@ -187,6 +190,7 @@ export class ResourceLoader {
   }
 
   private static flippedImagesMap = new Map<HTMLImageElement, HTMLImageElement>();
+
   public static flipImage(image: HTMLImageElement, rect: { width: number, height: number }): HTMLImageElement {
     if (this.flippedImagesMap.has(image)) {
       return this.flippedImagesMap.get(image)!;
@@ -346,6 +350,9 @@ export class ResourceLoader {
     });
     await withLogging('guard.death', async () => {
       this.loadedAssets.guard.death = new Sprite(await this.loadImage(this.rawAssets.guard.death), { cols: 9, rows: 1, size: 9 });
+    });
+    await withLogging('treeSprite', async () => {
+      this.loadedAssets.treeSprite = new Sprite(await this.loadImage(this.rawAssets.treeSprite), { cols: 3, rows: 5, size: 15 });
     });
   }
 }

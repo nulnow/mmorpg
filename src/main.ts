@@ -20,6 +20,7 @@ import { FireEntity } from './Buildings/FireEntity';
 import { EntityPreview } from './Rendering/EntityPreview';
 import { DeathEntity } from './Buildings/DeathEntity';
 import { DeathQuestEntity } from './Quests/DeathQuest/DeathQuestEntity';
+import { TreeEntity } from './Buildings/TreeEntity';
 
 const canvasWidth = window.innerWidth;
 const canvasHeight = window.innerHeight;
@@ -108,6 +109,14 @@ class Game {
 
   private tick(timeElapsed: number): void {
     this.entityManager.update(timeElapsed);
+
+    // for (let j = 0; j < this.scene.entities.length; j++) {
+    //   const entity = this.scene.entities[j];
+    //   if (this.scene.camera.isVisibleDrawableEntity(entity as any)) {
+    //     entity.update(timeElapsed);
+    //   }
+    // }
+    // this.entityManager.update(timeElapsed);
   }
 
   private draw(timeElapsed: number, timeElapsedReal: number): void {
@@ -131,77 +140,14 @@ class Game {
       );
     });
 
-    // const allEntities = this.scene.entities;
-    // allEntities.forEach((entity) => {
-    //   entity.update(timeElapsed);
-    // });
-
-    const visibleEntity = this.scene.entities.filter(entity => {
-      return camera.isVisibleDrawableEntity(entity as any);
-    });
-
-    visibleEntity.forEach(entity => {
-      // if (!camera.isVisible(entity)) {
-      //   return;
-      // }
-
-
-      // const relationalEntityCoordinates = camera.getBox().calculateRelationRect(entity.getBox());
-      // console.log(camera);
-      // console.log(relationalEntityCoordinates);
-
-      if (entity.getGameObject) {
-        // const relationalEntityCoordinates = entity.getGameObject().getBox().getRect();
-
-        entity.getGameObject().draw(this.context, camera);
-        // if (player.getCurrentState() === 'attack1') {
-        //   const center = box.getCenter();
-        //   this.context.save();
-        //   this.context.strokeStyle = 'rgba(255,0,0,0.32)';
-        //   this.context.beginPath();
-        //   this.context.arc(
-        //     center.x,
-        //     center.y,
-        //     100,
-        //     0,
-        //     2 * Math.PI,
-        //   );
-        //   this.context.stroke();
-        //   this.context.restore();
-        // }
-
-        // const player = entity as PlayerEntity;
-        // const gameObject = player.getGameObject();
-        //
-        // const currentSprite = gameObject.getCurrentSprite();
-
-        // const sprite = player.get.getCurrentSprite();
-
-
-        // this.context.fillStyle = entity.COLOR;
-        // this.context.strokeStyle =  entity.COLOR;
-        // this.context.beginPath();
-        // this.context.rect(
-        //   relationalEntityCoordinates.left,
-        //   relationalEntityCoordinates.top,
-        //   relationalEntityCoordinates.width,
-        //   relationalEntityCoordinates.height,
-        // );
-        // this.context.stroke();
-      } else {
-        // this.context.lineWidth = 1;
-        // this.context.fillStyle = entity.COLOR;
-        // this.context.strokeStyle =  '#000';
-        // this.context.beginPath();
-        // this.context.rect(
-        //   relationalEntityCoordinates.left,
-        //   relationalEntityCoordinates.top,
-        //   relationalEntityCoordinates.width,
-        //   relationalEntityCoordinates.height,
-        // );
-        // this.context.fill();
+    for (let j = 0; j < this.scene.entities.length; j++) {
+      const entity = this.scene.entities[j];
+      if (this.scene.camera.isVisibleDrawableEntity(entity as any)) {
+        if (entity.getGameObject) {
+          entity.getGameObject().draw(this.context, camera);
+        }
       }
-    });
+    }
 
     if (this.i % 20 === 0) {
       this.fps = Math.round(1000 / timeElapsedReal);
@@ -271,6 +217,33 @@ class Game {
     const map = new GameMap(this.scene);
     this.entityManager.addEntity(map, 'map');
 
+    { // TREES
+      const TREE_TYPE = 7;
+      let tree = new TreeEntity(-40, -300, TREE_TYPE, Math.random() > 0.5, 2);
+      this.entityManager.addEntity(tree, 'tree');
+      this.scene.entities.push(tree);
+
+      tree = new TreeEntity(-210, 80, TREE_TYPE, Math.random() > 0.5, 2);
+      this.entityManager.addEntity(tree, 'tree');
+      this.scene.entities.push(tree);
+
+      tree = new TreeEntity(-200, -180, TREE_TYPE, Math.random() > 0.5, 2);
+      this.entityManager.addEntity(tree, 'tree');
+      this.scene.entities.push(tree);
+
+      tree = new TreeEntity(-200, -180, TREE_TYPE, Math.random() > 0.5, 2);
+      this.entityManager.addEntity(tree, 'tree');
+      this.scene.entities.push(tree);
+
+      tree = new TreeEntity(300, -380, TREE_TYPE, Math.random() > 0.5, 2);
+      this.entityManager.addEntity(tree, 'tree');
+      this.scene.entities.push(tree);
+
+      tree = new TreeEntity(600, -340, TREE_TYPE, Math.random() > 0.5, 2);
+      this.entityManager.addEntity(tree, 'tree');
+      this.scene.entities.push(tree);
+    }
+
     const mapWall = new MapWall(800, 600);
     this.entityManager.addEntity(mapWall, 'mapWall');
     this.scene.entities.push(mapWall);
@@ -279,7 +252,7 @@ class Game {
     this.entityManager.addEntity(bed, 'bed');
     this.scene.entities.push(bed);
 
-    const player = new PlayerEntity(40, 40);
+    const player = new PlayerEntity(-400, -400);
     speedInput.value = player.getSpeed() + '';
     attackSpeedInput.value = player.getAttackSpeed() + '';
 
@@ -301,27 +274,33 @@ class Game {
 
     // const fieldEntity = new Entity();
 
-    for (let j = -1000; j < 1000; j++) {
-      if (j % 50 !== 0) continue;
-      const fire1 = new FireEntity(j, -1000, 150, 150);
-      fire1.getGameObject().setIsCollidable(true);
-      this.entityManager.addEntity(fire1);
-      this.scene.entities.push(fire1);
+    for (let i = 0; i < 1; i++) {
+      for (let j = -1000; j < 1000; j++) {
+        if (j % 50 !== 0) continue;
+        // TOP
+        const fire1 = new FireEntity(j, -1000 - ((i + 1) * 30), 150, 150);
+        // fire1.getGameObject().setIsCollidable(true);
+        this.entityManager.addEntity(fire1);
+        this.scene.entities.push(fire1);
 
-      const fire2 = new FireEntity(j, 1000, 150, 150);
-      fire2.getGameObject().setIsCollidable(true);
-      this.entityManager.addEntity(fire2);
-      this.scene.entities.push(fire2);
+        // BOTTOM
+        const fire2 = new FireEntity(j, 1000  + ((i + 1) * 30), 150, 150);
+        // fire2.getGameObject().setIsCollidable(true);
+        this.entityManager.addEntity(fire2);
+        this.scene.entities.push(fire2);
 
-      const fire3 = new FireEntity(-1000, j, 150, 150);
-      fire3.getGameObject().setIsCollidable(true);
-      this.entityManager.addEntity(fire3);
-      this.scene.entities.push(fire3);
+        // LEFT
+        const fire3 = new FireEntity(-1000  - ((i + 1) * 30), j, 150, 150);
+        // fire3.getGameObject().setIsCollidable(true);
+        this.entityManager.addEntity(fire3);
+        this.scene.entities.push(fire3);
 
-      const fire4 = new FireEntity(1000, j, 150, 150);
-      fire4.getGameObject().setIsCollidable(true);
-      this.entityManager.addEntity(fire4);
-      this.scene.entities.push(fire4);
+        // RIGHT
+        const fire4 = new FireEntity(1000 + ((i + 1) * 30), j, 150, 150);
+        // fire4.getGameObject().setIsCollidable(true);
+        this.entityManager.addEntity(fire4);
+        this.scene.entities.push(fire4);
+      }
     }
 
     for (let j = 0; j < 3; j++) {
