@@ -17,3 +17,24 @@ export const isMobileOrTablet: { result: null | boolean, (): boolean } = (): boo
   return isMobileOrTablet.result;
 }
 isMobileOrTablet.result = null;
+
+// TODO
+export const addScreenOrientationChangeEventHandler = (fn: () => void) => {
+  if (window.screen.orientation) {
+    window.screen.orientation.addEventListener('change', fn)
+    return;
+  }
+
+  if (window.onorientationchange) {
+    window.addEventListener('orientationchange', fn);
+    return;
+  }
+};
+
+// TODO
+export const removeScreenOrientationChangeEventHandler = (fn: () => void) => {
+  if (window.onorientationchange) {
+    window.removeEventListener('orientationchange', fn);
+    return;
+  }
+};

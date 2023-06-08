@@ -3,6 +3,7 @@ import { Box } from '../Rendering/Box';
 import { Position } from '../Rendering/Position';
 import { GameObject } from '../Rendering/GameObject';
 import { IDrawableEntity } from '../Rendering/IDrawableEntity';
+import { addScreenOrientationChangeEventHandler, removeScreenOrientationChangeEventHandler } from '../JSHACKS';
 
 export class Camera extends Entity {
   protected box: Box;
@@ -28,11 +29,13 @@ export class Camera extends Entity {
     super.initEntity();
     // todo
     window.addEventListener('resize', this.resizeHandler);
+    addScreenOrientationChangeEventHandler(this.resizeHandler);
   }
 
   public destroy() {
     super.destroy();
     window.removeEventListener('resize', this.resizeHandler);
+    removeScreenOrientationChangeEventHandler(this.resizeHandler);
   }
 
   public getFilter(): string {

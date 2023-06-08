@@ -65,6 +65,22 @@ const isMobileOrTablet = () => {
   return isMobileOrTablet.result;
 };
 isMobileOrTablet.result = null;
+const addScreenOrientationChangeEventHandler = (fn) => {
+  if (window.screen.orientation) {
+    window.screen.orientation.addEventListener("change", fn);
+    return;
+  }
+  if (window.onorientationchange) {
+    window.addEventListener("orientationchange", fn);
+    return;
+  }
+};
+const removeScreenOrientationChangeEventHandler = (fn) => {
+  if (window.onorientationchange) {
+    window.removeEventListener("orientationchange", fn);
+    return;
+  }
+};
 class EventEmitter {
   constructor() {
     __publicField(this, "subs", /* @__PURE__ */ new Map());
@@ -2134,10 +2150,12 @@ class Camera extends Entity {
   initEntity() {
     super.initEntity();
     window.addEventListener("resize", this.resizeHandler);
+    addScreenOrientationChangeEventHandler(this.resizeHandler);
   }
   destroy() {
     super.destroy();
     window.removeEventListener("resize", this.resizeHandler);
+    removeScreenOrientationChangeEventHandler(this.resizeHandler);
   }
   getFilter() {
     return this.filter;
@@ -2203,10 +2221,12 @@ class FollowPlayerCamera extends Camera {
       document.getElementById("cameraPos").innerHTML += `camera corner x ${this.getBox().getRect().left} y ${this.getBox().getRect().top} <br />`;
     });
     window.addEventListener("resize", this.syncWithPlayer);
+    addScreenOrientationChangeEventHandler(this.syncWithPlayer);
   }
   destroy() {
     super.destroy();
     window.removeEventListener("resize", this.syncWithPlayer);
+    removeScreenOrientationChangeEventHandler(this.syncWithPlayer);
     if (this.unsubscribeFromPlayerMoveEventFn) {
       this.unsubscribeFromPlayerMoveEventFn();
     }
