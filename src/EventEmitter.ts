@@ -1,5 +1,5 @@
 // TODO
-import { removeOnFromArray } from './JSHACKS';
+import { removeOneFromArray } from './JSHACKS';
 
 type Data = any;
 export type EventHandler = (data: Data) => void;
@@ -33,7 +33,7 @@ export class EventEmitter {
     this.subs.get(topic)!.push(fn);
 
     return () => {
-      removeOnFromArray(this.subs.get(topic)!, f => f !== fn);
+      removeOneFromArray(this.subs.get(topic)!, f => f !== fn);
     };
   }
 

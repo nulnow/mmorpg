@@ -39,10 +39,8 @@ export class BaseEnemyIdleState extends State {
     const distance = this.fsm.getEnemy().getGameObject().getBox().getCenter().distance(currentPlayer.getGameObject().getBox().getCenter());
     this.player.tuneSoundByDistance(distance);
 
-    const gameMap = this.fsm.getEnemy().getEntityManager().getEntityByName('map') as GameMap;
-
     // TODO
-    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), 200, (entity) => (
+    const players = this.fsm.getEnemy().getEntityManager().findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), 200, (entity) => (
       entity instanceof PlayerEntity && ((entity as any as IEntityWithHealth).getHealth().getValue() > 0)
     ));
 
@@ -177,8 +175,7 @@ export class BaseEnemyChasingPlayerState extends State {
     const distance = this.fsm.getEnemy().getGameObject().getBox().getCenter().distance(currentPlayer.getGameObject().getBox().getCenter());
     this.player.tuneSoundByDistance(distance);
 
-    const gameMap = this.fsm.getEnemy().getEntityManager().getEntityByName('map') as GameMap;
-    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance(), e => e instanceof PlayerEntity)
+    const players = this.fsm.getEnemy().getEntityManager().findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance(), e => e instanceof PlayerEntity)
 
     if (players.length > 0) {
       const playerToChaise = players[0] as PlayerEntity;
@@ -243,9 +240,8 @@ export class BaseEnemyAttackPlayerState extends State {
     const distance = this.fsm.getEnemy().getGameObject().getBox().getCenter().distance(currentPlayer.getGameObject().getBox().getCenter());
     this.player.tuneSoundByDistance(distance);
 
-    const gameMap = this.fsm.getEnemy().getEntityManager().getEntityByName('map') as GameMap;
     // TODO
-    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance(), (entity) => (
+    const players = this.fsm.getEnemy().getEntityManager().findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance(), (entity) => (
       entity instanceof PlayerEntity && ((entity as any as IEntityWithHealth).getHealth().getValue() > 0)
     ));
 

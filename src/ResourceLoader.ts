@@ -58,6 +58,8 @@ import bed from '../assets/bed.png';
 import treeSprite from '../assets/trees.gif';
 
 import flower from '../assets/flower.png'
+import stairs from '../assets/stairs.png';
+import giantTree from '../assets/GiantTreeLocationENHANCED.png';
 
 import mainTheme from '../assets/ruapporangespace_Aim_To_Head_-_EMPeror_71070745.mp3';
 import steps from '../assets/sneaker-shoe-on-concrete-floor-fast-pace-1-www.FesliyanStudios.com.mp3';
@@ -65,6 +67,10 @@ import evilSlime from '../assets/evil-slime.mp3';
 import movingSlime from '../assets/moving-slime.mp3';
 import neutralSlime from '../assets/neutral-slime.mp3';
 import sword from '../assets/Sword Whooshes Medium - QuickSounds.com.mp3';
+
+import fireball from '../assets/Fireball.mp3';
+import fireballExplosion from '../assets/FireballExplosion.mp3';
+import fire from '../assets/fire.mp3';
 
 import { Sprite } from './Rendering/Sprite';
 import { EventEmitter } from './EventEmitter';
@@ -147,6 +153,8 @@ export class ResourceLoader {
     deathSprite: deathSprite,
     treeSprite: treeSprite,
     flower: flower,
+    stairs: stairs,
+    giantTree: giantTree,
     cobblestone: cobblestone,
     bed: bed,
     sounds: {
@@ -156,6 +164,9 @@ export class ResourceLoader {
       sword: sword,
       steps: steps,
       mainTheme: mainTheme,
+      fireball: fireball,
+      fireballExplosion: fireballExplosion,
+      fire: fire,
     },
   };
   private static loadedAssets = {
@@ -178,10 +189,12 @@ export class ResourceLoader {
       run: null as any as Sprite,
       death: null as any as Sprite,
     },
-    fireSprite: null as any as Sprite,
+    fireSprite: null as any as HTMLImageElement,
     deathSprite: null as any as Sprite,
     treeSprite: null as any as Sprite,
     flower: null as any,
+    stairs: null as any,
+    giantTree: null as any,
     cobblestone: null as any,
     bed: null as any,
     sounds: {
@@ -191,6 +204,9 @@ export class ResourceLoader {
       sword: null as any as HTMLAudioElement,
       steps: null as any as HTMLAudioElement,
       mainTheme: null as any as HTMLAudioElement,
+      fireballExplosion: null as any as HTMLAudioElement,
+      fireball: null as any as HTMLAudioElement,
+      fire: null as any as HTMLAudioElement,
     },
   };
   public static getResourceCount() {
@@ -214,8 +230,45 @@ export class ResourceLoader {
     return this.loadedAssets;
   }
 
-  private static flippedImagesMap = new Map<HTMLImageElement, HTMLImageElement>();
+  private static croppedImagesMap = new Map<HTMLImageElement, Map<{ x: number, y: number }[], HTMLImageElement>>();
+  public static cropImageByPath(image: HTMLImageElement, points: { x: number, y: number }[]): HTMLImageElement {
+    if (this.croppedImagesMap.has(image) && this.croppedImagesMap.get(image)!.has(points)) {
+      return this.croppedImagesMap.get(image)!.get(points)!;
+    }
 
+    if (!this.croppedImagesMap.has(image)) {
+      this.croppedImagesMap.set(image, new Map());
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const context = canvas.getContext('2d')!;
+    const croppedImage = new Image();
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.beginPath();
+
+    context.moveTo(points[0].x, points[0].y);
+    points.forEach(pt => {
+      context.lineTo(pt.x, pt.y);
+    });
+    // old drawings will remain on where new drawings will be
+    // context.globalCompositeOperation = 'destination-in';
+    context.closePath();
+    context.clip();
+    context.drawImage(image, 0, 0);
+    // context.stroke();
+    // reset
+    // context.globalCompositeOperation = 'source-over';
+
+    croppedImage.src = canvas.toDataURL();
+    this.croppedImagesMap.get(image)!.set(points, croppedImage);
+
+    return croppedImage;
+  }
+
+  private static flippedImagesMap = new Map<HTMLImageElement, HTMLImageElement>();
   public static flipImage(image: HTMLImageElement, rect: { width: number, height: number }): HTMLImageElement {
     if (this.flippedImagesMap.has(image)) {
       return this.flippedImagesMap.get(image)!;
@@ -370,6 +423,13 @@ export class ResourceLoader {
     await withLogging('flower', async () => {
       this.loadedAssets.flower = await this.loadImage(this.rawAssets.flower)
     });
+    await withLogging('stairs', async () => {
+      this.loadedAssets.stairs = await this.loadImage(this.rawAssets.stairs)
+    });
+    await withLogging('giantTree', async () => {
+      this.loadedAssets.giantTree = await this.loadImage(this.rawAssets.giantTree)
+    });
+
     await withLogging('bed', async () => {
       this.loadedAssets.bed = await this.loadImage(this.rawAssets.bed)
     });
@@ -377,7 +437,7 @@ export class ResourceLoader {
       this.loadedAssets.cobblestone = this.compressSquareImage(await this.loadImage(this.rawAssets.cobblestone))
     });
     await withLogging('fireSprite', async () => {
-      this.loadedAssets.fireSprite = new Sprite(await this.loadImage(this.rawAssets.fireSprite), { cols: 2, rows: 2, size: 4 });
+      this.loadedAssets.fireSprite = await this.loadImage(this.rawAssets.fireSprite);
     });
     await withLogging('death.idle', async () => {
       this.loadedAssets.deathSprite = new Sprite(await this.loadImage(this.rawAssets.deathSprite), { cols: 4, rows: 1, size: 4 });
@@ -409,14 +469,20 @@ export class ResourceLoader {
       await withLogging('movingSlime', async () => {
         this.loadedAssets.sounds.movingSlime = await this.loadAudio(this.rawAssets.sounds.movingSlime);
       });
-      await withLogging('sword', async () => {
-        this.loadedAssets.sounds.sword = await this.loadAudio(this.rawAssets.sounds.sword);
-      });
       await withLogging('steps', async () => {
         this.loadedAssets.sounds.steps = await this.loadAudio(this.rawAssets.sounds.steps);
       });
       await withLogging('mainTheme', async () => {
         this.loadedAssets.sounds.mainTheme = await this.loadAudio(this.rawAssets.sounds.mainTheme);
+      });
+      await withLogging('fireball', async () => {
+        this.loadedAssets.sounds.fireball = await this.loadAudio(this.rawAssets.sounds.fireball);
+      });
+      await withLogging('fireballExplosion', async () => {
+        this.loadedAssets.sounds.fireballExplosion = await this.loadAudio(this.rawAssets.sounds.fireballExplosion);
+      });
+      await withLogging('fire', async () => {
+        this.loadedAssets.sounds.fireballExplosion = await this.loadAudio(this.rawAssets.sounds.fire);
       });
     }
   }

@@ -6,7 +6,7 @@ import { addScreenOrientationChangeEventHandler, removeScreenOrientationChangeEv
 export class FollowPlayerCamera extends Camera {
   private unsubscribeFromPlayerMoveEventFn: UnsubscribeFn | null = null;
 
-  public constructor(width: number, height: number, private player: PlayerEntity) {
+  public constructor(width: number, height: number, private player: PlayerEntity, private params?: { maxWidth: number, maxHeight: number, minWidth: number, minHeight: number }) {
     super(width, height);
   }
 
@@ -15,8 +15,29 @@ export class FollowPlayerCamera extends Camera {
     const playerCenter = this.player.getGameObject().getBox().getCenter();
 
     // TODO
-    topLeft.x = playerCenter.x - (window.innerWidth / 2)
-    topLeft.y = playerCenter.y - (window.innerHeight / 2)
+    let nextX = playerCenter.x - (window.innerWidth / 2);
+    let nextY = playerCenter.y - (window.innerHeight / 2);
+
+    if (this.params) {
+      if (nextX <= 0) {
+        nextX = 0;
+      }
+
+      if (nextX + window.innerWidth >= this.params.maxWidth) {
+        nextX = this.params.maxWidth - window.innerWidth;
+      }
+
+      if (nextY <= 0) {
+        nextY = 0;
+      }
+
+      if (nextY + window.innerHeight >= this.params.maxHeight) {
+        nextY = this.params.maxHeight - window.innerHeight;
+      }
+    }
+
+    topLeft.x = nextX;
+    topLeft.y = nextY;
   }
 
   public initEntity(): void {

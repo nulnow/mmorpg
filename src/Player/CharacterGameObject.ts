@@ -6,11 +6,13 @@ import { Position } from '../Rendering/Position';
 import { Rotation } from '../Rendering/Rotation';
 import { AttackCircle } from './AttackCircle';
 import { HealthBar } from './HealthBar';
+import { CooldownSpinner } from './CooldownSpinner';
 
 export class CharacterGameObject extends GameObject {
   private player: PlayerEntity;
   private attackCircle: AttackCircle;
   private healthBar: HealthBar;
+  private cooldownSpinner: CooldownSpinner;
 
   public constructor(x: number, y: number, player: PlayerEntity, finiteStateMachine: PlayerFiniteStateMachine) {
     super(finiteStateMachine);
@@ -27,5 +29,8 @@ export class CharacterGameObject extends GameObject {
 
     this.healthBar = new HealthBar(this.player);
     this.addChild(this.healthBar);
+
+    this.cooldownSpinner = new CooldownSpinner(player);
+    this.addChild(this.cooldownSpinner);
   }
 }

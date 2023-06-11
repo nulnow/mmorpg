@@ -1,4 +1,4 @@
-export const removeOnFromArray = <T>(array: T[], callback: (value: T) => boolean): T[] => {
+export const removeOneFromArray = <T>(array: T[], callback: (value: T) => boolean): T[] => {
   const index = array.findIndex(callback);
   if (index !== -1) {
     array.splice(index, 1);
@@ -51,3 +51,25 @@ export const removeScreenOrientationChangeEventHandler = (fn: () => void) => {
     // TODO logging errors
   }
 };
+
+export class TrippleMap<K1, K2, K3, VALUE> {
+  private map = new Map<K1, Map<K2, Map<K3, VALUE>>>();
+
+  public get(k1: K1, k2: K2, k3: K3): VALUE | undefined {
+    return this.map.get(k1)?.get(k2)?.get(k3);
+  }
+
+  public set(k1: K1, k2: K2, k3: K3, value: VALUE) {
+    if (!this.map.has(k1)) {
+      this.map.set(k1, new Map());
+    }
+    if (!this.map.get(k1)!.has(k2)) {
+      this.map.get(k1)!.set(k2, new Map());
+    }
+    this.map.get(k1)!.get(k2)!.set(k3, value);
+  }
+
+  public has(k1: K1, k2: K2, k3: K3): boolean {
+    return !!this.get(k1, k2, k3);
+  }
+}

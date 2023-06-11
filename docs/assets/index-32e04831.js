@@ -45,7 +45,9 @@ var __publicField = (obj, key, value) => {
     fetch(link.href, fetchOpts);
   }
 })();
-const removeOnFromArray = (array, callback) => {
+const base = "";
+const game = "";
+const removeOneFromArray = (array, callback) => {
   const index = array.findIndex(callback);
   if (index !== -1) {
     array.splice(index, 1);
@@ -91,6 +93,27 @@ const removeScreenOrientationChangeEventHandler = (fn) => {
   } catch (error) {
   }
 };
+class TrippleMap {
+  constructor() {
+    __publicField(this, "map", /* @__PURE__ */ new Map());
+  }
+  get(k1, k2, k3) {
+    var _a, _b;
+    return (_b = (_a = this.map.get(k1)) == null ? void 0 : _a.get(k2)) == null ? void 0 : _b.get(k3);
+  }
+  set(k1, k2, k3, value) {
+    if (!this.map.has(k1)) {
+      this.map.set(k1, /* @__PURE__ */ new Map());
+    }
+    if (!this.map.get(k1).has(k2)) {
+      this.map.get(k1).set(k2, /* @__PURE__ */ new Map());
+    }
+    this.map.get(k1).get(k2).set(k3, value);
+  }
+  has(k1, k2, k3) {
+    return !!this.get(k1, k2, k3);
+  }
+}
 class EventEmitter {
   constructor() {
     __publicField(this, "subs", /* @__PURE__ */ new Map());
@@ -115,7 +138,7 @@ class EventEmitter {
     }
     this.subs.get(topic).push(fn);
     return () => {
-      removeOnFromArray(this.subs.get(topic), (f) => f !== fn);
+      removeOneFromArray(this.subs.get(topic), (f) => f !== fn);
     };
   }
   once(topic, fn) {
@@ -124,177 +147,6 @@ class EventEmitter {
       unsubscribe();
     });
     return unsubscribe;
-  }
-}
-class Entity {
-  constructor() {
-    __publicField(this, "emitter", new EventEmitter());
-    __publicField(this, "name", "");
-    __publicField(this, "components", {});
-    __publicField(this, "entityManager");
-  }
-  getName() {
-    return this.name;
-  }
-  setName(name) {
-    this.name = name;
-  }
-  getEntityManager() {
-    return this.entityManager;
-  }
-  setEntityManager(entityManager) {
-    this.entityManager = entityManager;
-  }
-  initEntity() {
-    for (const componentName in this.components) {
-      this.components[componentName].initEntity();
-    }
-  }
-  addComponent(c) {
-    c.setParent(this);
-    this.components[c.constructor.name] = c;
-    c.init();
-    console.log("addComponent");
-    console.log(c);
-  }
-  getComponentByName(name) {
-    return this.components[name];
-  }
-  destroy() {
-    for (const componentName in this.components) {
-      this.components[componentName].destroy();
-    }
-  }
-  update(timeElapsed) {
-    for (const componentName in this.components) {
-      this.components[componentName].update(timeElapsed);
-    }
-  }
-}
-class Component {
-  constructor() {
-    __publicField(this, "parent");
-  }
-  setParent(parent) {
-    this.parent = parent;
-  }
-  init() {
-  }
-  destroy() {
-  }
-  initEntity() {
-  }
-  update(timeElapsed) {
-  }
-}
-class NetworkController extends Component {
-}
-class UIController extends Component {
-  destroy() {
-  }
-  init() {
-  }
-  initEntity() {
-  }
-  update(timeElapsed) {
-  }
-}
-const GAME_EVENTS = {
-  KILLED_EVENT: "KILLED_EVENT"
-};
-class EntityManager {
-  constructor(scene) {
-    __publicField(this, "emitter", new EventEmitter());
-    __publicField(this, "ids", 0);
-    __publicField(this, "entitiesMap", {});
-    __publicField(this, "entities", []);
-    __publicField(this, "lastSortTime", 0);
-    __publicField(this, "sortIntervalSEC", 0.5);
-    __publicField(this, "timePassed", 0);
-    this.scene = scene;
-  }
-  addToScene(drawableEntity) {
-    this.scene.entities.push(drawableEntity);
-  }
-  generateName() {
-    this.ids += 1;
-    return "__name__" + this.ids;
-  }
-  addEntity(entity, entityName) {
-    if (!entityName) {
-      entityName = this.generateName();
-    }
-    this.entitiesMap[entityName] = entity;
-    this.entities.push(entity);
-    entity.setEntityManager(this);
-    entity.setName(entityName);
-    entity.initEntity();
-    entity.emitter.subscribe(GAME_EVENTS.KILLED_EVENT, (data) => {
-      this.emitter.emit(GAME_EVENTS.KILLED_EVENT, data);
-    });
-  }
-  removeEntity(entity, destroy = true) {
-    Object.entries(this.entitiesMap).forEach(([key, value]) => {
-      if (value === entity) {
-        delete this.entitiesMap[key];
-        this.scene.entities = this.scene.entities.filter((e) => e !== entity);
-      }
-    });
-    this.entities = this.entities.filter((e) => e !== entity);
-    if (destroy) {
-      entity.destroy();
-      entity.getGameObject().destroy();
-    }
-  }
-  removeEntityByName(name) {
-    const entity = this.getEntityByName(name);
-    if (entity) {
-      delete this.entitiesMap[name];
-      this.scene.entities = this.scene.entities.filter((e) => e !== entity);
-    }
-  }
-  // public removeEntity(entity: Entity): void {
-  //   for (const key in this.entitiesMap) {
-  //     const e = this.entitiesMap[key];
-  //     if (e === entity) {
-  //       delete this.entitiesMap[key];
-  //       removeOnFromArray(this.scene.entities, e => e !== entity)
-  //       break;
-  //     }
-  //   }
-  //   removeOnFromArray(this.entities, e => e !== entity)
-  //   entity.destroy();
-  //   (entity as any as DrawableEntity).getGameObject().destroy();
-  // }
-  //
-  // public removeEntityByName(name: string): void {
-  //   const entity = this.getEntityByName(name);
-  //   if (entity) {
-  //     delete this.entitiesMap[name];
-  //     removeOnFromArray(this.scene.entities, e => e !== entity)
-  //   }
-  // }
-  getEntityByName(name) {
-    return this.entitiesMap[name];
-  }
-  filterEntities(callback) {
-    return this.entities.filter(callback);
-  }
-  update(timeElapsed) {
-    this.lastSortTime += timeElapsed;
-    this.timePassed += timeElapsed;
-    if (this.lastSortTime >= this.sortIntervalSEC * 1e3) {
-      this.lastSortTime = 0;
-      this.scene.entities.sort((a, b) => {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
-        const posY1 = ((_e = (_d = (_c = (_b = (_a = a == null ? void 0 : a.getGameObject) == null ? void 0 : _a.call(a)) == null ? void 0 : _b.getBox) == null ? void 0 : _c.call(_b)) == null ? void 0 : _d.getBottom) == null ? void 0 : _e.call(_d)) ?? -Infinity;
-        const posY2 = ((_j = (_i = (_h = (_g = (_f = b == null ? void 0 : b.getGameObject) == null ? void 0 : _f.call(b)) == null ? void 0 : _g.getBox) == null ? void 0 : _h.call(_g)) == null ? void 0 : _i.getBottom) == null ? void 0 : _j.call(_i)) ?? -Infinity;
-        return posY1 - posY2;
-      });
-    }
-    for (const entity of this.entities) {
-      entity.update(timeElapsed);
-    }
   }
 }
 const adventurerIdle00 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAlCAYAAAAA7LqSAAADDklEQVRYhe2XX0hTURzHP5PEVl3GxDkCFUFEUFoqasEqQmNR1Eti4kMRyHzpRXuL/lnQSwT1EgQRRRHhQh+DEouIwlzQ2lhlJdQ0ZCw3xp2JKd4e1r3cqRS4c+wP+8Dlnnvuub/f+d7f+f3OvZAjR44cOf4AFlmGX1w5o5mvtxw9K80XSBTS7WnQ3LXVAKhxlZo6FyBPkBSj3Z4GzVVWSjAyjlmMUqgA0HbhlnC/eaINArjKSo2zGleNfnNbNFKEBCPjGe1ngTdL+kUjRcjlhy8twcg4SqFC1x0/z5u9uLc5eN7sNUSJRkqO9Lvd2tP1swCcPtWVca9we9e/kez3Wlo0gIlEghK7HQDXoQoAgrfHcBWVU9V3XbjfNSKNjbZ3asGvn5hIJABwFZUDaQGyEfZmdBGj7l1MxqLsfB8yBO2trDPG3f/wiul9bZw8d1xoVIQYG23v1PQJAoYQHV0QQJnVytuWfQBCxUipWvGpCBOJBOVXHwBQYrcbR9nNJ0zGosJ9Zp0ji6MRfuen6eMnNpw4TyA4yJd1KuGCdLJ7Og4TCA4Sn4pk63YJWYXWnNwft+wA0tGompnAZs0HIDkzZwipmR3DZs1nBCfHzvtorFzzdywtXcS2vhGOHLtI7a7d3PUNWCAtQKfY4aTY4TSum9u9APg/zGsIQkqO6OjR2GgSsRhRYlYsRN/4fkW4oILN1enP940OJ+GCCnp8zyze1j2WQHBwpa6XJauImMuqeWI2a76RI5OxqHEUO5z07m9aWO6ZbBGys+sTetR3DYDkzJwGUMMYNlOFMueNPlY/Z8uKhbQNDVku1ddrANHXgSV7Q39MX3nfM/pbHelCddc3YOk4eEBYskv5Et20tXFBURRUNfNHSu8LDfuFFxkpVUtRFKMdGvbnmSduvicSqeV3NZEixLM2RdV8NGMJhYb9eaqq4lmbkuFSvJDe/U0Ltp8/VItpsH4zxoj2K1yILsJVWiLa9C+RliM9tx4ssX3jcTjvc2paij8pQpKmHX+1EC4kmUjwu7f+OTUtJU/+C34AdKI8D9icPRkAAAAASUVORK5CYII=";
@@ -346,24 +198,33 @@ const cobblestone = "" + new URL("cobblestone2.png", import.meta.url).href;
 const bed = "" + new URL("bed.png", import.meta.url).href;
 const treeSprite = "" + new URL("trees.gif", import.meta.url).href;
 const flower = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAALCAYAAACprHcmAAAAAXNSR0IArs4c6QAAAS9JREFUKFNFkT1OAzEQhd8UKFeApSQ1DZEQTbr1bAoKRE6w2gpxA7Yj3AClCuQABAmJIra3o4pEGkQJlCycIRSDxvZCY3v88+a9zwQQiACIIC0g0FpPwtRthzoOoHDAnItIFHDOERFBklAsICABDBuxS4vPRY3d8RWKEcM5TxSEJHkQgI2Rt7MtPG32oQLaZth7QX/6kx4kBxwUHdr7GuXsGfZiBZ4cYV4NsDOeoBgV8F47QNuzzKsDqNds+zr4VZ/t93lIU87W/5eZWay1aO9qlDdr2HqF4vIQt9UAmSoXBVzTqHcK4XJj5L3znJANe6/oTzdonA8hqAOnL0zOYt0SX4sa2Wmk4Z0niWz/EEf6gTNL5Ap4p60FEkNEZSIJ4SJNYO/hWD5OHsMv6W73lb8l6IsZYs2glgAAAABJRU5ErkJggg==";
+const stairs = "" + new URL("stairs.png", import.meta.url).href;
+const giantTree = "" + new URL("GiantTreeLocationENHANCED.png", import.meta.url).href;
 const mainTheme = "" + new URL("ruapporangespace_Aim_To_Head_-_EMPeror_71070745.mp3", import.meta.url).href;
 const steps = "" + new URL("sneaker-shoe-on-concrete-floor-fast-pace-1-www.FesliyanStudios.com.mp3", import.meta.url).href;
 const evilSlime = "" + new URL("evil-slime.mp3", import.meta.url).href;
 const movingSlime = "" + new URL("moving-slime.mp3", import.meta.url).href;
 const neutralSlime = "" + new URL("neutral-slime.mp3", import.meta.url).href;
 const swordAttack = "" + new URL("Sword Whooshes Medium - QuickSounds.com.mp3", import.meta.url).href;
-class Sprite {
+const fireBall = "" + new URL("Fireball.mp3", import.meta.url).href;
+const fireballExplosion = "" + new URL("FireballExplosion.mp3", import.meta.url).href;
+const fire = "" + new URL("fire.mp3", import.meta.url).href;
+const _Sprite = class {
   constructor(sprites, config) {
-    __publicField(this, "cache", /* @__PURE__ */ new Map());
+    __publicField(this, "filter");
     this.sprites = sprites;
     this.config = config;
+  }
+  setFilter(filter) {
+    this.filter = filter;
   }
   getLength() {
     return this.config.size;
   }
   getSpriteByIndex(index) {
-    if (this.cache.has(index)) {
-      return this.cache.get(index);
+    const fromCache = _Sprite.cache.get(index, this.filter ?? null, this.sprites);
+    if (!!fromCache) {
+      return fromCache;
     }
     const { width, height } = this.sprites;
     const colWidth = width / this.config.cols;
@@ -373,6 +234,9 @@ class Sprite {
     canvas2.height = rowHeight;
     const canvasContext = canvas2.getContext("2d");
     canvasContext.imageSmoothingEnabled = false;
+    if (this.filter) {
+      this.filter(canvasContext);
+    }
     const rowIndex = Math.floor(index / this.config.cols);
     const colIndex = index - rowIndex * this.config.cols;
     const xOffset = colIndex * colWidth;
@@ -390,10 +254,12 @@ class Sprite {
     );
     const image = new Image();
     image.src = canvas2.toDataURL();
-    this.cache.set(index, image);
+    _Sprite.cache.set(index, this.filter ?? null, this.sprites, image);
     return image;
   }
-}
+};
+let Sprite = _Sprite;
+__publicField(Sprite, "cache", new TrippleMap());
 class ResourceLoader {
   static getResourceCount() {
     const getCountRecursive = (o) => {
@@ -411,6 +277,31 @@ class ResourceLoader {
   }
   static getLoadedAssets() {
     return this.loadedAssets;
+  }
+  static cropImageByPath(image, points) {
+    if (this.croppedImagesMap.has(image) && this.croppedImagesMap.get(image).has(points)) {
+      return this.croppedImagesMap.get(image).get(points);
+    }
+    if (!this.croppedImagesMap.has(image)) {
+      this.croppedImagesMap.set(image, /* @__PURE__ */ new Map());
+    }
+    const canvas2 = document.createElement("canvas");
+    canvas2.width = image.width;
+    canvas2.height = image.height;
+    const context = canvas2.getContext("2d");
+    const croppedImage = new Image();
+    context.clearRect(0, 0, canvas2.width, canvas2.height);
+    context.beginPath();
+    context.moveTo(points[0].x, points[0].y);
+    points.forEach((pt) => {
+      context.lineTo(pt.x, pt.y);
+    });
+    context.closePath();
+    context.clip();
+    context.drawImage(image, 0, 0);
+    croppedImage.src = canvas2.toDataURL();
+    this.croppedImagesMap.get(image).set(points, croppedImage);
+    return croppedImage;
   }
   static flipImage(image, rect) {
     if (this.flippedImagesMap.has(image)) {
@@ -547,6 +438,12 @@ class ResourceLoader {
     await withLogging("flower", async () => {
       this.loadedAssets.flower = await this.loadImage(this.rawAssets.flower);
     });
+    await withLogging("stairs", async () => {
+      this.loadedAssets.stairs = await this.loadImage(this.rawAssets.stairs);
+    });
+    await withLogging("giantTree", async () => {
+      this.loadedAssets.giantTree = await this.loadImage(this.rawAssets.giantTree);
+    });
     await withLogging("bed", async () => {
       this.loadedAssets.bed = await this.loadImage(this.rawAssets.bed);
     });
@@ -554,7 +451,7 @@ class ResourceLoader {
       this.loadedAssets.cobblestone = this.compressSquareImage(await this.loadImage(this.rawAssets.cobblestone));
     });
     await withLogging("fireSprite", async () => {
-      this.loadedAssets.fireSprite = new Sprite(await this.loadImage(this.rawAssets.fireSprite), { cols: 2, rows: 2, size: 4 });
+      this.loadedAssets.fireSprite = await this.loadImage(this.rawAssets.fireSprite);
     });
     await withLogging("death.idle", async () => {
       this.loadedAssets.deathSprite = new Sprite(await this.loadImage(this.rawAssets.deathSprite), { cols: 4, rows: 1, size: 4 });
@@ -584,14 +481,20 @@ class ResourceLoader {
       await withLogging("movingSlime", async () => {
         this.loadedAssets.sounds.movingSlime = await this.loadAudio(this.rawAssets.sounds.movingSlime);
       });
-      await withLogging("sword", async () => {
-        this.loadedAssets.sounds.sword = await this.loadAudio(this.rawAssets.sounds.sword);
-      });
       await withLogging("steps", async () => {
         this.loadedAssets.sounds.steps = await this.loadAudio(this.rawAssets.sounds.steps);
       });
       await withLogging("mainTheme", async () => {
         this.loadedAssets.sounds.mainTheme = await this.loadAudio(this.rawAssets.sounds.mainTheme);
+      });
+      await withLogging("fireball", async () => {
+        this.loadedAssets.sounds.fireball = await this.loadAudio(this.rawAssets.sounds.fireball);
+      });
+      await withLogging("fireballExplosion", async () => {
+        this.loadedAssets.sounds.fireballExplosion = await this.loadAudio(this.rawAssets.sounds.fireballExplosion);
+      });
+      await withLogging("fire", async () => {
+        this.loadedAssets.sounds.fireballExplosion = await this.loadAudio(this.rawAssets.sounds.fire);
       });
     }
   }
@@ -671,6 +574,8 @@ __publicField(ResourceLoader, "rawAssets", {
   deathSprite,
   treeSprite,
   flower,
+  stairs,
+  giantTree,
   cobblestone,
   bed,
   sounds: {
@@ -679,7 +584,10 @@ __publicField(ResourceLoader, "rawAssets", {
     neutralSlime,
     sword: swordAttack,
     steps,
-    mainTheme
+    mainTheme,
+    fireball: fireBall,
+    fireballExplosion,
+    fire
   }
 });
 __publicField(ResourceLoader, "loadedAssets", {
@@ -706,6 +614,8 @@ __publicField(ResourceLoader, "loadedAssets", {
   deathSprite: null,
   treeSprite: null,
   flower: null,
+  stairs: null,
+  giantTree: null,
   cobblestone: null,
   bed: null,
   sounds: {
@@ -714,9 +624,13 @@ __publicField(ResourceLoader, "loadedAssets", {
     neutralSlime: null,
     sword: null,
     steps: null,
-    mainTheme: null
+    mainTheme: null,
+    fireballExplosion: null,
+    fireball: null,
+    fire: null
   }
 });
+__publicField(ResourceLoader, "croppedImagesMap", /* @__PURE__ */ new Map());
 __publicField(ResourceLoader, "flippedImagesMap", /* @__PURE__ */ new Map());
 __publicField(ResourceLoader, "patternMap", /* @__PURE__ */ new Map());
 __publicField(ResourceLoader, "compressedImagesMap", /* @__PURE__ */ new Map());
@@ -841,6 +755,9 @@ class Rotation {
   set(val) {
     this.value = val;
   }
+  add(val) {
+    this.value += val;
+  }
   isLeft() {
     const value = this.value % (Math.PI * 2);
     return Math.abs(value) > Math.PI / 2;
@@ -859,8 +776,19 @@ class GameObject {
     __publicField(this, "color", null);
     __publicField(this, "patternImage", null);
     __publicField(this, "image", null);
+    __publicField(this, "zIndex", 0);
     __publicField(this, "rightToLeft", true);
+    __publicField(this, "drawHooks", {
+      before: [],
+      after: []
+    });
     this.finiteStateMachine = finiteStateMachine;
+  }
+  getZIndex() {
+    return this.zIndex;
+  }
+  setZIndex(zIndex) {
+    this.zIndex = zIndex;
   }
   getImage() {
     return this.image;
@@ -942,7 +870,7 @@ class GameObject {
     this.children.push(child);
   }
   removeChild(child) {
-    removeOnFromArray(this.children, (c) => c !== child);
+    removeOneFromArray(this.children, (c) => c !== child);
   }
   update(timeElapsed) {
     this.finiteStateMachine.update(timeElapsed);
@@ -954,7 +882,19 @@ class GameObject {
     var _a;
     return ((_a = this.finiteStateMachine.getCurrentState()) == null ? void 0 : _a.getCurrentSprite()) ?? null;
   }
+  addHook(key, hook) {
+    this.drawHooks[key].push(hook);
+    return () => {
+      this.removeHook(key, hook);
+    };
+  }
+  removeHook(key, hook) {
+    removeOneFromArray(this.drawHooks[key], (h) => h === hook);
+  }
   draw(context, camera) {
+    for (const hook of this.drawHooks.before) {
+      hook(context, camera);
+    }
     if (this.box) {
       const relationalEntityCoordinates = camera.getRelativeCoordinates(this.box).getRect();
       const currentSprite = this.getCurrentSprite();
@@ -1006,6 +946,9 @@ class GameObject {
     }
     for (const child of this.children) {
       child.draw(context, camera);
+    }
+    for (const hook of this.drawHooks.after) {
+      hook(context, camera);
     }
   }
   destroy() {
@@ -1119,12 +1062,22 @@ const _MusicPlayer = class {
   static createNeutralSlimePlayer() {
     return this.createPlayer(neutralSlime, { loop: true, volume: 1e-3 });
   }
+  static createFireBallPlayer() {
+    return this.createPlayer(fireBall, { loop: false, volume: 0.1 });
+  }
+  static createFirePlayer() {
+    return this.createPlayer(fire, { loop: true, volume: 0.1, maxTimeSEC: 10 });
+  }
+  static createFireballExplosionPlayer() {
+    return this.createPlayer(fireballExplosion, { loop: false, volume: 0.1 });
+  }
   play() {
     if (this.isPlaying) {
       return;
     }
-    this.audio.play();
-    this.isPlaying = true;
+    this.audio.play().then(() => {
+      this.isPlaying = true;
+    });
   }
   pause() {
     if (!this.isPlaying) {
@@ -1168,16 +1121,25 @@ class PlayerIdleState extends State {
     super.onExit();
   }
   update(timeElapsed) {
-    var _a, _b, _c;
+    var _a, _b, _c, _d, _e, _f;
     super.update(timeElapsed);
     if ((_a = this.fsm.getPlayer().getInputController()) == null ? void 0 : _a.isAttack1Pressed()) {
-      return this.fsm.setState(PlayerAttackState);
+      this.fsm.setState(PlayerAttackState);
     }
     if ((_b = this.fsm.getPlayer().getInputController()) == null ? void 0 : _b.isAttack2Pressed()) {
-      return this.fsm.getPlayer().fireAttack();
+      this.fsm.getPlayer().fireAttack();
     }
-    if ((_c = this.fsm.getPlayer().getInputController()) == null ? void 0 : _c.isOneOfMovementKeysIsPressed()) {
-      return this.fsm.setState(PlayerRunState);
+    if ((_c = this.fsm.getPlayer().getInputController()) == null ? void 0 : _c.isAttack3Pressed()) {
+      this.fsm.getPlayer().activateFireShield();
+    }
+    if ((_d = this.fsm.getPlayer().getInputController()) == null ? void 0 : _d.isAttack4Pressed()) {
+      this.fsm.getPlayer().addHealBall();
+    }
+    if ((_e = this.fsm.getPlayer().getInputController()) == null ? void 0 : _e.isClearButtonPressed()) {
+      this.fsm.getPlayer().handleClear();
+    }
+    if ((_f = this.fsm.getPlayer().getInputController()) == null ? void 0 : _f.isOneOfMovementKeysIsPressed()) {
+      this.fsm.setState(PlayerRunState);
     }
   }
 }
@@ -1199,10 +1161,23 @@ class PlayerRunState extends State {
     MusicPlayer.pausePlayingSteps();
   }
   update(timeElapsed) {
+    var _a, _b, _c, _d;
     super.update(timeElapsed);
     const inputController = this.fsm.getInputController();
     if (!inputController) {
       return;
+    }
+    if ((_a = this.fsm.getPlayer().getInputController()) == null ? void 0 : _a.isAttack1Pressed()) {
+      this.fsm.setState(PlayerAttackState);
+    }
+    if ((_b = this.fsm.getPlayer().getInputController()) == null ? void 0 : _b.isAttack2Pressed()) {
+      this.fsm.getPlayer().fireAttack();
+    }
+    if ((_c = this.fsm.getPlayer().getInputController()) == null ? void 0 : _c.isAttack3Pressed()) {
+      this.fsm.getPlayer().activateFireShield();
+    }
+    if ((_d = this.fsm.getPlayer().getInputController()) == null ? void 0 : _d.isClearButtonPressed()) {
+      this.fsm.getPlayer().handleClear();
     }
     if (!(inputController == null ? void 0 : inputController.isOneOfMovementKeysIsPressed())) {
       this.fsm.setState(PlayerIdleState);
@@ -1267,8 +1242,7 @@ class PlayerAttackState extends State {
   }
   update(timeElapsed) {
     super.update(timeElapsed);
-    const gameMap = this.fsm.getPlayer().getEntityManager().getEntityByName("map");
-    const entities = gameMap.findEntities(this.player.getGameObject().getBox().getCenter(), this.player.getAttackRange(), (entity) => entity !== this.player && !!entity.getHealth && entity.getHealth().getValue() > 0);
+    const entities = this.fsm.getPlayer().getEntityManager().findEntities(this.player.getGameObject().getBox().getCenter(), this.player.getAttackRange(), (entity) => entity !== this.player && !!entity.getHealth && entity.getHealth().getValue() > 0);
     const damage = this.player.getAttackDamage() * this.player.getAttackSpeed() * (timeElapsed / 1e3);
     for (const e of entities) {
       e.damage(damage, this.player);
@@ -1332,7 +1306,7 @@ class PlayerFiniteStateMachine extends FiniteStateMachine {
   }
 }
 class Position {
-  constructor(x, y, z) {
+  constructor(x = 0, y = 0, z = 0) {
     __publicField(this, "pos", [0, 0, 0]);
     this.x = x;
     this.y = y;
@@ -1497,8 +1471,7 @@ class EnemyIdleState extends State {
     const currentPlayer = this.fsm.getEnemy().getEntityManager().getEntityByName("player");
     const distance = this.fsm.getEnemy().getGameObject().getBox().getCenter().distance(currentPlayer.getGameObject().getBox().getCenter());
     this.player.tuneSoundByDistance(distance);
-    const gameMap = this.fsm.getEnemy().getEntityManager().getEntityByName("map");
-    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), 200, (e) => e instanceof PlayerEntity && e.getHealth().getValue() > 0);
+    const players = this.fsm.getEnemy().getEntityManager().findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), 200, (e) => e instanceof PlayerEntity && e.getHealth().getValue() > 0);
     if (players.length > 0) {
       this.fsm.setState(EnemyChasingPlayerState);
     } else {
@@ -1569,8 +1542,7 @@ class EnemyChasingPlayerState extends State {
     const currentPlayer = this.fsm.getEnemy().getEntityManager().getEntityByName("player");
     const distance = this.fsm.getEnemy().getGameObject().getBox().getCenter().distance(currentPlayer.getGameObject().getBox().getCenter());
     this.player.tuneSoundByDistance(distance);
-    const gameMap = this.fsm.getEnemy().getEntityManager().getEntityByName("map");
-    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance(), (e) => e instanceof PlayerEntity);
+    const players = this.fsm.getEnemy().getEntityManager().findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance(), (e) => e instanceof PlayerEntity);
     if (players.length > 0) {
       const playerToChaise = players[0];
       const distanceToPlayer = playerToChaise.getGameObject().getBox().getCenter().distance(this.fsm.getEnemy().getGameObject().getBox().getCenter());
@@ -1616,8 +1588,7 @@ class EnemyAttackPlayerState extends State {
     const currentPlayer = this.fsm.getEnemy().getEntityManager().getEntityByName("player");
     const distance = this.fsm.getEnemy().getGameObject().getBox().getCenter().distance(currentPlayer.getGameObject().getBox().getCenter());
     this.player.tuneSoundByDistance(distance);
-    const gameMap = this.fsm.getEnemy().getEntityManager().getEntityByName("map");
-    const players = gameMap.findEntities(
+    const players = this.fsm.getEnemy().getEntityManager().findEntities(
       this.fsm.getEnemy().getGameObject().getBox().getCenter(),
       this.fsm.getEnemy().getReactDistance(),
       (e) => e instanceof PlayerEntity && e.getHealth().getValue() > 0
@@ -1682,12 +1653,37 @@ class HealthBar extends GameObject {
     context.restore();
   }
 }
+class CooldownSpinner extends GameObject {
+  constructor(player) {
+    super();
+    __publicField(this, "player");
+    this.player = player;
+  }
+  draw(context, camera) {
+    const parentTopLeft = this.player.getGameObject().getBox().getTopLeft();
+    const relativePosition = camera.getRelativePosition(parentTopLeft);
+    const percent = this.player.getTimeFromLastFireShieldActivation() / this.player.getFIRE_SHIELD_DELAY_MS();
+    if (percent > 1) {
+      return;
+    }
+    const endAngle = Math.PI * 2 * percent;
+    context.save();
+    context.beginPath();
+    context.strokeStyle = "rgba(255,255,255,0.69)";
+    context.lineWidth = 2;
+    const RADIUS = 3;
+    context.arc(relativePosition.x - RADIUS * 4, relativePosition.y + RADIUS * 2, 5, 0, endAngle);
+    context.stroke();
+    context.restore();
+  }
+}
 class CharacterGameObject extends GameObject {
   constructor(x, y, player, finiteStateMachine) {
     super(finiteStateMachine);
     __publicField(this, "player");
     __publicField(this, "attackCircle");
     __publicField(this, "healthBar");
+    __publicField(this, "cooldownSpinner");
     this.player = player;
     this.box = new Box(
       new Position(x, y, 0),
@@ -1699,6 +1695,8 @@ class CharacterGameObject extends GameObject {
     this.addChild(this.attackCircle);
     this.healthBar = new HealthBar(this.player);
     this.addChild(this.healthBar);
+    this.cooldownSpinner = new CooldownSpinner(player);
+    this.addChild(this.cooldownSpinner);
   }
 }
 class Health {
@@ -1722,6 +1720,58 @@ class Health {
     return this.value / this.maxValue;
   }
 }
+class Entity {
+  constructor() {
+    __publicField(this, "emitter", new EventEmitter());
+    __publicField(this, "tags", []);
+    __publicField(this, "name", "");
+    __publicField(this, "components", {});
+    __publicField(this, "entityManager");
+  }
+  addTag(tag) {
+    this.tags.push(tag);
+  }
+  hasTag(tag) {
+    return this.tags.includes(tag);
+  }
+  getName() {
+    return this.name;
+  }
+  setName(name) {
+    this.name = name;
+  }
+  getEntityManager() {
+    return this.entityManager;
+  }
+  setEntityManager(entityManager) {
+    this.entityManager = entityManager;
+  }
+  initEntity() {
+    for (const componentName in this.components) {
+      this.components[componentName].initEntity();
+    }
+  }
+  addComponent(c) {
+    c.setParent(this);
+    this.components[c.constructor.name] = c;
+    c.init();
+    console.log("addComponent");
+    console.log(c);
+  }
+  getComponentByName(name) {
+    return this.components[name];
+  }
+  destroy() {
+    for (const componentName in this.components) {
+      this.components[componentName].destroy();
+    }
+  }
+  update(timeElapsed) {
+    for (const componentName in this.components) {
+      this.components[componentName].update(timeElapsed);
+    }
+  }
+}
 class DrawableEntity extends Entity {
   constructor() {
     super(...arguments);
@@ -1734,13 +1784,12 @@ class DrawableEntity extends Entity {
     this.gameObject = gameObject;
   }
   findCollisions(boxToFindCollisionsWith) {
-    const gameMap = this.getEntityManager().getEntityByName("map");
-    const collidableGameObjects = gameMap.getCollidableGameObjects();
+    const collidableGameObjects = this.getEntityManager().getCollidableGameObjects();
     return collidableGameObjects.filter((obj) => {
       return obj !== this.getGameObject() && boxToFindCollisionsWith.isCollide(obj.getBox());
     });
   }
-  distance(entity) {
+  distanceTo(entity) {
     return this.getGameObject().getBox().getTopLeft().distance(
       entity.getGameObject().getBox().getTopLeft()
     );
@@ -1749,11 +1798,14 @@ class DrawableEntity extends Entity {
 class FireBurningState extends State {
   constructor(fsm) {
     super(fsm);
-    __publicField(this, "sprites", ResourceLoader.getLoadedAssets().fireSprite);
+    __publicField(this, "sprites", new Sprite(ResourceLoader.getLoadedAssets().fireSprite, { cols: 2, rows: 2, size: 4 }));
     __publicField(this, "speed", 6);
     __publicField(this, "fsm");
     this.fsm = fsm;
     this.gameObject = this.fsm.getFire().getGameObject();
+    if (this.fsm.getFilter()) {
+      this.sprites.setFilter(this.fsm.getFilter());
+    }
   }
   onEnter() {
     this.speed += 3 * Math.random();
@@ -1764,19 +1816,24 @@ class FireBurningState extends State {
   }
 }
 class FireStateMachine extends FiniteStateMachine {
-  constructor(fire) {
+  constructor(fire2, filter) {
     super();
     __publicField(this, "fire");
-    this.fire = fire;
+    __publicField(this, "filter");
+    this.filter = filter;
+    this.fire = fire2;
     this.addState(FireBurningState);
     this.setState(FireBurningState);
+  }
+  getFilter() {
+    return this.filter;
   }
   getFire() {
     return this.fire;
   }
 }
 class FireEntity extends DrawableEntity {
-  constructor(x, y, width, height) {
+  constructor(x, y, width, height, spriteFilter) {
     super();
     __publicField(this, "gameObject");
     __publicField(this, "finiteStateMachine");
@@ -1784,7 +1841,7 @@ class FireEntity extends DrawableEntity {
     this.y = y;
     this.width = width;
     this.height = height;
-    this.finiteStateMachine = new FireStateMachine(this);
+    this.finiteStateMachine = new FireStateMachine(this, spriteFilter);
     this.gameObject = new GameObject(this.finiteStateMachine);
     this.gameObject.setBox(new Box(
       new Position(x, y, 0),
@@ -1801,16 +1858,112 @@ class FireEntity extends DrawableEntity {
     this.finiteStateMachine.update(timeElapsed);
   }
 }
-const MAX_DISTANCE = 300;
-class FireAttackEntity extends FireEntity {
-  constructor(x, y, rotation = 0, speed = 500, width = 30, height = 30) {
-    super(x, y, width, height);
+const MAX_DISTANCE = 1300;
+const _FireAttackEntity = class extends FireEntity {
+  constructor(x, y, rotation = 0, speed = _FireAttackEntity.DEFAULT_SPEED, width = _FireAttackEntity.DEFAULT_WIDTH, height = _FireAttackEntity.DEFAULT_HEIGHT, filter) {
+    super(x, y, width, height, filter);
+    __publicField(this, "fireBallPlayer", MusicPlayer.createFireBallPlayer());
+    __publicField(this, "firePlayer", MusicPlayer.createFirePlayer());
     __publicField(this, "travelledDistance", 0);
     __publicField(this, "stoppedAtCollisionTimeMs", 0);
-    __publicField(this, "MAX_FIRE_TIME_MS", 1e3);
+    __publicField(this, "MAX_FIRE_TIME_MS", 6e4 * 1);
+    __publicField(this, "exploded", false);
+    __publicField(this, "stopped", false);
     this.rotation = rotation;
     this.speed = speed;
     this.gameObject.setIsCollidable(false);
+  }
+  initEntity() {
+    super.initEntity();
+    setTimeout(() => {
+      this.fireBallPlayer.play();
+    }, Math.random() * 200);
+  }
+  getAttackRange() {
+    return 130;
+  }
+  getAttackDamage() {
+    return 50;
+  }
+  getAttackSpeed() {
+    return 1;
+  }
+  update(timeElapsed) {
+    super.update(timeElapsed);
+    const length = this.speed * timeElapsed / 1e3;
+    const x = length * Math.cos(this.rotation);
+    const y = length * Math.sin(this.rotation);
+    const nextBox = this.getGameObject().getBox().copy();
+    nextBox.move(x, y);
+    const collisions = this.findCollisions(nextBox);
+    if (!collisions.length && !this.stopped) {
+      this.getGameObject().getBox().move(x, y);
+      this.travelledDistance += length;
+    } else {
+      this.stopped = true;
+      this.fireBallPlayer.pause();
+      this.firePlayer.play();
+      this.stoppedAtCollisionTimeMs += timeElapsed;
+      if (!this.exploded) {
+        this.exploded = true;
+        setTimeout(() => {
+          MusicPlayer.createFireballExplosionPlayer().play();
+        }, Math.random() * 200);
+      }
+      if (this.stoppedAtCollisionTimeMs >= this.MAX_FIRE_TIME_MS) {
+        this.firePlayer.pause();
+        this.getEntityManager().removeEntity(this);
+      }
+    }
+    const player = this.getEntityManager().getEntityByName("player");
+    if (this.travelledDistance >= MAX_DISTANCE) {
+      this.getEntityManager().removeEntity(this);
+    }
+    const entities = this.getEntityManager().findEntities(
+      this.getGameObject().getBox().getCenter(),
+      this.getAttackRange(),
+      (entity) => entity !== player && !!entity.getHealth && entity.getHealth().getValue() > 0
+    );
+    const damage = this.getAttackDamage() * this.getAttackSpeed() * (timeElapsed / 1e3);
+    for (const e of entities) {
+      e.damage(damage, player);
+    }
+  }
+  destroy() {
+    super.destroy();
+    this.firePlayer.pause();
+  }
+};
+let FireAttackEntity = _FireAttackEntity;
+__publicField(FireAttackEntity, "DEFAULT_SPEED", 800);
+__publicField(FireAttackEntity, "DEFAULT_WIDTH", 60);
+__publicField(FireAttackEntity, "DEFAULT_HEIGHT", 60);
+const firePurpleFilter = (context) => {
+  context.filter = "hue-rotate(250deg)";
+};
+const fireGreenFilter = (context) => {
+  context.filter = "hue-rotate(100deg)";
+};
+class FireShieldEntity extends FireEntity {
+  constructor(player, x, y, speed = 2e-3, width = 30, height = 30, filter) {
+    super(x, y, width, height, filter);
+    __publicField(this, "distance", 70);
+    __publicField(this, "rotation", new Rotation(0));
+    this.player = player;
+    this.speed = speed;
+    this.gameObject.setIsCollidable(false);
+  }
+  initEntity() {
+    super.initEntity();
+    const fireBallPlayer = MusicPlayer.createFireBallPlayer();
+    fireBallPlayer.setVolume(0.09);
+    fireBallPlayer.play();
+  }
+  getDistance() {
+    return this.distance;
+  }
+  setDistance(distance) {
+    this.distance = distance;
   }
   getAttackRange() {
     return 30;
@@ -1821,33 +1974,23 @@ class FireAttackEntity extends FireEntity {
   getAttackSpeed() {
     return 1;
   }
-  reset() {
-    this.travelledDistance = 0;
-    this.stoppedAtCollisionTimeMs = 0;
+  getRotation() {
+    return this.rotation;
+  }
+  setRotation(rotation) {
+    this.rotation = rotation;
   }
   update(timeElapsed) {
     super.update(timeElapsed);
-    const length = this.speed * timeElapsed / 1e3;
-    const x = length * Math.cos(this.rotation);
-    const y = length * Math.sin(this.rotation);
-    const nextBox = this.getGameObject().getBox().copy();
-    nextBox.move(x, y);
-    const collisions = this.findCollisions(nextBox);
-    if (!collisions.length) {
-      this.getGameObject().getBox().move(x, y);
-      this.travelledDistance += length;
-    } else {
-      this.stoppedAtCollisionTimeMs += timeElapsed;
-      if (this.stoppedAtCollisionTimeMs >= this.MAX_FIRE_TIME_MS) {
-        this.getEntityManager().removeEntity(this);
-      }
-    }
+    this.rotation.add(this.speed * timeElapsed);
+    const playerTopLeft = this.player.getGameObject().getBox().getCenter();
+    const x = Math.cos(this.rotation.get()) * this.distance + playerTopLeft.x - this.width / 2;
+    const y = Math.sin(this.rotation.get()) * 0.7 * this.distance + playerTopLeft.y - this.height / 2;
+    const topLeft = this.gameObject.getBox().getTopLeft();
+    topLeft.x = x;
+    topLeft.y = y;
     const player = this.getEntityManager().getEntityByName("player");
-    if (this.travelledDistance >= MAX_DISTANCE) {
-      this.getEntityManager().removeEntity(this);
-    }
-    const gameMap = this.getEntityManager().getEntityByName("map");
-    const entities = gameMap.findEntities(
+    const entities = this.getEntityManager().findEntities(
       this.getGameObject().getBox().getCenter(),
       this.getAttackRange(),
       (entity) => entity !== player && !!entity.getHealth && entity.getHealth().getValue() > 0
@@ -1864,13 +2007,23 @@ class PlayerEntity extends DrawableEntity {
     __publicField(this, "finiteStateMachine");
     __publicField(this, "inputController");
     __publicField(this, "health", new Health(100, 150));
-    __publicField(this, "FIRE_ATTACK_DELAY_MS", 1200);
-    __publicField(this, "timeFromLastFireAttack", 0);
+    // private FIRE_ATTACK_DELAY_MS = 1200;
+    __publicField(this, "FIRE_ATTACK_DELAY_MS", 400);
+    __publicField(this, "timeFromLastFireAttack", this.FIRE_ATTACK_DELAY_MS);
+    __publicField(this, "FIRE_SHIELD_DELAY_MS", 100);
+    __publicField(this, "FIRE_SHIELD_MAX_COUNT", 25);
+    __publicField(this, "addShieldBallsCount", 1);
+    __publicField(this, "timeFromLastFireShieldActivation", this.FIRE_SHIELD_DELAY_MS);
+    __publicField(this, "fireShieldBalls", []);
+    __publicField(this, "HEAL_BALL_DELAY_MS", 100);
+    __publicField(this, "HEAL_BALL_MAX_COUNT", 25);
+    __publicField(this, "timeFromLastHealBallActivation", this.HEAL_BALL_DELAY_MS);
+    __publicField(this, "addhealBallCount", 1);
+    __publicField(this, "healBalls", []);
     __publicField(this, "attackSpeed", 15);
     __publicField(this, "attackDamage", 20);
     __publicField(this, "attackRange", 65);
-    __publicField(this, "speed", 350);
-    __publicField(this, "COLOR", "rgba(255,0,98,0)");
+    __publicField(this, "speed", 250);
     __publicField(this, "unsubscribeFromSpeedChange");
     this.finiteStateMachine = new PlayerFiniteStateMachine(this);
     this.gameObject = new CharacterGameObject(x, y, this, this.finiteStateMachine);
@@ -1898,6 +2051,7 @@ class PlayerEntity extends DrawableEntity {
     if (newHealth <= 0) {
       newHealth = 0;
       this.finiteStateMachine.setState(PlayerDieState);
+      this.onDeath();
       this.getEntityManager().getEntityByName("ui").showModal({
         title: "ПОРАЖЕНИЕ",
         body: "О НЕТ! ПОСЛЕДНЯЯ НАДЕЖДА ИМПЕРИИ ПАЛА. ВЕСЬ МИР ВЗОРВАЛСЯ И ВСЕ УМЕРЛИ",
@@ -1908,18 +2062,94 @@ class PlayerEntity extends DrawableEntity {
     }
     this.setHealth(newHealth);
   }
-  // private particlesCache: FireAttackEntity[] = [];
   fireAttack() {
     if (this.timeFromLastFireAttack < this.FIRE_ATTACK_DELAY_MS) {
       return;
     }
     this.timeFromLastFireAttack = 0;
     const center = this.getGameObject().getBox().getCenter();
-    for (let i = 0.1; i < Math.PI * 2; i += 0.05) {
-      const fireBall = new FireAttackEntity(center.x, center.y, i + (0.5 - Math.random()) / 2);
-      this.getEntityManager().addToScene(fireBall);
-      this.getEntityManager().addEntity(fireBall);
+    for (const shieldFireBall of this.fireShieldBalls) {
+      const fireBall2 = new FireAttackEntity(
+        center.x - 30,
+        center.y - 30,
+        shieldFireBall.getRotation().get(),
+        FireAttackEntity.DEFAULT_SPEED,
+        FireAttackEntity.DEFAULT_WIDTH,
+        FireAttackEntity.DEFAULT_HEIGHT,
+        firePurpleFilter
+      );
+      this.getEntityManager().addToScene(fireBall2);
+      this.getEntityManager().addEntity(fireBall2);
     }
+    this.clearShield();
+  }
+  // private FIRE_SHIELD_DELAY_MS = 100;
+  // private FIRE_SHIELD_MAX_COUNT = 60;
+  getFIRE_SHIELD_DELAY_MS() {
+    return this.FIRE_SHIELD_DELAY_MS;
+  }
+  getTimeFromLastFireShieldActivation() {
+    return this.timeFromLastFireShieldActivation;
+  }
+  activateFireShield() {
+    if (this.timeFromLastFireShieldActivation < this.FIRE_SHIELD_DELAY_MS) {
+      return;
+    }
+    if (this.fireShieldBalls.length >= this.FIRE_SHIELD_MAX_COUNT) {
+      return;
+    }
+    this.timeFromLastFireShieldActivation = 0;
+    const center = this.getGameObject().getBox().getCenter();
+    for (let i = 0; i < this.addShieldBallsCount; i++) {
+      const fireBall2 = new FireShieldEntity(this, center.x, center.y, 4e-3, 30, 30, firePurpleFilter);
+      fireBall2.getRotation().add(0);
+      this.getEntityManager().addToScene(fireBall2);
+      this.getEntityManager().addEntity(fireBall2);
+      this.fireShieldBalls.push(fireBall2);
+    }
+    const angleStep = Math.PI * 2 / this.fireShieldBalls.length;
+    let angle = 0;
+    for (const fireBall2 of this.fireShieldBalls) {
+      fireBall2.getRotation().set(angle);
+      angle += angleStep;
+    }
+  }
+  clearShield() {
+    for (const fireBall2 of this.fireShieldBalls) {
+      this.getEntityManager().removeEntity(fireBall2);
+    }
+    this.fireShieldBalls.length = 0;
+  }
+  clearHealBalls() {
+    for (const fireBall2 of this.healBalls) {
+      this.getEntityManager().removeEntity(fireBall2);
+    }
+    this.healBalls.length = 0;
+    console.log("here");
+  }
+  addHealBall() {
+    if (this.timeFromLastHealBallActivation < this.HEAL_BALL_DELAY_MS) {
+      return;
+    }
+    if (this.healBalls.length >= this.HEAL_BALL_MAX_COUNT) {
+      return;
+    }
+    this.timeFromLastHealBallActivation = 0;
+    const center = this.getGameObject().getBox().getCenter();
+    for (let i = 0; i < this.addhealBallCount; i++) {
+      const healBall = new FireShieldEntity(this, center.x, center.y, 2e-3, 30, 30, fireGreenFilter);
+      healBall.getRotation().add(0);
+      this.getEntityManager().addToScene(healBall);
+      this.getEntityManager().addEntity(healBall);
+      this.healBalls.push(healBall);
+    }
+  }
+  handleClear() {
+    this.clearShield();
+    this.clearHealBalls();
+  }
+  onDeath() {
+    this.handleClear();
   }
   getAttackSpeed() {
     return this.attackSpeed;
@@ -1943,9 +2173,7 @@ class PlayerEntity extends DrawableEntity {
     return this.speed;
   }
   initEntity() {
-    console.log("init player entity");
     this.inputController = this.getComponentByName("InputController");
-    console.log("input controller", this.inputController);
     this.unsubscribeFromSpeedChange = this.emitter.subscribe("speed_change", (value) => {
       this.speed = value;
     });
@@ -1961,87 +2189,158 @@ class PlayerEntity extends DrawableEntity {
   }
   update(timeElapsed) {
     super.update(timeElapsed);
+    if (this.healBalls.length) {
+      const count = this.healBalls.length;
+      if (this.health.getValue() < this.health.getMaxValue()) {
+        let newHeathValue = this.health.getValue() + count * timeElapsed * 0.01;
+        if (newHeathValue > this.health.getMaxValue()) {
+          newHeathValue = this.health.getMaxValue();
+        }
+        this.health.setValue(newHeathValue);
+      }
+    }
     this.timeFromLastFireAttack += timeElapsed;
+    this.timeFromLastFireShieldActivation += timeElapsed;
+    this.timeFromLastHealBallActivation += timeElapsed;
     this.finiteStateMachine.update(timeElapsed);
   }
 }
-class InputController extends Component {
-  constructor() {
-    super(...arguments);
-    __publicField(this, "pressedKeys", /* @__PURE__ */ new Map());
-    __publicField(this, "keyDownHandler", (event) => {
-      this.pressedKeys.set(event.code, true);
+class SceneRenderer {
+  constructor(width, height, scene, entityManager) {
+    __publicField(this, "started", false);
+    __publicField(this, "canvas", null);
+    __publicField(this, "context", null);
+    __publicField(this, "prevDOMHighResTimeStamp", 0);
+    this.width = width;
+    this.height = height;
+    this.scene = scene;
+    this.entityManager = entityManager;
+  }
+  getCanvas() {
+    return this.canvas;
+  }
+  start() {
+    if (this.started) {
+      return;
+    }
+    this.started = true;
+    if (!this.canvas) {
+      this.canvas = this.createCanvas();
+      this.context = this.canvas.getContext("2d");
+    }
+    this.run();
+  }
+  stop() {
+    this.started = false;
+  }
+  run() {
+    if (!this.started) {
+      return;
+    }
+    requestAnimationFrame((timestamp) => {
+      var _a;
+      const timeElapsed = timestamp - this.prevDOMHighResTimeStamp;
+      this.prevDOMHighResTimeStamp = timestamp;
+      (_a = this.context) == null ? void 0 : _a.clearRect(0, 0, this.width, this.height);
+      for (const entity of this.scene.entities) {
+        const drawableEntity = entity;
+        drawableEntity.getGameObject().draw(this.context, this.scene.camera);
+      }
+      this.entityManager.update(timeElapsed);
+      this.run();
     });
-    __publicField(this, "keyUpHandler", (event) => {
-      this.pressedKeys.set(event.code, false);
-    });
-    __publicField(this, "windowFocusOutHandler", () => {
-      this.pressedKeys.forEach((_, key) => {
-        this.pressedKeys.set(key, false);
-      });
-    });
   }
-  isOneOfMovementKeysIsPressed() {
-    return this.isTopPressed() || this.isRightPressed() || this.isBottomPressed() || this.isLeftPressed();
-  }
-  isTopPressed() {
-    return !!this.pressedKeys.get("KeyW") || !!this.pressedKeys.get("ArrowUp");
-  }
-  isRightPressed() {
-    return !!this.pressedKeys.get("KeyD") || !!this.pressedKeys.get("ArrowRight");
-  }
-  isBottomPressed() {
-    return !!this.pressedKeys.get("KeyS") || !!this.pressedKeys.get("ArrowDown");
-  }
-  isLeftPressed() {
-    return !!this.pressedKeys.get("KeyA") || !!this.pressedKeys.get("ArrowLeft");
-  }
-  isAttack1Pressed() {
-    return !!this.pressedKeys.get("KeyE");
-  }
-  isAttack2Pressed() {
-    return !!this.pressedKeys.get("KeyQ");
-  }
-  init() {
-    super.init();
-    document.addEventListener("keydown", this.keyDownHandler);
-    Array.from(document.querySelectorAll("#mobile-controls [data-key]")).forEach((div) => {
-      div.addEventListener("mousedown", (event) => {
-        this.pressedKeys.set(div.getAttribute("data-key"), true);
-      });
-      div.addEventListener("mouseup", (event) => {
-        this.pressedKeys.set(div.getAttribute("data-key"), false);
-      });
-      div.addEventListener("touchstart", (event) => {
-        this.pressedKeys.set(div.getAttribute("data-key"), true);
-      });
-      div.addEventListener("touchend", (event) => {
-        this.pressedKeys.set(div.getAttribute("data-key"), false);
-      });
-    });
-    document.addEventListener("keyup", this.keyUpHandler);
-    document.addEventListener("focusout", this.windowFocusOutHandler);
-  }
-  destroy() {
-    super.destroy();
-    document.removeEventListener("keydown", this.keyDownHandler);
-    document.removeEventListener("keyup", this.keyUpHandler);
-    document.removeEventListener("focusout", this.windowFocusOutHandler);
-  }
-  update(timeElapsed) {
-    super.update(timeElapsed);
+  createCanvas() {
+    const canvas2 = document.createElement("canvas");
+    canvas2.width = this.width;
+    canvas2.height = this.height;
+    canvas2.getContext("2d").imageSmoothingEnabled = false;
+    return canvas2;
   }
 }
-const _GameMap = class extends Entity {
+const GAME_EVENTS = {
+  KILLED_EVENT: "KILLED_EVENT"
+};
+class EntityManager {
   constructor(scene) {
-    super();
-    __publicField(this, "scene");
+    __publicField(this, "emitter", new EventEmitter());
+    __publicField(this, "ids", 0);
+    __publicField(this, "entitiesMap", {});
+    __publicField(this, "entities", []);
+    __publicField(this, "scene", null);
+    __publicField(this, "lastSortTime", 0);
+    __publicField(this, "sortIntervalSEC", 0.3);
     this.scene = scene;
   }
-  add(entity) {
-    this.scene.entities.push(entity);
+  addToScene(drawableEntity) {
+    this.scene.entities.push(drawableEntity);
   }
-  findEntities(point, maxDistance = _GameMap.MAX_DISTANCE, filter = () => true) {
+  generateName() {
+    this.ids += 1;
+    return "__name__" + this.ids;
+  }
+  addEntity(entity, entityName) {
+    if (!entityName) {
+      entityName = this.generateName();
+    }
+    this.entitiesMap[entityName] = entity;
+    this.entities.push(entity);
+    entity.setEntityManager(this);
+    entity.setName(entityName);
+    entity.initEntity();
+    entity.emitter.subscribe(GAME_EVENTS.KILLED_EVENT, (data) => {
+      this.emitter.emit(GAME_EVENTS.KILLED_EVENT, data);
+    });
+  }
+  removeEntity(entity, destroy = true) {
+    var _a;
+    Object.entries(this.entitiesMap).forEach(([key, value]) => {
+      if (value === entity) {
+        delete this.entitiesMap[key];
+        this.scene.entities = this.scene.entities.filter((e) => e !== entity);
+      }
+    });
+    this.entities = this.entities.filter((e) => e !== entity);
+    if (destroy) {
+      entity.destroy();
+      (_a = entity.getGameObject) == null ? void 0 : _a.call(entity).destroy();
+    }
+  }
+  removeEntityByName(name) {
+    const entity = this.getEntityByName(name);
+    if (entity) {
+      delete this.entitiesMap[name];
+      this.scene.entities = this.scene.entities.filter((e) => e !== entity);
+    }
+  }
+  // public removeEntity(entity: Entity): void {
+  //   for (const key in this.entitiesMap) {
+  //     const e = this.entitiesMap[key];
+  //     if (e === entity) {
+  //       delete this.entitiesMap[key];
+  //       removeOnFromArray(this.scene.entities, e => e !== entity)
+  //       break;
+  //     }
+  //   }
+  //   removeOnFromArray(this.entities, e => e !== entity)
+  //   entity.destroy();
+  //   (entity as any as DrawableEntity).getGameObject().destroy();
+  // }
+  //
+  // public removeEntityByName(name: string): void {
+  //   const entity = this.getEntityByName(name);
+  //   if (entity) {
+  //     delete this.entitiesMap[name];
+  //     removeOnFromArray(this.scene.entities, e => e !== entity)
+  //   }
+  // }
+  getEntityByName(name) {
+    return this.entitiesMap[name];
+  }
+  filterEntities(callback) {
+    return this.entities.filter(callback);
+  }
+  findEntities(point, maxDistance = Infinity, filter = () => true) {
     return this.scene.entities.filter((entity) => {
       var _a, _b, _c;
       const center = (_c = (_b = (_a = entity.getGameObject) == null ? void 0 : _a.call(entity)) == null ? void 0 : _b.getBox()) == null ? void 0 : _c.getCenter();
@@ -2065,78 +2364,32 @@ const _GameMap = class extends Entity {
       return result;
     }, []);
   }
-};
-let GameMap = _GameMap;
-__publicField(GameMap, "MAX_DISTANCE", Infinity);
-class MapWall extends DrawableEntity {
-  // protected color = '#000';
-  constructor(width, height) {
-    super();
-    __publicField(this, "gameObject");
-    this.width = width;
-    this.height = height;
-    this.gameObject = new GameObject();
-    this.setUpWalls();
+  update(timeElapsed) {
+    this.lastSortTime += timeElapsed;
+    if (this.lastSortTime >= this.sortIntervalSEC * 1e3) {
+      this.lastSortTime = 0;
+      this.scene.entities.sort((a, b) => {
+        var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
+        const z1 = a.getGameObject().getZIndex();
+        const z2 = b.getGameObject().getZIndex();
+        if (z1 !== z2) {
+          return z1 - z2;
+        }
+        const posY1 = ((_e = (_d = (_c = (_b = (_a = a == null ? void 0 : a.getGameObject) == null ? void 0 : _a.call(a)) == null ? void 0 : _b.getBox) == null ? void 0 : _c.call(_b)) == null ? void 0 : _d.getBottom) == null ? void 0 : _e.call(_d)) ?? -Infinity;
+        const posY2 = ((_j = (_i = (_h = (_g = (_f = b == null ? void 0 : b.getGameObject) == null ? void 0 : _f.call(b)) == null ? void 0 : _g.getBox) == null ? void 0 : _h.call(_g)) == null ? void 0 : _i.getBottom) == null ? void 0 : _j.call(_i)) ?? -Infinity;
+        return posY1 - posY2;
+      });
+    }
+    for (const entity of this.entities) {
+      entity.update(timeElapsed);
+    }
   }
-  setUpWalls() {
-    const wallColor = "#493420";
-    const floor = new GameObject();
-    floor.setBox(new Box(
-      new Position(0, 0, 0),
-      this.width,
-      this.height
-    ));
-    floor.setImage(ResourceLoader.getImageFromPattern(ResourceLoader.getLoadedAssets().cobblestone, this.width, this.height));
-    floor.setIsCollidable(false);
-    this.gameObject.addChild(floor);
-    const leftWall = new GameObject();
-    leftWall.setBox(new Box(
-      new Position(0, 0, 0),
-      20,
-      this.height
-    ));
-    leftWall.setColor(wallColor);
-    leftWall.setIsCollidable(true);
-    this.gameObject.addChild(leftWall);
-    const rightWall = new GameObject();
-    rightWall.setBox(new Box(
-      new Position(this.width - 20, 0, 0),
-      20,
-      this.height / 2 - 100
-    ));
-    rightWall.setColor(wallColor);
-    rightWall.setIsCollidable(true);
-    this.gameObject.addChild(rightWall);
-    const rightWall2 = new GameObject();
-    rightWall2.setBox(new Box(
-      new Position(this.width - 20, this.height / 2 + 100, 0),
-      20,
-      this.height / 2 - 100
-    ));
-    rightWall2.setColor(wallColor);
-    rightWall2.setIsCollidable(true);
-    this.gameObject.addChild(rightWall2);
-    const topWall = new GameObject();
-    topWall.setBox(new Box(
-      new Position(0, 0, 0),
-      this.width,
-      20
-    ));
-    topWall.setColor(wallColor);
-    topWall.setIsCollidable(true);
-    this.gameObject.addChild(topWall);
-    const bottomWall = new GameObject();
-    bottomWall.setBox(new Box(
-      new Position(0, this.height - 20, 0),
-      this.width,
-      20
-    ));
-    bottomWall.setColor(wallColor);
-    bottomWall.setIsCollidable(true);
-    this.gameObject.addChild(bottomWall);
-  }
-  getGameObject() {
-    return this.gameObject;
+  destroy() {
+    for (const entity of this.entities) {
+      entity.destroy();
+    }
+    this.entities = null;
+    this.scene = null;
   }
 }
 class Camera extends Entity {
@@ -2210,36 +2463,959 @@ class Camera extends Entity {
     return copy;
   }
 }
-class FollowPlayerCamera extends Camera {
-  constructor(width, height, player) {
-    super(width, height);
-    __publicField(this, "unsubscribeFromPlayerMoveEventFn", null);
-    __publicField(this, "syncWithPlayer", () => {
-      const topLeft = this.getBox().getTopLeft();
-      const playerCenter = this.player.getGameObject().getBox().getCenter();
-      topLeft.x = playerCenter.x - window.innerWidth / 2;
-      topLeft.y = playerCenter.y - window.innerHeight / 2;
+class EntityPreview {
+  constructor(entity) {
+    __publicField(this, "element", null);
+    __publicField(this, "sceneRenderer", null);
+    __publicField(this, "destroyed", false);
+    this.entity = entity;
+  }
+  mount(id) {
+    var _a;
+    const WIDTH = 100;
+    const HEIGHT = 100;
+    this.element = document.getElementById(id);
+    const camera = new Camera(WIDTH, HEIGHT);
+    const scene = {
+      camera,
+      entities: []
+    };
+    const entityManager = new EntityManager(scene);
+    scene.entities.push(this.entity);
+    entityManager.addEntity(this.entity);
+    const sceneRenderer = new SceneRenderer(WIDTH, HEIGHT, scene, entityManager);
+    sceneRenderer.start();
+    (_a = this.element) == null ? void 0 : _a.appendChild(sceneRenderer.getCanvas());
+    this.sceneRenderer = sceneRenderer;
+  }
+  destroy() {
+    if (this.destroyed) {
+      console.error("Calling destroy on already destroyed EntityPreview");
+      return;
+    }
+    this.sceneRenderer.stop();
+    this.element.removeChild(this.sceneRenderer.getCanvas());
+    this.destroyed = true;
+  }
+}
+class UIEntity extends Entity {
+  constructor() {
+    super(...arguments);
+    __publicField(this, "ui", document.getElementById("ui"));
+    __publicField(this, "openModals", []);
+    __publicField(this, "quests", []);
+  }
+  addQuest(id, text, onClick) {
+    this.quests.push({ id, text, onClick });
+    this.renderQuests();
+  }
+  markQuestDone(id) {
+    this.quests.find((q) => q.id === id).done = true;
+    this.renderQuests();
+  }
+  renderQuests() {
+    this.ui.querySelector("#quests .quests__list").innerHTML = this.quests.map((quest) => {
+      return `
+        <div data-quest-id="${quest.id}" class="quest-list-item ${quest.done ? "quest-list-item--done" : ""}"><p>${quest.text}</p></div>
+      `;
+    }).join("");
+    this.quests.forEach((quest) => {
+      const questId = quest.id;
+      if (!quest.done) {
+        this.ui.querySelector(`[data-quest-id="${questId}"]`).onclick = quest.onClick ?? null;
+      }
     });
-    this.player = player;
+  }
+  showModal({ title, body, updater, onClose }) {
+    const id = this.createModalId();
+    const modal = this.createModal();
+    const titleElem = modal.querySelector(".modal__title");
+    const bodyElem = modal.querySelector(".modal__body");
+    const okButtonElem = modal.querySelector(".modal__okButton");
+    titleElem.innerHTML = title;
+    bodyElem.innerHTML = body;
+    this.openModals.push(id);
+    this.ui.querySelector("#modals").appendChild(modal);
+    const close = () => {
+      const prevLength = this.openModals.length;
+      this.openModals = this.openModals.filter((modalId) => modalId !== id);
+      const newLength = this.openModals.length;
+      if (prevLength !== newLength) {
+        document.getElementById("modals").removeChild(modal);
+      }
+      onClose == null ? void 0 : onClose();
+    };
+    okButtonElem.onclick = close;
+    if (updater) {
+      updater(modal);
+    }
+    return close;
+  }
+  createModal() {
+    const div = document.createElement("div");
+    div.classList.add("modal");
+    const title = document.createElement("h1");
+    title.classList.add("modal__title");
+    div.appendChild(title);
+    const body = document.createElement("p");
+    body.classList.add("modal__body");
+    div.appendChild(body);
+    const okButton = document.createElement("div");
+    okButton.innerText = "ok";
+    okButton.classList.add("modal__okButton");
+    okButton.innerHTML = `<button id="start" style="width: 100%; height: 35px" class="gameButton">OK</button>`;
+    div.appendChild(okButton);
+    div.style.animation = "loadevent ease-in-out .55s";
+    return div;
+  }
+  createModalId() {
+    return "modal_id_" + Math.random().toString().replace(".", "");
+  }
+}
+class Component {
+  constructor() {
+    __publicField(this, "parent");
+  }
+  setParent(parent) {
+    this.parent = parent;
+  }
+  init() {
+  }
+  destroy() {
+  }
+  initEntity() {
+  }
+  update(timeElapsed) {
+  }
+}
+class NetworkController extends Component {
+}
+const TOP_LEFT_WALL_PATH = [
+  {
+    "x": 471,
+    "y": 5
+  },
+  {
+    "x": 506,
+    "y": 23
+  },
+  {
+    "x": 505,
+    "y": 65
+  },
+  {
+    "x": 492,
+    "y": 80
+  },
+  {
+    "x": 491,
+    "y": 120
+  },
+  {
+    "x": 491,
+    "y": 205
+  },
+  {
+    "x": 458,
+    "y": 207
+  },
+  {
+    "x": 456,
+    "y": 370
+  },
+  {
+    "x": 438,
+    "y": 393
+  },
+  {
+    "x": 442,
+    "y": 591
+  },
+  {
+    "x": 425,
+    "y": 614
+  },
+  {
+    "x": 426,
+    "y": 724
+  },
+  {
+    "x": 423,
+    "y": 939
+  },
+  {
+    "x": 246,
+    "y": 1264
+  },
+  {
+    "x": 3,
+    "y": 1295
+  },
+  {
+    "x": 3,
+    "y": 4
+  }
+];
+const BOXES = [
+  [
+    {
+      "x": 1165,
+      "y": 768
+    },
+    {
+      "x": 753,
+      "y": 556
+    }
+  ],
+  [
+    {
+      "x": 891,
+      "y": 751
+    },
+    {
+      "x": 929,
+      "y": 803
+    }
+  ],
+  [
+    {
+      "x": 1008,
+      "y": 759
+    },
+    {
+      "x": 1072,
+      "y": 827
+    }
+  ],
+  [
+    {
+      "x": 1122,
+      "y": 749
+    },
+    {
+      "x": 1189,
+      "y": 1015
+    }
+  ],
+  [
+    {
+      "x": 756,
+      "y": 980
+    },
+    {
+      "x": 1187,
+      "y": 1113
+    }
+  ],
+  [
+    {
+      "x": 560,
+      "y": 291.5
+    },
+    {
+      "x": 684,
+      "y": 367.5
+    }
+  ],
+  [
+    {
+      "x": 618,
+      "y": 378.5
+    },
+    {
+      "x": 708,
+      "y": 438.5
+    }
+  ],
+  [
+    {
+      "x": 604,
+      "y": 357.5
+    },
+    {
+      "x": 710,
+      "y": 387.5
+    }
+  ],
+  [
+    {
+      "x": 655,
+      "y": 421.5
+    },
+    {
+      "x": 727,
+      "y": 463.5
+    }
+  ],
+  [
+    {
+      "x": 678,
+      "y": 452.5
+    },
+    {
+      "x": 748,
+      "y": 507.5
+    }
+  ],
+  [
+    {
+      "x": 709,
+      "y": 496.5
+    },
+    {
+      "x": 773,
+      "y": 563.5
+    }
+  ],
+  [
+    {
+      "x": 474,
+      "y": 714.5
+    },
+    {
+      "x": 411,
+      "y": 996.5
+    }
+  ],
+  [
+    {
+      "x": 380,
+      "y": 982
+    },
+    {
+      "x": 441,
+      "y": 1051
+    }
+  ],
+  [
+    {
+      "x": 350,
+      "y": 1047
+    },
+    {
+      "x": 411,
+      "y": 1113
+    }
+  ],
+  [
+    {
+      "x": 317,
+      "y": 1106
+    },
+    {
+      "x": 370,
+      "y": 1165
+    }
+  ],
+  [
+    {
+      "x": 290,
+      "y": 1159
+    },
+    {
+      "x": 342,
+      "y": 1219
+    }
+  ],
+  [
+    {
+      "x": 263,
+      "y": 1216
+    },
+    {
+      "x": 312,
+      "y": 1267
+    }
+  ],
+  [
+    {
+      "x": 238,
+      "y": 1266
+    },
+    {
+      "x": 290,
+      "y": 1318
+    }
+  ],
+  [
+    {
+      "x": 211,
+      "y": 1309
+    },
+    {
+      "x": 267,
+      "y": 1378
+    }
+  ],
+  [
+    {
+      "x": 179,
+      "y": 1363
+    },
+    {
+      "x": 231,
+      "y": 1434
+    }
+  ],
+  [
+    {
+      "x": 214,
+      "y": 1415
+    },
+    {
+      "x": 156,
+      "y": 1469
+    }
+  ],
+  [
+    {
+      "x": 128,
+      "y": 1465
+    },
+    {
+      "x": 185,
+      "y": 1519
+    }
+  ],
+  [
+    {
+      "x": 103,
+      "y": 1520
+    },
+    {
+      "x": 167,
+      "y": 1584
+    }
+  ],
+  [
+    {
+      "x": 67,
+      "y": 1572
+    },
+    {
+      "x": 131,
+      "y": 1636
+    }
+  ],
+  [
+    {
+      "x": 80,
+      "y": 1614
+    },
+    {
+      "x": 0,
+      "y": 1666
+    }
+  ],
+  [
+    {
+      "x": 61,
+      "y": 1638
+    },
+    {
+      "x": 0,
+      "y": 1686
+    }
+  ],
+  [
+    {
+      "x": 31,
+      "y": 1692
+    },
+    {
+      "x": 0,
+      "y": 1719
+    }
+  ],
+  [
+    {
+      "x": 31,
+      "y": 1684
+    },
+    {
+      "x": 0,
+      "y": 1701
+    }
+  ],
+  [
+    {
+      "x": 817,
+      "y": 1115
+    },
+    {
+      "x": 735,
+      "y": 1214
+    }
+  ],
+  [
+    {
+      "x": 774,
+      "y": 1164
+    },
+    {
+      "x": 722,
+      "y": 1310
+    }
+  ],
+  [
+    {
+      "x": 735,
+      "y": 1224
+    },
+    {
+      "x": 691,
+      "y": 1336
+    }
+  ],
+  [
+    {
+      "x": 669,
+      "y": 1274
+    },
+    {
+      "x": 742,
+      "y": 1350
+    }
+  ],
+  [
+    {
+      "x": 648,
+      "y": 1323
+    },
+    {
+      "x": 726,
+      "y": 1394
+    }
+  ],
+  [
+    {
+      "x": 614,
+      "y": 1376
+    },
+    {
+      "x": 695,
+      "y": 1461
+    }
+  ],
+  [
+    {
+      "x": 579,
+      "y": 1439
+    },
+    {
+      "x": 684,
+      "y": 1532
+    }
+  ],
+  [
+    {
+      "x": 546,
+      "y": 1503
+    },
+    {
+      "x": 623,
+      "y": 1588
+    }
+  ],
+  [
+    {
+      "x": 514,
+      "y": 1579
+    },
+    {
+      "x": 595,
+      "y": 1665
+    }
+  ],
+  [
+    {
+      "x": 549,
+      "y": 1633
+    },
+    {
+      "x": 492,
+      "y": 1719
+    }
+  ],
+  [
+    {
+      "x": 494,
+      "y": 1665
+    },
+    {
+      "x": 461,
+      "y": 1719
+    }
+  ],
+  [
+    {
+      "x": 505,
+      "y": 192
+    },
+    {
+      "x": 595,
+      "y": 247
+    }
+  ],
+  [
+    {
+      "x": 538,
+      "y": 248
+    },
+    {
+      "x": 609,
+      "y": 292
+    }
+  ],
+  [
+    {
+      "x": 486,
+      "y": 138
+    },
+    {
+      "x": 530,
+      "y": 171
+    }
+  ],
+  [
+    {
+      "x": 492,
+      "y": 164
+    },
+    {
+      "x": 548,
+      "y": 202
+    }
+  ],
+  [
+    {
+      "x": 367,
+      "y": 656
+    },
+    {
+      "x": 417,
+      "y": 719
+    }
+  ],
+  [
+    {
+      "x": 336,
+      "y": 622
+    },
+    {
+      "x": 382,
+      "y": 668
+    }
+  ],
+  [
+    {
+      "x": 292,
+      "y": 574
+    },
+    {
+      "x": 351,
+      "y": 628
+    }
+  ],
+  [
+    {
+      "x": 260,
+      "y": 527
+    },
+    {
+      "x": 310,
+      "y": 584
+    }
+  ],
+  [
+    {
+      "x": 228,
+      "y": 482
+    },
+    {
+      "x": 279,
+      "y": 532
+    }
+  ],
+  [
+    {
+      "x": 199,
+      "y": 414
+    },
+    {
+      "x": 259,
+      "y": 484
+    }
+  ],
+  [
+    {
+      "x": 194,
+      "y": 365
+    },
+    {
+      "x": 236,
+      "y": 420
+    }
+  ],
+  [
+    {
+      "x": 181,
+      "y": 304
+    },
+    {
+      "x": 229,
+      "y": 368
+    }
+  ],
+  [
+    {
+      "x": 252,
+      "y": 223
+    },
+    {
+      "x": 192,
+      "y": 302
+    }
+  ],
+  [
+    {
+      "x": 291,
+      "y": 166
+    },
+    {
+      "x": 230,
+      "y": 238
+    }
+  ],
+  [
+    {
+      "x": 302,
+      "y": 124
+    },
+    {
+      "x": 253,
+      "y": 175
+    }
+  ],
+  [
+    {
+      "x": 312,
+      "y": 88
+    },
+    {
+      "x": 275,
+      "y": 133
+    }
+  ],
+  [
+    {
+      "x": 494,
+      "y": 85
+    },
+    {
+      "x": 443,
+      "y": 139
+    }
+  ],
+  [
+    {
+      "x": 448,
+      "y": 57
+    },
+    {
+      "x": 309,
+      "y": 101
+    }
+  ]
+];
+const DEFAULT_WIDTH = 1580;
+const DEFAULT_HEIGHT = 1720;
+class TopLeftStairsWallEntity extends DrawableEntity {
+  constructor(x, y, scale) {
+    super();
+    this.x = x;
+    this.y = y;
+    this.scale = scale;
+    const box = new Box(
+      new Position(x, y),
+      DEFAULT_WIDTH * scale,
+      DEFAULT_HEIGHT * scale
+    );
+    this.gameObject = new GameObject();
+    this.gameObject.setBox(box);
+    this.gameObject.setZIndex(1);
+    const topLeftWallImage = ResourceLoader.cropImageByPath(ResourceLoader.getLoadedAssets().stairs, TOP_LEFT_WALL_PATH);
+    this.gameObject.setImage(topLeftWallImage);
+    this.gameObject.addHook("before", (context, camera) => {
+      context.globalAlpha = 0.7;
+    });
+    this.gameObject.addHook("after", (context, camera) => {
+      context.globalAlpha = 1;
+    });
+  }
+}
+class Stairs extends DrawableEntity {
+  constructor(x, y, scale = 2) {
+    super();
+    __publicField(this, "topLeftWallEntity", null);
+    this.x = x;
+    this.y = y;
+    this.scale = scale;
+    const imageBox = new Box(
+      new Position(x, y),
+      DEFAULT_WIDTH * scale,
+      DEFAULT_HEIGHT * scale
+    );
+    this.gameObject = new GameObject();
+    this.gameObject.setBox(imageBox);
+    this.gameObject.setZIndex(-1);
+    const backgroundImage = ResourceLoader.getLoadedAssets().stairs;
+    this.gameObject.setImage(backgroundImage);
+    for (const box of BOXES) {
+      const point1 = box[0];
+      const point2 = box[1];
+      const scaledPoint1 = {
+        x: x + point1.x * this.scale,
+        y: y + point1.y * this.scale
+      };
+      const scaledPoint2 = {
+        x: x + point2.x * this.scale,
+        y: y + point2.y * this.scale
+      };
+      const topLeftX = Math.min(scaledPoint1.x, scaledPoint2.x);
+      const topLeftY = Math.min(scaledPoint1.y, scaledPoint2.y);
+      const width = Math.abs(scaledPoint1.x - scaledPoint2.x);
+      const height = Math.abs(scaledPoint1.y - scaledPoint2.y);
+      const collidableGameObject = new GameObject();
+      collidableGameObject.setIsCollidable(true);
+      collidableGameObject.setBox(new Box(
+        new Position(topLeftX, topLeftY),
+        width,
+        height
+      ));
+      this.gameObject.addChild(collidableGameObject);
+    }
+  }
+  getWidth___TODO_DELETE_IT() {
+    return this.getGameObject().getBox().getWidth();
+  }
+  getHeight__TODO_DELETE_IT() {
+    return this.getGameObject().getBox().getWidth();
   }
   initEntity() {
     super.initEntity();
-    this.syncWithPlayer();
-    this.unsubscribeFromPlayerMoveEventFn = this.player.emitter.subscribe("player_move", () => {
-      this.syncWithPlayer();
-      document.getElementById("cameraPos").innerHTML = `camera center x ${this.getBox().getCenter().x} y ${this.getBox().getCenter().y} <br />`;
-      document.getElementById("cameraPos").innerHTML += `camera corner x ${this.getBox().getRect().left} y ${this.getBox().getRect().top} <br />`;
-    });
-    window.addEventListener("resize", this.syncWithPlayer);
-    addScreenOrientationChangeEventHandler(this.syncWithPlayer);
+    const entityManager = this.getEntityManager();
+    const topLeftWallEntity = new TopLeftStairsWallEntity(this.x, this.y, this.scale);
+    entityManager.addToScene(topLeftWallEntity);
+    entityManager.addEntity(topLeftWallEntity);
+    this.topLeftWallEntity = topLeftWallEntity;
   }
   destroy() {
     super.destroy();
-    window.removeEventListener("resize", this.syncWithPlayer);
-    removeScreenOrientationChangeEventHandler(this.syncWithPlayer);
-    if (this.unsubscribeFromPlayerMoveEventFn) {
-      this.unsubscribeFromPlayerMoveEventFn();
+    if (this.topLeftWallEntity) {
+      this.getEntityManager().removeEntity(this.topLeftWallEntity);
     }
+  }
+}
+const BASE_WIDTH = 112;
+const BASE_HEIGHT = 160;
+class TreeEntity extends DrawableEntity {
+  constructor(x, y, index = 0, isRightToLeft = true, scale = 1) {
+    super();
+    this.x = x;
+    this.y = y;
+    this.index = index;
+    this.isRightToLeft = isRightToLeft;
+    this.scale = scale;
+    const tree = new GameObject();
+    tree.setBox(new Box(
+      new Position(this.x, this.y, 0),
+      BASE_WIDTH * this.scale,
+      BASE_HEIGHT * this.scale
+    ));
+    tree.setImage(ResourceLoader.getLoadedAssets().treeSprite.getSpriteByIndex(this.index));
+    tree.setIsCollidable(false);
+    tree.setIsRightToLeft(this.isRightToLeft);
+    const collidableBox = new GameObject();
+    collidableBox.setIsCollidable(true);
+    collidableBox.setBox(new Box(
+      new Position(this.x + BASE_WIDTH * this.scale / 4, this.y + BASE_HEIGHT * this.scale * (3 / 4), 0),
+      BASE_WIDTH * this.scale / 2,
+      BASE_HEIGHT * this.scale / 4 / 5
+    ));
+    tree.addChild(collidableBox);
+    this.gameObject = tree;
+  }
+}
+class MapWall extends DrawableEntity {
+  // protected color = '#000';
+  constructor(width, height) {
+    super();
+    __publicField(this, "gameObject");
+    this.width = width;
+    this.height = height;
+    this.gameObject = new GameObject();
+    this.setUpWalls();
+  }
+  setUpWalls() {
+    const wallColor = "#493420";
+    const floor = new GameObject();
+    floor.setBox(new Box(
+      new Position(0, 0, 0),
+      this.width,
+      this.height
+    ));
+    floor.setImage(ResourceLoader.getImageFromPattern(ResourceLoader.getLoadedAssets().cobblestone, this.width, this.height));
+    floor.setIsCollidable(false);
+    this.gameObject.addChild(floor);
+    const leftWall = new GameObject();
+    leftWall.setBox(new Box(
+      new Position(0, 0, 0),
+      20,
+      this.height
+    ));
+    leftWall.setColor(wallColor);
+    leftWall.setIsCollidable(true);
+    this.gameObject.addChild(leftWall);
+    const rightWall = new GameObject();
+    rightWall.setBox(new Box(
+      new Position(this.width - 20, 0, 0),
+      20,
+      this.height / 2 - 100
+    ));
+    rightWall.setColor(wallColor);
+    rightWall.setIsCollidable(true);
+    this.gameObject.addChild(rightWall);
+    const rightWall2 = new GameObject();
+    rightWall2.setBox(new Box(
+      new Position(this.width - 20, this.height / 2 + 100, 0),
+      20,
+      this.height / 2 - 100
+    ));
+    rightWall2.setColor(wallColor);
+    rightWall2.setIsCollidable(true);
+    this.gameObject.addChild(rightWall2);
+    const topWall = new GameObject();
+    topWall.setBox(new Box(
+      new Position(0, 0, 0),
+      this.width,
+      20
+    ));
+    topWall.setColor(wallColor);
+    topWall.setIsCollidable(true);
+    this.gameObject.addChild(topWall);
+    const bottomWall = new GameObject();
+    bottomWall.setBox(new Box(
+      new Position(0, this.height - 20, 0),
+      this.width,
+      20
+    ));
+    bottomWall.setColor(wallColor);
+    bottomWall.setIsCollidable(true);
+    this.gameObject.addChild(bottomWall);
+  }
+  getGameObject() {
+    return this.gameObject;
   }
 }
 class BedEntity extends DrawableEntity {
@@ -2285,6 +3461,146 @@ class BedEntity extends DrawableEntity {
           body: ""
         });
       }
+    }
+  }
+}
+class InputController extends Component {
+  constructor() {
+    super(...arguments);
+    __publicField(this, "pressedKeys", /* @__PURE__ */ new Map());
+    __publicField(this, "mobileControls", (() => {
+      const map = /* @__PURE__ */ new Map();
+      const buttons = Array.from(document.getElementById("mobile-controls").querySelectorAll("[data-key]"));
+      for (const button of buttons) {
+        const key = button.getAttribute("data-key");
+        map.set(key, button);
+      }
+      return map;
+    })());
+    __publicField(this, "keyDownHandler", (event) => {
+      this.pressedKeys.set(event.code, true);
+      if (this.mobileControls.has(event.code)) {
+        this.mobileControls.get(event.code).classList.add("active");
+      }
+    });
+    __publicField(this, "keyUpHandler", (event) => {
+      this.pressedKeys.set(event.code, false);
+      if (this.mobileControls.has(event.code)) {
+        this.mobileControls.get(event.code).classList.remove("active");
+      }
+    });
+    __publicField(this, "windowFocusOutHandler", () => {
+      this.pressedKeys.forEach((_, key) => {
+        this.pressedKeys.set(key, false);
+      });
+    });
+  }
+  isOneOfMovementKeysIsPressed() {
+    return this.isTopPressed() || this.isRightPressed() || this.isBottomPressed() || this.isLeftPressed();
+  }
+  isTopPressed() {
+    return !!this.pressedKeys.get("KeyW") || !!this.pressedKeys.get("ArrowUp");
+  }
+  isRightPressed() {
+    return !!this.pressedKeys.get("KeyD") || !!this.pressedKeys.get("ArrowRight");
+  }
+  isBottomPressed() {
+    return !!this.pressedKeys.get("KeyS") || !!this.pressedKeys.get("ArrowDown");
+  }
+  isLeftPressed() {
+    return !!this.pressedKeys.get("KeyA") || !!this.pressedKeys.get("ArrowLeft");
+  }
+  isAttack1Pressed() {
+    return !!this.pressedKeys.get("KeyE");
+  }
+  isAttack2Pressed() {
+    return !!this.pressedKeys.get("KeyQ");
+  }
+  isAttack3Pressed() {
+    return !!this.pressedKeys.get("KeyX");
+  }
+  isAttack4Pressed() {
+    return !!this.pressedKeys.get("KeyF");
+  }
+  isClearButtonPressed() {
+    return !!this.pressedKeys.get("KeyC");
+  }
+  init() {
+    super.init();
+    document.addEventListener("keydown", this.keyDownHandler);
+    Array.from(document.querySelectorAll("#mobile-controls [data-key]")).forEach((div) => {
+      div.addEventListener("mousedown", (event) => {
+        this.pressedKeys.set(div.getAttribute("data-key"), true);
+      });
+      div.addEventListener("mouseup", (event) => {
+        this.pressedKeys.set(div.getAttribute("data-key"), false);
+      });
+      div.addEventListener("touchstart", (event) => {
+        this.pressedKeys.set(div.getAttribute("data-key"), true);
+      });
+      div.addEventListener("touchend", (event) => {
+        this.pressedKeys.set(div.getAttribute("data-key"), false);
+      });
+    });
+    document.addEventListener("keyup", this.keyUpHandler);
+    document.addEventListener("focusout", this.windowFocusOutHandler);
+  }
+  destroy() {
+    super.destroy();
+    document.removeEventListener("keydown", this.keyDownHandler);
+    document.removeEventListener("keyup", this.keyUpHandler);
+    document.removeEventListener("focusout", this.windowFocusOutHandler);
+  }
+  update(timeElapsed) {
+    super.update(timeElapsed);
+  }
+}
+class FollowPlayerCamera extends Camera {
+  constructor(width, height, player, params) {
+    super(width, height);
+    __publicField(this, "unsubscribeFromPlayerMoveEventFn", null);
+    __publicField(this, "syncWithPlayer", () => {
+      const topLeft = this.getBox().getTopLeft();
+      const playerCenter = this.player.getGameObject().getBox().getCenter();
+      let nextX = playerCenter.x - window.innerWidth / 2;
+      let nextY = playerCenter.y - window.innerHeight / 2;
+      if (this.params) {
+        if (nextX <= 0) {
+          nextX = 0;
+        }
+        if (nextX + window.innerWidth >= this.params.maxWidth) {
+          nextX = this.params.maxWidth - window.innerWidth;
+        }
+        if (nextY <= 0) {
+          nextY = 0;
+        }
+        if (nextY + window.innerHeight >= this.params.maxHeight) {
+          nextY = this.params.maxHeight - window.innerHeight;
+        }
+      }
+      topLeft.x = nextX;
+      topLeft.y = nextY;
+    });
+    this.player = player;
+    this.params = params;
+  }
+  initEntity() {
+    super.initEntity();
+    this.syncWithPlayer();
+    this.unsubscribeFromPlayerMoveEventFn = this.player.emitter.subscribe("player_move", () => {
+      this.syncWithPlayer();
+      document.getElementById("cameraPos").innerHTML = `camera center x ${this.getBox().getCenter().x} y ${this.getBox().getCenter().y} <br />`;
+      document.getElementById("cameraPos").innerHTML += `camera corner x ${this.getBox().getRect().left} y ${this.getBox().getRect().top} <br />`;
+    });
+    window.addEventListener("resize", this.syncWithPlayer);
+    addScreenOrientationChangeEventHandler(this.syncWithPlayer);
+  }
+  destroy() {
+    super.destroy();
+    window.removeEventListener("resize", this.syncWithPlayer);
+    removeScreenOrientationChangeEventHandler(this.syncWithPlayer);
+    if (this.unsubscribeFromPlayerMoveEventFn) {
+      this.unsubscribeFromPlayerMoveEventFn();
     }
   }
 }
@@ -2334,8 +3650,7 @@ class BaseEnemyIdleState extends State {
     const currentPlayer = this.fsm.getEnemy().getEntityManager().getEntityByName("player");
     const distance = this.fsm.getEnemy().getGameObject().getBox().getCenter().distance(currentPlayer.getGameObject().getBox().getCenter());
     this.player.tuneSoundByDistance(distance);
-    const gameMap = this.fsm.getEnemy().getEntityManager().getEntityByName("map");
-    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), 200, (entity) => entity instanceof PlayerEntity && entity.getHealth().getValue() > 0);
+    const players = this.fsm.getEnemy().getEntityManager().findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), 200, (entity) => entity instanceof PlayerEntity && entity.getHealth().getValue() > 0);
     if (players.length > 0) {
       this.fsm.setChasingPlayerState();
     } else {
@@ -2442,8 +3757,7 @@ class BaseEnemyChasingPlayerState extends State {
     const currentPlayer = this.fsm.getEnemy().getEntityManager().getEntityByName("player");
     const distance = this.fsm.getEnemy().getGameObject().getBox().getCenter().distance(currentPlayer.getGameObject().getBox().getCenter());
     this.player.tuneSoundByDistance(distance);
-    const gameMap = this.fsm.getEnemy().getEntityManager().getEntityByName("map");
-    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance(), (e) => e instanceof PlayerEntity);
+    const players = this.fsm.getEnemy().getEntityManager().findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance(), (e) => e instanceof PlayerEntity);
     if (players.length > 0) {
       const playerToChaise = players[0];
       const distanceToPlayer = playerToChaise.getGameObject().getBox().getCenter().distance(this.fsm.getEnemy().getGameObject().getBox().getCenter());
@@ -2493,8 +3807,7 @@ class BaseEnemyAttackPlayerState extends State {
     const currentPlayer = this.fsm.getEnemy().getEntityManager().getEntityByName("player");
     const distance = this.fsm.getEnemy().getGameObject().getBox().getCenter().distance(currentPlayer.getGameObject().getBox().getCenter());
     this.player.tuneSoundByDistance(distance);
-    const gameMap = this.fsm.getEnemy().getEntityManager().getEntityByName("map");
-    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance(), (entity) => entity instanceof PlayerEntity && entity.getHealth().getValue() > 0);
+    const players = this.fsm.getEnemy().getEntityManager().findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance(), (entity) => entity instanceof PlayerEntity && entity.getHealth().getValue() > 0);
     const player = players.length ? players[0] : null;
     if (!player) {
       this.fsm.setIdleState();
@@ -2682,147 +3995,6 @@ class SlimeEntity extends BaseEnemyEntity {
     this.health.setValue(value);
   }
 }
-const TITLE = `Задача. Очистить дом`;
-const BODY = `О нет! Наша великая империя находится в упадке! Демоны нападают со всех сторон, культы предателей возникают то тут, то тамНам предстоит сделать выбор - мы герой или революционер. От нас зависит судьба империи - выберем ли мы разрушить её, либо отстроить из пепла и руин.Вы - независимый герой, способный на многое! Перед вами открывается путь приключений доселе не слыханной широты! Доколе мы - простые люди империидолжны страдать от гнёта короля-тирана. Пора навести порядок и восстановить справедливость! <br />  <br /> убейте 3х водных сламов и потушите ваш дом. Тогда империя восстановится.`;
-class QuestEntity extends Entity {
-  constructor() {
-    super();
-    __publicField(this, "unsubscribeFromKilledEvent", null);
-    __publicField(this, "closeStartModalFn", null);
-    __publicField(this, "killCount", 0);
-    __publicField(this, "done", false);
-    __publicField(this, "fires", []);
-  }
-  initEntity() {
-    super.initEntity();
-    const uiEntity = this.getEntityManager().getEntityByName("ui");
-    uiEntity.addQuest("initial", TITLE, () => {
-      uiEntity.showModal({
-        title: TITLE,
-        body: BODY
-      });
-    });
-    this.closeStartModalFn = uiEntity.showModal({
-      title: TITLE,
-      body: BODY
-    });
-    this.unsubscribeFromKilledEvent = this.getEntityManager().emitter.subscribe(GAME_EVENTS.KILLED_EVENT, ({ who, killer }) => {
-      if (!this.done && who instanceof SlimeEntity && killer instanceof PlayerEntity) {
-        this.killCount++;
-        if (this.killCount === 3) {
-          this.done = false;
-          this.onSuccess();
-        }
-      }
-    });
-    for (let j = 0; j < 5; j++) {
-      const fire = new FireEntity(-70, 50 * (j + 1), 150, 150);
-      this.getEntityManager().addToScene(fire);
-      this.getEntityManager().addEntity(fire);
-      this.fires.push(fire);
-    }
-    for (let j = 0; j < 10; j++) {
-      const fire = new FireEntity(j * 50, -70, 150, 150);
-      this.getEntityManager().addToScene(fire);
-      this.getEntityManager().addEntity(fire);
-      this.fires.push(fire);
-    }
-  }
-  onSuccess() {
-    if (this.closeStartModalFn) {
-      this.closeStartModalFn();
-    }
-    const uiEntity = this.getEntityManager().getEntityByName("ui");
-    uiEntity.markQuestDone("initial");
-    uiEntity.showModal({
-      title: "Congrats!",
-      body: "You have done the quests! Fire is down. Империя спасена! Good shape хороший Color и fabric"
-    });
-    this.fires.forEach((fire) => {
-      this.getEntityManager().removeEntity(fire);
-    });
-  }
-  destroy() {
-    super.destroy();
-    if (this.unsubscribeFromKilledEvent) {
-      this.unsubscribeFromKilledEvent();
-    }
-  }
-}
-class UIEntity extends Entity {
-  constructor() {
-    super(...arguments);
-    __publicField(this, "ui", document.getElementById("ui"));
-    __publicField(this, "openModals", []);
-    __publicField(this, "quests", []);
-  }
-  addQuest(id, text, onClick) {
-    this.quests.push({ id, text, onClick });
-    this.renderQuests();
-  }
-  markQuestDone(id) {
-    this.quests.find((q) => q.id === id).done = true;
-    this.renderQuests();
-  }
-  renderQuests() {
-    this.ui.querySelector("#quests .quests__list").innerHTML = this.quests.map((quest) => {
-      return `
-        <div data-quest-id="${quest.id}" class="quest-list-item ${quest.done ? "quest-list-item--done" : ""}"><p>${quest.text}</p></div>
-      `;
-    }).join("");
-    this.quests.forEach((quest) => {
-      const questId = quest.id;
-      if (!quest.done) {
-        this.ui.querySelector(`[data-quest-id="${questId}"]`).onclick = quest.onClick ?? null;
-      }
-    });
-  }
-  showModal({ title, body, updater, onClose }) {
-    const id = this.createModalId();
-    const modal = this.createModal();
-    const titleElem = modal.querySelector(".modal__title");
-    const bodyElem = modal.querySelector(".modal__body");
-    const okButtonElem = modal.querySelector(".modal__okButton");
-    titleElem.innerHTML = title;
-    bodyElem.innerHTML = body;
-    this.openModals.push(id);
-    this.ui.querySelector("#modals").appendChild(modal);
-    const close = () => {
-      const prevLength = this.openModals.length;
-      this.openModals = this.openModals.filter((modalId) => modalId !== id);
-      const newLength = this.openModals.length;
-      if (prevLength !== newLength) {
-        document.getElementById("modals").removeChild(modal);
-      }
-      onClose == null ? void 0 : onClose();
-    };
-    okButtonElem.onclick = close;
-    if (updater) {
-      updater(modal);
-    }
-    return close;
-  }
-  createModal() {
-    const div = document.createElement("div");
-    div.classList.add("modal");
-    const title = document.createElement("h1");
-    title.classList.add("modal__title");
-    div.appendChild(title);
-    const body = document.createElement("p");
-    body.classList.add("modal__body");
-    div.appendChild(body);
-    const okButton = document.createElement("div");
-    okButton.innerText = "ok";
-    okButton.classList.add("modal__okButton");
-    okButton.innerHTML = `<button id="start" style="width: 100%; height: 35px" class="gameButton">OK</button>`;
-    div.appendChild(okButton);
-    div.style.animation = "loadevent ease-in-out .55s";
-    return div;
-  }
-  createModalId() {
-    return "modal_id_" + Math.random().toString().replace(".", "");
-  }
-}
 class GuardEnemyIdleState extends BaseEnemyIdleState {
   constructor() {
     super(...arguments);
@@ -2891,94 +4063,6 @@ class GuardEntity extends BaseEnemyEntity {
     this.health.setValue(value);
   }
 }
-class SceneRenderer {
-  constructor(width, height, scene, entityManager) {
-    __publicField(this, "started", false);
-    __publicField(this, "canvas", null);
-    __publicField(this, "context", null);
-    __publicField(this, "prevDOMHighResTimeStamp", 0);
-    this.width = width;
-    this.height = height;
-    this.scene = scene;
-    this.entityManager = entityManager;
-  }
-  getCanvas() {
-    return this.canvas;
-  }
-  start() {
-    if (this.started) {
-      return;
-    }
-    this.started = true;
-    if (!this.canvas) {
-      this.canvas = this.createCanvas();
-      this.context = this.canvas.getContext("2d");
-    }
-    this.run();
-  }
-  stop() {
-    this.started = false;
-  }
-  run() {
-    if (!this.started) {
-      return;
-    }
-    requestAnimationFrame((timestamp) => {
-      var _a;
-      const timeElapsed = timestamp - this.prevDOMHighResTimeStamp;
-      this.prevDOMHighResTimeStamp = timestamp;
-      (_a = this.context) == null ? void 0 : _a.clearRect(0, 0, this.width, this.height);
-      for (const entity of this.scene.entities) {
-        const drawableEntity = entity;
-        drawableEntity.getGameObject().draw(this.context, this.scene.camera);
-      }
-      this.entityManager.update(timeElapsed);
-      this.run();
-    });
-  }
-  createCanvas() {
-    const canvas2 = document.createElement("canvas");
-    canvas2.width = this.width;
-    canvas2.height = this.height;
-    canvas2.getContext("2d").imageSmoothingEnabled = false;
-    return canvas2;
-  }
-}
-class EntityPreview {
-  constructor(entity) {
-    __publicField(this, "element", null);
-    __publicField(this, "sceneRenderer", null);
-    __publicField(this, "destroyed", false);
-    this.entity = entity;
-  }
-  mount(id) {
-    var _a;
-    const WIDTH = 100;
-    const HEIGHT = 100;
-    this.element = document.getElementById(id);
-    const camera = new Camera(WIDTH, HEIGHT);
-    const scene = {
-      camera,
-      entities: []
-    };
-    const entityManager = new EntityManager(scene);
-    scene.entities.push(this.entity);
-    entityManager.addEntity(this.entity);
-    const sceneRenderer = new SceneRenderer(WIDTH, HEIGHT, scene, entityManager);
-    sceneRenderer.start();
-    (_a = this.element) == null ? void 0 : _a.appendChild(sceneRenderer.getCanvas());
-    this.sceneRenderer = sceneRenderer;
-  }
-  destroy() {
-    if (this.destroyed) {
-      console.error("Calling destroy on already destroyed EntityPreview");
-      return;
-    }
-    this.sceneRenderer.stop();
-    this.element.removeChild(this.sceneRenderer.getCanvas());
-    this.destroyed = true;
-  }
-}
 class DeathIdleState extends State {
   constructor(fsm) {
     super(fsm);
@@ -3022,6 +4106,73 @@ class DeathEntity extends DrawableEntity {
   update(timeElapsed) {
     super.update(timeElapsed);
     this.finiteStateMachine.update(timeElapsed);
+  }
+}
+const TITLE = `Задача. Очистить дом`;
+const BODY = `О нет! Наша великая империя находится в упадке! Демоны нападают со всех сторон, культы предателей возникают то тут, то тамНам предстоит сделать выбор - мы герой или революционер. От нас зависит судьба империи - выберем ли мы разрушить её, либо отстроить из пепла и руин.Вы - независимый герой, способный на многое! Перед вами открывается путь приключений доселе не слыханной широты! Доколе мы - простые люди империидолжны страдать от гнёта короля-тирана. Пора навести порядок и восстановить справедливость! <br />  <br /> убейте 3х водных сламов и потушите ваш дом. Тогда империя восстановится.`;
+class QuestEntity extends Entity {
+  constructor() {
+    super();
+    __publicField(this, "unsubscribeFromKilledEvent", null);
+    __publicField(this, "closeStartModalFn", null);
+    __publicField(this, "killCount", 0);
+    __publicField(this, "done", false);
+    __publicField(this, "fires", []);
+  }
+  initEntity() {
+    super.initEntity();
+    const uiEntity = this.getEntityManager().getEntityByName("ui");
+    uiEntity.addQuest("initial", TITLE, () => {
+      uiEntity.showModal({
+        title: TITLE,
+        body: BODY
+      });
+    });
+    this.closeStartModalFn = uiEntity.showModal({
+      title: TITLE,
+      body: BODY
+    });
+    this.unsubscribeFromKilledEvent = this.getEntityManager().emitter.subscribe(GAME_EVENTS.KILLED_EVENT, ({ who, killer }) => {
+      if (!this.done && who instanceof SlimeEntity && killer instanceof PlayerEntity) {
+        this.killCount++;
+        if (this.killCount === 3) {
+          this.done = false;
+          this.onSuccess();
+        }
+      }
+    });
+    for (let j = 0; j < 5; j++) {
+      const fire2 = new FireEntity(-70, 50 * (j + 1), 150, 150);
+      this.getEntityManager().addToScene(fire2);
+      this.getEntityManager().addEntity(fire2);
+      this.fires.push(fire2);
+    }
+    for (let j = 0; j < 10; j++) {
+      const fire2 = new FireEntity(j * 50, -70, 150, 150);
+      this.getEntityManager().addToScene(fire2);
+      this.getEntityManager().addEntity(fire2);
+      this.fires.push(fire2);
+    }
+  }
+  onSuccess() {
+    if (this.closeStartModalFn) {
+      this.closeStartModalFn();
+    }
+    const uiEntity = this.getEntityManager().getEntityByName("ui");
+    uiEntity.markQuestDone("initial");
+    uiEntity.showModal({
+      title: "Congrats!",
+      body: "You have done the quests! Fire is down. Империя спасена! Good shape хороший Color и fabric"
+    });
+    this.fires.forEach((fire2) => {
+      this.getEntityManager().removeEntity(fire2);
+    });
+  }
+  destroy() {
+    super.destroy();
+    if (this.unsubscribeFromKilledEvent) {
+      this.unsubscribeFromKilledEvent();
+    }
   }
 }
 class NotSetDeathQuestState extends State {
@@ -3114,40 +4265,244 @@ class DeathQuestEntity extends Entity {
   }
   update(timeElapsed) {
     super.update(timeElapsed);
-    const distanceToPlayer = this.death.distance(this.player);
+    const distanceToPlayer = this.death.distanceTo(this.player);
     if (distanceToPlayer < 150) {
       this.fsm.send({ type: "player_near_death" });
     }
   }
 }
-const BASE_WIDTH = 112;
-const BASE_HEIGHT = 160;
-class TreeEntity extends DrawableEntity {
-  constructor(x, y, index = 0, isRightToLeft = true, scale = 1) {
+class GameMap {
+  constructor() {
+    __publicField(this, "canvas", null);
+    __publicField(this, "context", null);
+    __publicField(this, "entityManager", null);
+    __publicField(this, "scene", null);
+    __publicField(this, "fps", 0);
+    __publicField(this, "drawHooks", {
+      before: [],
+      beforeEntities: [],
+      afterEntities: [],
+      after: []
+    });
+    __publicField(this, "i", 0);
+  }
+  getCanvas() {
+    return this.canvas;
+  }
+  setCanvas(canvas2) {
+    this.canvas = canvas2;
+    this.context = canvas2.getContext("2d");
+  }
+  getEntityManager() {
+    return this.entityManager;
+  }
+  setEntityManager(entityManager) {
+    this.entityManager = entityManager;
+  }
+  getScene() {
+    return this.scene;
+  }
+  setScene(scene) {
+    this.scene = scene;
+  }
+  initialize() {
+    const scene = {
+      // TODO
+      camera: new Camera(window.innerWidth, window.innerHeight),
+      entities: []
+    };
+    this.setScene(scene);
+    const entityManager = new EntityManager(scene);
+    this.setEntityManager(entityManager);
+  }
+  addHook(key, hook) {
+    this.drawHooks[key].push(hook);
+    return () => {
+      this.removeHook(key, hook);
+    };
+  }
+  removeHook(key, hook) {
+    removeOneFromArray(this.drawHooks[key], (h) => h === hook);
+  }
+  draw(timeElapsed, timeElapsedReal) {
+    const context = this.context;
+    const camera = this.scene.camera;
+    for (const hook of this.drawHooks.before) {
+      hook(context, camera);
+    }
+    context.imageSmoothingEnabled = false;
+    context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    context.beginPath();
+    context.rect(0, 0, window.innerWidth, window.innerHeight);
+    context.fillStyle = "#3f4941";
+    context.fill();
+    context.filter = camera.getFilter();
+    for (const hook of this.drawHooks.beforeEntities) {
+      hook(context, camera);
+    }
+    for (let j = 0; j < this.scene.entities.length; j++) {
+      const entity = this.scene.entities[j];
+      if (this.scene.camera.isVisibleDrawableEntity(entity)) {
+        if (entity.getGameObject) {
+          entity.getGameObject().draw(context, camera);
+        }
+      }
+    }
+    for (const hook of this.drawHooks.afterEntities) {
+      hook(context, camera);
+    }
+    if (this.i % 20 === 0) {
+      this.fps = Math.round(1e3 / timeElapsedReal);
+    }
+    context.save();
+    context.fillStyle = "#ffffff";
+    context.font = "15px monospace";
+    context.fillText(`FPS: ${this.fps}`, 10, 30);
+    context.fillText("Attack: E, Q, X. Move: WASD", 10, 50);
+    const player = this.entityManager.getEntityByName("player");
+    if (player) {
+      const playerTopLeft = player.getGameObject().getBox().getTopLeft();
+      context.font = "10px monospace";
+      context.fillText(`x:${Math.floor(playerTopLeft.x)} y:${Math.floor(playerTopLeft.y)}`, 10, 70);
+    }
+    context.restore();
+    if (this.drawHooks.after.length) {
+      for (const hook of this.drawHooks.after) {
+        hook(context, camera);
+      }
+    }
+  }
+  tick(timeElapsed) {
+    this.i++;
+    this.entityManager.update(timeElapsed);
+  }
+  destroy() {
+  }
+}
+class HomeMap extends GameMap {
+  constructor() {
     super();
-    this.x = x;
-    this.y = y;
-    this.index = index;
-    this.isRightToLeft = isRightToLeft;
-    this.scale = scale;
-    const tree = new GameObject();
-    tree.setBox(new Box(
-      new Position(this.x, this.y, 0),
-      BASE_WIDTH * this.scale,
-      BASE_HEIGHT * this.scale
-    ));
-    tree.setImage(ResourceLoader.getLoadedAssets().treeSprite.getSpriteByIndex(this.index));
-    tree.setIsCollidable(false);
-    tree.setIsRightToLeft(this.isRightToLeft);
-    const collidableBox = new GameObject();
-    collidableBox.setIsCollidable(true);
-    collidableBox.setBox(new Box(
-      new Position(this.x + BASE_WIDTH * this.scale / 4, this.y + BASE_HEIGHT * this.scale * (3 / 4), 0),
-      BASE_WIDTH * this.scale / 2,
-      BASE_HEIGHT * this.scale / 4 / 5
-    ));
-    tree.addChild(collidableBox);
-    this.gameObject = tree;
+    __publicField(this, "flowersMap", (() => {
+      const flowers = [];
+      for (let i = -1e3; i < 1e3 * 2; i++) {
+        for (let j = -1e3; j < 1e3 * 2; j++) {
+          if (Math.random() < 25e-6) {
+            flowers.push({
+              i,
+              j
+            });
+          }
+        }
+      }
+      return flowers;
+    })());
+  }
+  initialize() {
+    super.initialize();
+    this.addHook("beforeEntities", (context, camera2) => {
+      for (const { i: x, j: y } of this.flowersMap) {
+        const relativePosition = camera2.getRelativePosition(new Position(x, y, 0));
+        context.drawImage(
+          ResourceLoader.getLoadedAssets().flower,
+          relativePosition.x,
+          relativePosition.y,
+          20,
+          20
+        );
+      }
+    });
+    const entityManager = this.getEntityManager();
+    const uiEntity = new UIEntity();
+    entityManager.addEntity(uiEntity, "ui");
+    const networkEntity = new Entity();
+    const networkController = new NetworkController();
+    networkEntity.addComponent(networkController);
+    entityManager.addEntity(networkEntity, "network");
+    const stairs2 = new Stairs(11e3, 0, 1.5);
+    entityManager.addToScene(stairs2);
+    entityManager.addEntity(stairs2);
+    {
+      const TREE_TYPE = 7;
+      let tree = new TreeEntity(-40, -300, TREE_TYPE, Math.random() > 0.5, 2);
+      entityManager.addEntity(tree, "tree");
+      entityManager.addToScene(tree);
+      tree = new TreeEntity(-210, 80, TREE_TYPE, Math.random() > 0.5, 2);
+      entityManager.addEntity(tree, "tree");
+      entityManager.addToScene(tree);
+      tree = new TreeEntity(-200, -180, TREE_TYPE, Math.random() > 0.5, 2);
+      entityManager.addEntity(tree, "tree");
+      entityManager.addToScene(tree);
+      tree = new TreeEntity(-200, -180, TREE_TYPE, Math.random() > 0.5, 2);
+      entityManager.addEntity(tree, "tree");
+      entityManager.addToScene(tree);
+      tree = new TreeEntity(300, -380, TREE_TYPE, Math.random() > 0.5, 2);
+      entityManager.addEntity(tree, "tree");
+      entityManager.addToScene(tree);
+      tree = new TreeEntity(600, -340, TREE_TYPE, Math.random() > 0.5, 2);
+      entityManager.addEntity(tree, "tree");
+      entityManager.addToScene(tree);
+    }
+    const mapWall = new MapWall(800, 600);
+    entityManager.addEntity(mapWall, "mapWall");
+    entityManager.addToScene(mapWall);
+    const bed2 = new BedEntity();
+    entityManager.addEntity(bed2, "bed");
+    entityManager.addToScene(bed2);
+    const player = new PlayerEntity(12e3 - 200, 1250);
+    player.emitter.subscribe("dead_and_modal_closed", () => {
+      player.respawn();
+    });
+    for (let j = 0; j < 3; j++) {
+      const slime = new SlimeEntity(12e3 - 100 + Math.random() * 300, 1250 - 100 + Math.random() * 300);
+      entityManager.addEntity(slime);
+      entityManager.addToScene(slime);
+    }
+    const inputController = new InputController();
+    player.addComponent(inputController);
+    entityManager.addEntity(player, "player");
+    const camera = new FollowPlayerCamera(window.innerWidth, window.innerHeight, player);
+    entityManager.addEntity(camera, "camera");
+    this.getScene().camera = camera;
+    const getRandomDiff = () => (0.5 - Math.random()) * 500;
+    for (let i = 0; i < 10; i++) {
+      for (let j = -2e3; j < 2e3; j++) {
+        if (j % 500 !== 0)
+          continue;
+        const MULT = 200;
+        const tree1 = new TreeEntity(j + getRandomDiff(), -1e3 - (i + 1) * MULT + getRandomDiff(), 0, true, 2);
+        entityManager.addEntity(tree1);
+        entityManager.addToScene(tree1);
+        const tree2 = new TreeEntity(j + getRandomDiff(), 1e3 + (i + 1) * MULT + getRandomDiff(), 0, true, 2);
+        entityManager.addEntity(tree2);
+        entityManager.addToScene(tree2);
+        if (j > -1e3 && j < 1e3) {
+          const tree3 = new TreeEntity(-1e3 - (i + 1) * MULT + getRandomDiff(), j + getRandomDiff(), 0, true, 2);
+          entityManager.addEntity(tree3);
+          entityManager.addToScene(tree3);
+          const tree4 = new TreeEntity(1e3 + (i + 1) * MULT + getRandomDiff(), j + getRandomDiff(), 0, true, 2);
+          entityManager.addEntity(tree4);
+          entityManager.addToScene(tree4);
+        }
+      }
+    }
+    for (let j = 0; j < 3; j++) {
+      const slime = new SlimeEntity(200 * Math.random() + 200, 200 * Math.random() + 200);
+      entityManager.addEntity(slime);
+      entityManager.addToScene(slime);
+    }
+    for (let j = 0; j < 3; j++) {
+      const guard = new GuardEntity(200 * Math.random() + 600, 200 * Math.random() + 600);
+      entityManager.addEntity(guard);
+      entityManager.addToScene(guard);
+    }
+    entityManager.addToScene(player);
+    const death = new DeathEntity(800, 200);
+    entityManager.addEntity(death, "death");
+    entityManager.addToScene(death);
+    const questEntity = new QuestEntity();
+    entityManager.addEntity(questEntity, "quests");
+    const deathQuest = new DeathQuestEntity();
+    entityManager.addEntity(deathQuest, "deathQuest");
   }
 }
 let canvasWidth = window.innerWidth;
@@ -3167,101 +4522,37 @@ document.getElementById("resetTimeButton").onclick = () => {
   setTimeSpeed(1);
 };
 const canvas = document.getElementById("canvas");
-window.addEventListener("reset", () => {
+window.addEventListener("resize", () => {
   canvasWidth = window.innerWidth;
   canvasHeight = window.innerHeight;
   canvas.width = canvasWidth;
   canvas.height = canvasHeight;
 });
-const speedInput = document.getElementById("speedInput");
-const attackSpeedInput = document.getElementById("attackSpeedInput");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
-const debug = document.getElementById("debug");
 class Game {
-  constructor(canvas2, requestAnimationFrame2, cancelAnimationFrame) {
-    __publicField(this, "isSetUp", false);
-    __publicField(this, "scene");
+  constructor(canvas2) {
     __publicField(this, "canvas");
-    __publicField(this, "context");
-    __publicField(this, "requestAnimationFrame");
-    __publicField(this, "cancelAnimationFrame");
-    __publicField(this, "entityManager");
+    __publicField(this, "gameMap", null);
     __publicField(this, "interval", -1);
-    __publicField(this, "flowersMap", (() => {
-      const flowers = [];
-      for (let i = -1e3; i < 1e3 * 2; i++) {
-        for (let j = -1e3; j < 1e3 * 2; j++) {
-          if (Math.random() < 25e-6) {
-            flowers.push({
-              i,
-              j
-            });
-          }
-        }
-      }
-      return flowers;
-    })());
-    __publicField(this, "i", 0);
-    __publicField(this, "fps", 0);
     __publicField(this, "prevDOMHighResTimeStamp", 0);
     this.canvas = canvas2;
-    this.context = this.canvas.getContext("2d");
-    this.requestAnimationFrame = requestAnimationFrame2;
-    this.cancelAnimationFrame = cancelAnimationFrame;
   }
-  getIsSetUp() {
-    return this.isSetUp;
+  setGameMap(gameMap) {
+    if (this.gameMap) {
+      this.gameMap.destroy();
+    }
+    gameMap.initialize();
+    this.gameMap = gameMap;
   }
-  tick(timeElapsed) {
-    this.entityManager.update(timeElapsed);
+  tick(timeElapsed, timeElapsedReal) {
+    this.gameMap.tick(timeElapsed);
   }
   draw(timeElapsed, timeElapsedReal) {
-    this.context.imageSmoothingEnabled = false;
-    this.context.clearRect(0, 0, canvasWidth, canvasHeight);
-    this.context.beginPath();
-    this.context.rect(0, 0, canvasWidth, canvasHeight);
-    this.context.fillStyle = "#3f4941";
-    this.context.fill();
-    const camera = this.scene.camera;
-    this.context.filter = camera.getFilter();
-    for (const { i: x, j: y } of this.flowersMap) {
-      const relativePosition = camera.getRelativePosition(new Position(x, y, 0));
-      this.context.drawImage(
-        ResourceLoader.getLoadedAssets().flower,
-        relativePosition.x,
-        relativePosition.y,
-        20,
-        20
-      );
-    }
-    for (let j = 0; j < this.scene.entities.length; j++) {
-      const entity = this.scene.entities[j];
-      if (this.scene.camera.isVisibleDrawableEntity(entity)) {
-        if (entity.getGameObject) {
-          entity.getGameObject().draw(this.context, camera);
-        }
-      }
-    }
-    if (this.i % 20 === 0) {
-      this.fps = Math.round(1e3 / timeElapsedReal);
-    }
-    this.context.save();
-    this.context.fillStyle = "#ffffff";
-    this.context.font = "15px sans-serif";
-    this.context.fillText(`FPS: ${this.fps}`, 10, 30);
-    this.context.fillText("Attack: E, Q. Move: WASD", 10, 50);
-    this.context.restore();
+    this.gameMap.draw(timeElapsed, timeElapsedReal);
   }
   run() {
-    if (!MusicPlayer.getIsPlaying()) {
-      MusicPlayer.playMainTheme();
-    }
-    this.i++;
-    if (this.i === 1e3) {
-      this.i = 0;
-    }
-    this.interval = this.requestAnimationFrame((timeStamp) => {
+    this.interval = requestAnimationFrame((timeStamp) => {
       const timeElapsedReal = timeStamp - this.prevDOMHighResTimeStamp;
       const timeElapsed = timeElapsedReal * timeSpeed;
       this.prevDOMHighResTimeStamp = timeStamp;
@@ -3271,114 +4562,12 @@ class Game {
     });
   }
   stop() {
-    this.cancelAnimationFrame(this.interval);
+    cancelAnimationFrame(this.interval);
   }
-  async setUp() {
-    if (this.isSetUp) {
-      console.error("Game is already set up!");
-      return;
-    }
-    this.scene = {
-      camera: null,
-      entities: []
-    };
-    this.entityManager = new EntityManager(this.scene);
-    const uiEntity = new UIEntity();
-    const uiController = new UIController();
-    uiEntity.addComponent(uiController);
-    this.entityManager.addEntity(uiEntity, "ui");
-    const networkEntity = new Entity();
-    const networkController = new NetworkController();
-    networkEntity.addComponent(networkController);
-    this.entityManager.addEntity(networkEntity, "network");
-    const map = new GameMap(this.scene);
-    this.entityManager.addEntity(map, "map");
-    {
-      const TREE_TYPE = 7;
-      let tree = new TreeEntity(-40, -300, TREE_TYPE, Math.random() > 0.5, 2);
-      this.entityManager.addEntity(tree, "tree");
-      this.scene.entities.push(tree);
-      tree = new TreeEntity(-210, 80, TREE_TYPE, Math.random() > 0.5, 2);
-      this.entityManager.addEntity(tree, "tree");
-      this.scene.entities.push(tree);
-      tree = new TreeEntity(-200, -180, TREE_TYPE, Math.random() > 0.5, 2);
-      this.entityManager.addEntity(tree, "tree");
-      this.scene.entities.push(tree);
-      tree = new TreeEntity(-200, -180, TREE_TYPE, Math.random() > 0.5, 2);
-      this.entityManager.addEntity(tree, "tree");
-      this.scene.entities.push(tree);
-      tree = new TreeEntity(300, -380, TREE_TYPE, Math.random() > 0.5, 2);
-      this.entityManager.addEntity(tree, "tree");
-      this.scene.entities.push(tree);
-      tree = new TreeEntity(600, -340, TREE_TYPE, Math.random() > 0.5, 2);
-      this.entityManager.addEntity(tree, "tree");
-      this.scene.entities.push(tree);
-    }
-    const mapWall = new MapWall(800, 600);
-    this.entityManager.addEntity(mapWall, "mapWall");
-    this.scene.entities.push(mapWall);
-    const bed2 = new BedEntity();
-    this.entityManager.addEntity(bed2, "bed");
-    this.scene.entities.push(bed2);
-    const player = new PlayerEntity(40, 40);
-    player.emitter.subscribe("dead_and_modal_closed", () => {
-      player.respawn();
-    });
-    speedInput.value = player.getSpeed() + "";
-    attackSpeedInput.value = player.getAttackSpeed() + "";
-    speedInput.oninput = (event) => {
-      player.emitter.emit("speed_change", event.target.value);
-    };
-    attackSpeedInput.oninput = (event) => {
-      player.emitter.emit("attack_speed_change", event.target.value);
-    };
-    const inputController = new InputController();
-    player.addComponent(inputController);
-    this.entityManager.addEntity(player, "player");
-    const camera = new FollowPlayerCamera(canvasWidth, canvasHeight, player);
-    this.entityManager.addEntity(camera, "camera");
-    this.scene.camera = camera;
-    const getRandomDiff = () => (0.5 - Math.random()) * 500;
-    for (let i = 0; i < 10; i++) {
-      for (let j = -2e3; j < 2e3; j++) {
-        if (j % 500 !== 0)
-          continue;
-        const MULT = 200;
-        const tree1 = new TreeEntity(j + getRandomDiff(), -1e3 - (i + 1) * MULT + getRandomDiff(), 0, true, 2);
-        this.entityManager.addEntity(tree1);
-        this.scene.entities.push(tree1);
-        const tree2 = new TreeEntity(j + getRandomDiff(), 1e3 + (i + 1) * MULT + getRandomDiff(), 0, true, 2);
-        this.entityManager.addEntity(tree2);
-        this.scene.entities.push(tree2);
-        if (j > -1e3 && j < 1e3) {
-          const tree3 = new TreeEntity(-1e3 - (i + 1) * MULT + getRandomDiff(), j + getRandomDiff(), 0, true, 2);
-          this.entityManager.addEntity(tree3);
-          this.scene.entities.push(tree3);
-          const tree4 = new TreeEntity(1e3 + (i + 1) * MULT + getRandomDiff(), j + getRandomDiff(), 0, true, 2);
-          this.entityManager.addEntity(tree4);
-          this.scene.entities.push(tree4);
-        }
-      }
-    }
-    for (let j = 0; j < 3; j++) {
-      const slime = new SlimeEntity(200 * Math.random() + 200, 200 * Math.random() + 200);
-      this.entityManager.addEntity(slime);
-      this.scene.entities.push(slime);
-    }
-    for (let j = 0; j < 3; j++) {
-      const guard = new GuardEntity(200 * Math.random() + 600, 200 * Math.random() + 600);
-      this.entityManager.addEntity(guard);
-      this.scene.entities.push(guard);
-    }
-    this.scene.entities.push(player);
-    const death = new DeathEntity(800, 200);
-    this.scene.entities.push(death);
-    this.entityManager.addEntity(death, "death");
-    const questEntity = new QuestEntity();
-    this.entityManager.addEntity(questEntity, "quests");
-    const deathQuest = new DeathQuestEntity();
-    this.entityManager.addEntity(deathQuest, "deathQuest");
-    this.isSetUp = true;
+  setUp() {
+    const homeMap = new HomeMap();
+    homeMap.setCanvas(this.canvas);
+    this.setGameMap(homeMap);
   }
 }
 (async () => {
@@ -3402,10 +4591,8 @@ class Game {
   loading.style.display = "none";
   const entityPreview = new EntityPreview(new PlayerEntity(0, 0));
   entityPreview.mount("select-hero");
-  const game = new Game(
-    canvas,
-    window.requestAnimationFrame.bind(window),
-    window.cancelAnimationFrame.bind(window)
+  const game2 = new Game(
+    canvas
   );
   const state = document.getElementById("state");
   const startButton = document.getElementById("start");
@@ -3415,10 +4602,9 @@ class Game {
     entityPreview.destroy();
     state.innerText = "started";
     state.style.color = "#22ff00";
-    if (!game.getIsSetUp()) {
-      await game.setUp();
-    }
-    game.run();
+    game2.setUp();
+    MusicPlayer.playMainTheme();
+    game2.run();
     document.getElementById("start-stop-buttons").style.top = "0px";
     document.getElementById("start-stop-buttons").style.right = "0px";
     startButton.classList.add("none");
@@ -3430,9 +4616,8 @@ class Game {
   stopButton.onclick = function() {
     state.innerText = "stopped";
     state.style.color = "#ff0000";
-    debug.innerText = "";
     MusicPlayer.pause();
-    game.stop();
+    game2.stop();
     startButton.classList.remove("none");
     stopButton.classList.add("none");
   };

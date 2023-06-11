@@ -13,6 +13,10 @@ export class Rotation {
     this.value = val;
   }
 
+  public add(val: number) {
+    this.value += val;
+  }
+
   public isLeft(): boolean {
     const value = this.value % (Math.PI * 2);
     return (

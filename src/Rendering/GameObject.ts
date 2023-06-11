@@ -3,8 +3,11 @@ import { FiniteStateMachine } from '../StateMachine/FiniteStateMachine';
 import { Camera } from '../Camera/Camera';
 import { Rotation } from './Rotation';
 import { ResourceLoader } from '../ResourceLoader';
-import { removeOnFromArray } from '../JSHACKS';
+import { removeOneFromArray } from '../JSHACKS';
+import { UnsubscribeFn } from '../EventEmitter';
 // import { FireStateMachine } from '../Buildings/FireStateMachine';
+
+export type DrawHook = (context: CanvasRenderingContext2D, camera: Camera) => void;
 
 export class GameObject {
   protected box!: Box;
@@ -15,6 +18,13 @@ export class GameObject {
   protected color: string | null = null;
   protected patternImage: HTMLImageElement | null = null;
   protected image: HTMLImageElement | null = null;
+  protected zIndex = 0;
+  public getZIndex(): number {
+    return this.zIndex;
+  }
+  public setZIndex(zIndex: number): void {
+    this.zIndex = zIndex;
+  }
 
   public constructor(finiteStateMachine: FiniteStateMachine = new FiniteStateMachine()) {
     this.finiteStateMachine = finiteStateMachine;
@@ -124,7 +134,7 @@ export class GameObject {
   }
 
   public removeChild(child: GameObject) {
-    removeOnFromArray(this.children, c => c !== child);
+    removeOneFromArray(this.children, c => c !== child);
   }
 
   public update(timeElapsed: number) {
@@ -139,7 +149,25 @@ export class GameObject {
     return this.finiteStateMachine.getCurrentState()?.getCurrentSprite() ?? null;
   };
 
+  private drawHooks = {
+    before: [] as DrawHook[],
+    after: [] as DrawHook[],
+  };
+  public addHook(key: 'before' | 'after', hook: DrawHook): UnsubscribeFn {
+    this.drawHooks[key].push(hook);
+
+    return () => {
+      this.removeHook(key, hook);
+    };
+  }
+  public removeHook(key: 'before' | 'after', hook: DrawHook): void {
+    removeOneFromArray(this.drawHooks[key], (h) => h === hook);
+  }
   public draw(context: CanvasRenderingContext2D, camera: Camera): void {
+    for (const hook of this.drawHooks.before) {
+      hook(context, camera);
+    }
+
     if (this.box) {
       const relationalEntityCoordinates = camera.getRelativeCoordinates(this.box).getRect();
 
@@ -197,6 +225,10 @@ export class GameObject {
 
     for (const child of this.children) {
       child.draw(context, camera);
+    }
+
+    for (const hook of this.drawHooks.after) {
+      hook(context, camera);
     }
   }
 

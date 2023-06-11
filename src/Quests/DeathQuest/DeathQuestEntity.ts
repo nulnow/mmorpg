@@ -33,7 +33,7 @@ export class DeathQuestEntity extends Entity {
   public update(timeElapsed: number) {
     super.update(timeElapsed);
 
-    const distanceToPlayer = this.death.distance(this.player);
+    const distanceToPlayer = this.death.distanceTo(this.player);
 
     if (distanceToPlayer < 150) {
       this.fsm.send({ type: 'player_near_death' });

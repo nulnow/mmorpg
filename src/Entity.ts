@@ -5,6 +5,14 @@ import { EventEmitter } from './EventEmitter';
 export class Entity {
   public readonly emitter = new EventEmitter();
 
+  private tags: string[] = [];
+  public addTag(tag: string): void {
+    this.tags.push(tag);
+  }
+  public hasTag(tag: string): boolean {
+    return this.tags.includes(tag);
+  }
+
   private name = '';
   public getName() { return this.name };
   public setName(name: string): void { this.name = name; }

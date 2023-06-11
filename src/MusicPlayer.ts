@@ -7,6 +7,10 @@ import evilSlime from '../assets/evil-slime.mp3';
 import neutralSlime from '../assets/neutral-slime.mp3';
 import movingSlime from '../assets/moving-slime.mp3';
 
+import fireBall from '../assets/Fireball.mp3';
+import fire from '../assets/fire.mp3';
+import fireballExplosion from '../assets/FireballExplosion.mp3';
+
 export class MusicPlayer {
   private static currentTrack: HTMLAudioElement;
   private static steps: HTMLAudioElement;
@@ -101,6 +105,18 @@ export class MusicPlayer {
     return this.createPlayer(neutralSlime, { loop: true, volume: 0.001 });
   }
 
+  public static createFireBallPlayer(): MusicPlayer {
+    return this.createPlayer(fireBall, { loop: false, volume: 0.1 });
+  }
+
+  public static createFirePlayer(): MusicPlayer {
+    return this.createPlayer(fire, { loop: true, volume: 0.1, maxTimeSEC: 10 });
+  }
+
+  public static createFireballExplosionPlayer(): MusicPlayer {
+    return this.createPlayer(fireballExplosion, { loop: false, volume: 0.1 });
+  }
+
   private audio: HTMLAudioElement;
   private isPlaying: boolean = false;
   private constructor(audio: HTMLAudioElement) {
@@ -111,8 +127,9 @@ export class MusicPlayer {
     if (this.isPlaying) {
       return;
     }
-    this.audio.play();
-    this.isPlaying = true;
+    this.audio.play().then(() => {
+      this.isPlaying = true;
+    });
   }
   public pause(): void {
     if (!this.isPlaying) {

@@ -9,7 +9,7 @@ import { DrawableEntity } from '../Rendering/DrawableEntity';
 import { UIEntity } from '../UI/UIEntity';
 import { FireAttackEntity } from '../Buildings/FireAttackEntity';
 import { Position } from '../Rendering/Position';
-import { Entity } from '../Entity';
+import { fireGreenFilter, firePurpleFilter, FireShieldEntity } from '../Buildings/FireShieldEntity';
 
 export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, IEntityAbleToAttack {
   private readonly finiteStateMachine: PlayerFiniteStateMachine;
@@ -50,6 +50,7 @@ export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, I
     if (newHealth <= 0) {
       newHealth = 0;
       this.finiteStateMachine.setState(PlayerDieState as any);
+      this.onDeath();
       (this.getEntityManager().getEntityByName('ui') as UIEntity).showModal({
         title: 'ПОРАЖЕНИЕ',
         body: 'О НЕТ! ПОСЛЕДНЯЯ НАДЕЖДА ИМПЕРИИ ПАЛА. ВЕСЬ МИР ВЗОРВАЛСЯ И ВСЕ УМЕРЛИ',
@@ -60,38 +61,124 @@ export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, I
     }
     this.setHealth(newHealth)
   }
-  private FIRE_ATTACK_DELAY_MS = 1200;
-  private timeFromLastFireAttack = 0;
-
-  // private particlesCache: FireAttackEntity[] = [];
+  // private FIRE_ATTACK_DELAY_MS = 1200;
+  private FIRE_ATTACK_DELAY_MS = 400;
+  private timeFromLastFireAttack = this.FIRE_ATTACK_DELAY_MS;
   public fireAttack(): void {
     if (this.timeFromLastFireAttack < this.FIRE_ATTACK_DELAY_MS) {
       return;
     }
+
     this.timeFromLastFireAttack = 0;
     const center = this.getGameObject().getBox().getCenter();
 
-    // TODO
-    // if (this.particlesCache.length) {
-    //   for (const fireBall of this.particlesCache) {
-    //     fireBall.reset();
-    //     const topLeft = fireBall.getGameObject().getBox().getTopLeft();
-    //     topLeft.x = center.x;
-    //     topLeft.y = center.y;
-    //     this.getEntityManager().addToScene(fireBall);
-    //     this.getEntityManager().addEntity(fireBall);
-    //   }
-    //
-    //   return;
+    // for (let i = 0.1; i < Math.PI * 2; i += 0.05) {
+    //   const fireBall = new FireAttackEntity(center.x - 30, center.y - 30, i + (0.5 - Math.random()) / 2);
+    //   this.getEntityManager().addToScene(fireBall);
+    //   this.getEntityManager().addEntity(fireBall);
     // }
 
-    for (let i = 0.1; i < Math.PI * 2; i += 0.05) {
-
-      const fireBall = new FireAttackEntity(center.x, center.y, i + (0.5 - Math.random()) / 2);
+    for (const shieldFireBall of this.fireShieldBalls) {
+      const fireBall = new FireAttackEntity(
+        center.x - 30, center.y - 30,
+        shieldFireBall.getRotation().get(),
+        FireAttackEntity.DEFAULT_SPEED,
+        FireAttackEntity.DEFAULT_WIDTH,
+        FireAttackEntity.DEFAULT_HEIGHT,
+        firePurpleFilter,
+      );
       this.getEntityManager().addToScene(fireBall);
       this.getEntityManager().addEntity(fireBall);
-      // this.particlesCache.push(fireBall)
     }
+
+    this.clearShield();
+  }
+
+  private FIRE_SHIELD_DELAY_MS = 100;
+  private FIRE_SHIELD_MAX_COUNT = 25;
+  private addShieldBallsCount = 1
+  // private FIRE_SHIELD_DELAY_MS = 100;
+  // private FIRE_SHIELD_MAX_COUNT = 60;
+
+  public getFIRE_SHIELD_DELAY_MS(): number { return this.FIRE_SHIELD_DELAY_MS; }
+
+  private timeFromLastFireShieldActivation = this.FIRE_SHIELD_DELAY_MS;
+  public getTimeFromLastFireShieldActivation(): number { return this.timeFromLastFireShieldActivation; }
+
+  private fireShieldBalls: FireShieldEntity[] = [];
+  public activateFireShield(): void {
+    if (this.timeFromLastFireShieldActivation < this.FIRE_SHIELD_DELAY_MS) {
+      return;
+    }
+    if (this.fireShieldBalls.length >= this.FIRE_SHIELD_MAX_COUNT) {
+      return;
+    }
+    this.timeFromLastFireShieldActivation = 0;
+    const center = this.getGameObject().getBox().getCenter();
+
+    for (let i = 0; i < this.addShieldBallsCount; i++) {
+      const fireBall = new FireShieldEntity(this, center.x, center.y, 0.004, 30,30, firePurpleFilter);
+      fireBall.getRotation().add(0);
+      this.getEntityManager().addToScene(fireBall);
+      this.getEntityManager().addEntity(fireBall);
+      this.fireShieldBalls.push(fireBall);
+    }
+
+    // REDISTRIBUTE SHIELD ANGLES
+    const angleStep = Math.PI * 2 / this.fireShieldBalls.length;
+    let angle = 0;
+    for (const fireBall of this.fireShieldBalls) {
+      fireBall.getRotation().set(angle);
+      angle += angleStep;
+    }
+  }
+  private clearShield(): void {
+    for (const fireBall of this.fireShieldBalls) {
+      this.getEntityManager().removeEntity(fireBall);
+    }
+    this.fireShieldBalls.length = 0;
+  }
+
+  private clearHealBalls(): void {
+    for (const fireBall of this.healBalls) {
+      this.getEntityManager().removeEntity(fireBall);
+    }
+    this.healBalls.length = 0;
+    console.log('here')
+  }
+
+  private HEAL_BALL_DELAY_MS = 100;
+  private HEAL_BALL_MAX_COUNT = 25;
+  private timeFromLastHealBallActivation = this.HEAL_BALL_DELAY_MS;
+  private addhealBallCount = 1
+  private healBalls: FireShieldEntity[] = [];
+
+  public addHealBall(): void {
+    if (this.timeFromLastHealBallActivation < this.HEAL_BALL_DELAY_MS) {
+      return;
+    }
+    if (this.healBalls.length >= this.HEAL_BALL_MAX_COUNT) {
+      return;
+    }
+    this.timeFromLastHealBallActivation = 0;
+    const center = this.getGameObject().getBox().getCenter();
+
+    for (let i = 0; i < this.addhealBallCount; i++) {
+      const healBall = new FireShieldEntity(this, center.x, center.y, 0.002, 30,30, fireGreenFilter);
+      healBall.getRotation().add(0);
+      this.getEntityManager().addToScene(healBall);
+      this.getEntityManager().addEntity(healBall);
+      this.healBalls.push(healBall);
+    }
+  }
+
+  public handleClear(): void {
+    this.clearShield();
+    this.clearHealBalls();
+  }
+
+  private onDeath(): void {
+    this.handleClear();
   }
 
   private attackSpeed = 15;
@@ -118,19 +205,15 @@ export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, I
     this.attackRange = value;
   }
 
-  private speed = 350;
+  private speed = 250;
   public getSpeed(): number {
     return this.speed;
   }
 
-  public COLOR = "rgba(255,0,98,0)";
-
   private unsubscribeFromSpeedChange!: UnsubscribeFn;
 
   public initEntity(): void {
-    console.log('init player entity')
     this.inputController = this.getComponentByName('InputController') as any as InputController;
-    console.log('input controller', this.inputController);
 
     this.unsubscribeFromSpeedChange = this.emitter.subscribe('speed_change', (value) => {
       this.speed = value;
@@ -150,7 +233,19 @@ export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, I
 
   public update(timeElapsed: number): void {
     super.update(timeElapsed);
+    if (this.healBalls.length) {
+      const count = this.healBalls.length;
+      if (this.health.getValue() < this.health.getMaxValue()) {
+        let newHeathValue = this.health.getValue() + count * timeElapsed * 0.01;
+        if (newHeathValue > this.health.getMaxValue()) {
+          newHeathValue = this.health.getMaxValue();
+        }
+        this.health.setValue(newHeathValue)
+      }
+    }
     this.timeFromLastFireAttack += timeElapsed;
+    this.timeFromLastFireShieldActivation += timeElapsed;
+    this.timeFromLastHealBallActivation += timeElapsed;
     this.finiteStateMachine.update(timeElapsed);
   }
 }

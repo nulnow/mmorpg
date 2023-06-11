@@ -2,14 +2,12 @@ import { FiniteStateMachine } from '../StateMachine/FiniteStateMachine';
 import { State } from '../StateMachine/State';
 import { ResourceLoader } from '../ResourceLoader';
 import { EnemyEntity } from './EnemyEntity';
-import { GameMap } from '../GameMap';
 import { PlayerEntity } from '../Player/PlayerEntity';
 import { MusicPlayer } from '../MusicPlayer';
 import { IEntityWithHealth } from '../IEntityWithHealth';
 import { Rotation } from '../Rendering/Rotation';
 import { Random } from '../Random';
 import { UnsubscribeFn } from '../EventEmitter';
-import { PlayerDeadState } from '../Player/PlayerStateMachine';
 
 export class EnemyIdleState extends State {
   protected sprites = ResourceLoader.getLoadedAssets().slime.idle;
@@ -40,9 +38,7 @@ export class EnemyIdleState extends State {
     const distance = this.fsm.getEnemy().getGameObject().getBox().getCenter().distance(currentPlayer.getGameObject().getBox().getCenter());
     this.player.tuneSoundByDistance(distance);
 
-    const gameMap = this.fsm.getEnemy().getEntityManager().getEntityByName('map') as GameMap;
-
-    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), 200, (e) => (
+    const players = this.fsm.getEnemy().getEntityManager().findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), 200, (e) => (
       e instanceof PlayerEntity && ((e as any as IEntityWithHealth).getHealth().getValue() > 0)
     ));
 
@@ -177,8 +173,7 @@ export class EnemyChasingPlayerState extends State {
     const distance = this.fsm.getEnemy().getGameObject().getBox().getCenter().distance(currentPlayer.getGameObject().getBox().getCenter());
     this.player.tuneSoundByDistance(distance);
 
-    const gameMap = this.fsm.getEnemy().getEntityManager().getEntityByName('map') as GameMap;
-    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance(), e => (
+    const players = this.fsm.getEnemy().getEntityManager().findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance(), e => (
       e instanceof PlayerEntity
     ))
 
@@ -240,8 +235,7 @@ export class EnemyAttackPlayerState extends State {
     const distance = this.fsm.getEnemy().getGameObject().getBox().getCenter().distance(currentPlayer.getGameObject().getBox().getCenter());
     this.player.tuneSoundByDistance(distance);
 
-    const gameMap = this.fsm.getEnemy().getEntityManager().getEntityByName('map') as GameMap;
-    const players = gameMap.findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance(),
+    const players = this.fsm.getEnemy().getEntityManager().findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance(),
       e => e instanceof PlayerEntity && ((e as any as IEntityWithHealth).getHealth().getValue() > 0)
     );
 

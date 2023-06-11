@@ -5,7 +5,6 @@ import { ResourceLoader } from '../ResourceLoader';
 import { UnsubscribeFn } from '../EventEmitter';
 import { PlayerEntity } from './PlayerEntity';
 import { InputController } from '../InputController';
-import { GameMap } from '../GameMap';
 import { IEntityWithHealth } from '../IEntityWithHealth';
 import { EnemyEntity } from '../Enemies/EnemyEntity';
 
@@ -31,13 +30,24 @@ export class PlayerIdleState extends State {
   public update(timeElapsed: number): void {
     super.update(timeElapsed);
     if (this.fsm.getPlayer().getInputController()?.isAttack1Pressed()) {
-      return this.fsm.setState(PlayerAttackState as any);
+      this.fsm.setState(PlayerAttackState as any);
     }
     if (this.fsm.getPlayer().getInputController()?.isAttack2Pressed()) {
-      return this.fsm.getPlayer().fireAttack();
+      this.fsm.getPlayer().fireAttack();
+    }
+    if (this.fsm.getPlayer().getInputController()?.isAttack3Pressed()) {
+      this.fsm.getPlayer().activateFireShield();
+    }
+    if (this.fsm.getPlayer().getInputController()?.isAttack4Pressed()) {
+      this.fsm.getPlayer().addHealBall();
+    }
+
+
+    if (this.fsm.getPlayer().getInputController()?.isClearButtonPressed()) {
+      this.fsm.getPlayer().handleClear();
     }
     if (this.fsm.getPlayer().getInputController()?.isOneOfMovementKeysIsPressed()) {
-      return this.fsm.setState(PlayerRunState as any);
+      this.fsm.setState(PlayerRunState as any);
     }
   }
 }
@@ -70,6 +80,20 @@ export class PlayerRunState extends State {
     if (!inputController) {
       return;
     }
+
+    if (this.fsm.getPlayer().getInputController()?.isAttack1Pressed()) {
+      this.fsm.setState(PlayerAttackState as any);
+    }
+    if (this.fsm.getPlayer().getInputController()?.isAttack2Pressed()) {
+      this.fsm.getPlayer().fireAttack();
+    }
+    if (this.fsm.getPlayer().getInputController()?.isAttack3Pressed()) {
+      this.fsm.getPlayer().activateFireShield();
+    }
+    if (this.fsm.getPlayer().getInputController()?.isClearButtonPressed()) {
+      this.fsm.getPlayer().handleClear();
+    }
+
     if (!inputController?.isOneOfMovementKeysIsPressed()) {
       this.fsm.setState(PlayerIdleState as any);
     } else {
@@ -148,8 +172,7 @@ export class PlayerAttackState extends State {
   public update(timeElapsed: number): void {
     super.update(timeElapsed);
 
-    const gameMap = this.fsm.getPlayer().getEntityManager().getEntityByName('map') as GameMap;
-    const entities = gameMap
+    const entities = this.fsm.getPlayer().getEntityManager()
       .findEntities(this.player.getGameObject().getBox().getCenter(), this.player.getAttackRange(), entity => (
         (entity !== this.player)
         && (!!(entity as any).getHealth)

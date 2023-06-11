@@ -1,3 +1,5 @@
+import { TrippleMap } from '../JSHACKS';
+
 export type SpriteConfig = {
   rows: number;
   cols: number;
@@ -7,21 +9,28 @@ export type SpriteConfig = {
   to?: number;
 }
 
+export type SpriteFilter = (context: CanvasRenderingContext2D) => void;
+
 export class Sprite {
   public constructor(
     private sprites: HTMLImageElement,
     private config: SpriteConfig,
   ) {}
 
-  private cache = new Map<number, HTMLImageElement>()
+  private static cache = new TrippleMap<number, SpriteFilter | null, HTMLImageElement, HTMLImageElement>();
+  private filter?: SpriteFilter;
+  public setFilter(filter: SpriteFilter) {
+    this.filter = filter;
+  }
 
   public getLength(): number {
     return this.config.size;
   }
 
   public getSpriteByIndex(index: number): HTMLImageElement {
-    if (this.cache.has(index)) {
-      return this.cache.get(index)!;
+    const fromCache = Sprite.cache.get(index, this.filter ?? null, this.sprites);
+    if (!!fromCache) {
+      return fromCache;
     }
 
     const { width, height } = this.sprites;
@@ -34,6 +43,10 @@ export class Sprite {
     canvas.height = rowHeight;
     const canvasContext = canvas.getContext('2d')!;
     canvasContext.imageSmoothingEnabled = false;
+
+    if (this.filter) {
+      this.filter(canvasContext);
+    }
 
     const rowIndex = Math.floor(index / this.config.cols);
     const colIndex = index - (rowIndex * this.config.cols);
@@ -55,7 +68,7 @@ export class Sprite {
     const image = new Image();
     image.src = canvas.toDataURL();
 
-    this.cache.set(index, image);
+    Sprite.cache.set(index, this.filter ?? null, this.sprites, image);
 
     return image;
   }
