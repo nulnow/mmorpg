@@ -11,17 +11,39 @@ export class Animator {
   private currentAnimationId = 0;
   private timeSpent = 0;
 
-  public setSpeed(speed: number): void {
+  public setSpeed(speed: number): this {
     this.speed = speed;
+
+    return this;
   }
-  public setSprites(sprites: HTMLImageElement[] | Sprite): void {
+
+  public setSprites(sprites: HTMLImageElement[] | Sprite): this {
     this.sprites = sprites;
+
+    return this;
   }
+
+  public warmCache(): this {
+    if (this.sprites instanceof Sprite && this.gameObject) {
+      const box = this.gameObject.getBox();
+      const rect = box.getRect();
+
+      for (let i = 0; i < this.sprites.getLength(); i++) {
+        ResourceLoader.flipImage(this.sprites.getSpriteByIndex(i), rect, this.sprites);
+      }
+    }
+
+    return this;
+  }
+
   public getGameObject(): GameObject {
     return this.gameObject;
   }
-  public setGameObject(gameObject: GameObject): void {
+
+  public setGameObject(gameObject: GameObject): this {
     this.gameObject = gameObject;
+
+    return this;
   }
 
   public getCurrentSprite(): HTMLImageElement {

@@ -50,8 +50,6 @@ export class Entity {
     c.setParent(this);
     this.components[c.constructor.name] = c;
     c.init();
-    console.log('addComponent');
-    console.log(c);
   }
 
   public getComponentByName(name: string): Component {

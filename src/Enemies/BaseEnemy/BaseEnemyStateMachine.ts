@@ -209,9 +209,8 @@ export class BaseEnemyChasingPlayerState extends State {
           this.fsm.getEnemy().getGameObject().getBox().move(dx, dy);
         }
 
-        console.log('here1')
       } else {
-        console.log('here')
+
         this.fsm.setAttackState();
       }
 
@@ -271,7 +270,6 @@ export class BaseEnemyAttackPlayerState extends State {
       player.damage(damage);
 
       if (player.getGameObject().getBox().getCenter().distance(this.fsm.getEnemy().getGameObject().getBox().getCenter()) > this.fsm.getEnemy().getAttackRange()) {
-        console.log('bbbb')
         this.fsm.setChasingPlayerState();
       }
     }

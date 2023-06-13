@@ -215,9 +215,16 @@ const _Sprite = class {
     __publicField(this, "filter");
     this.sprites = sprites;
     this.config = config;
+    this.warmCaches();
   }
   setFilter(filter) {
     this.filter = filter;
+  }
+  warmCaches() {
+    for (let i = 0; i < this.getLength(); i++) {
+      this.getSpriteByIndex(i);
+    }
+    return this;
   }
   getLength() {
     return this.config.size;
@@ -685,15 +692,28 @@ class Animator {
   }
   setSpeed(speed) {
     this.speed = speed;
+    return this;
   }
   setSprites(sprites) {
     this.sprites = sprites;
+    return this;
+  }
+  warmCache() {
+    if (this.sprites instanceof Sprite && this.gameObject) {
+      const box = this.gameObject.getBox();
+      const rect = box.getRect();
+      for (let i = 0; i < this.sprites.getLength(); i++) {
+        ResourceLoader.flipImage(this.sprites.getSpriteByIndex(i), rect, this.sprites);
+      }
+    }
+    return this;
   }
   getGameObject() {
     return this.gameObject;
   }
   setGameObject(gameObject) {
     this.gameObject = gameObject;
+    return this;
   }
   getCurrentSprite() {
     const SPRITE_TIME_MS = 1e3 / this.speed;
@@ -1017,6 +1037,7 @@ class State {
     __publicField(this, "sprites", []);
     __publicField(this, "speed", 0);
     __publicField(this, "gameObject");
+    __publicField(this, "animatorCacheFilled", false);
     this.fsm = fsm;
     this.gameObject = new GameObject(fsm);
   }
@@ -1024,6 +1045,10 @@ class State {
     this.animator.setGameObject(this.gameObject);
     this.animator.setSprites(this.sprites);
     this.animator.setSpeed(this.speed);
+    if (!this.animatorCacheFilled) {
+      this.animator.warmCache();
+      this.animatorCacheFilled = true;
+    }
   }
   onExit() {
   }
@@ -1828,8 +1853,6 @@ class Entity {
     c.setParent(this);
     this.components[c.constructor.name] = c;
     c.init();
-    console.log("addComponent");
-    console.log(c);
   }
   getComponentByName(name) {
     return this.components[name];
@@ -3016,9 +3039,7 @@ class BaseEnemyChasingPlayerState extends State {
         if (!this.fsm.getEnemy().findCollisions(nextBox).length) {
           this.fsm.getEnemy().getGameObject().getBox().move(dx, dy);
         }
-        console.log("here1");
       } else {
-        console.log("here");
         this.fsm.setAttackState();
       }
     } else {
@@ -3056,7 +3077,6 @@ class BaseEnemyAttackPlayerState extends State {
       const damage = this.enemy.getAttackDamage() * this.enemy.getAttackSpeed() * (timeElapsed / 1e3);
       player.damage(damage);
       if (player.getGameObject().getBox().getCenter().distance(this.fsm.getEnemy().getGameObject().getBox().getCenter()) > this.fsm.getEnemy().getAttackRange()) {
-        console.log("bbbb");
         this.fsm.setChasingPlayerState();
       }
     }

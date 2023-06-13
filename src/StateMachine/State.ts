@@ -17,10 +17,16 @@ export abstract class State {
     this.gameObject = new GameObject(fsm);
   }
 
+  private animatorCacheFilled = false;
   public onEnter(): void {
     this.animator.setGameObject(this.gameObject);
     this.animator.setSprites(this.sprites);
     this.animator.setSpeed(this.speed);
+
+    if (!this.animatorCacheFilled) {
+      this.animator.warmCache();
+      this.animatorCacheFilled = true;
+    }
   }
 
   public onExit(): void {
