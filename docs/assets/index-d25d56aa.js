@@ -5497,14 +5497,14 @@ class SkeletonEnemyHangingAroundState extends BaseEnemyHangingAroundState {
 class SkeletonEnemyDieState extends BaseEnemyDieState {
   constructor() {
     super(...arguments);
-    __publicField(this, "speed", 0);
+    __publicField(this, "speed", 10);
     __publicField(this, "sprites", ResourceLoader.getLoadedAssets().skeleton.die);
   }
 }
 class SkeletonEnemyDeadState extends BaseEnemyDeadState {
   constructor() {
     super(...arguments);
-    __publicField(this, "speed", 26);
+    __publicField(this, "speed", 1);
     __publicField(this, "sprites", ResourceLoader.getLoadedAssets().skeleton.death);
   }
 }

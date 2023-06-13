@@ -43,12 +43,12 @@ class SkeletonEnemyHangingAroundState extends BaseEnemyHangingAroundState {
 }
 
 class SkeletonEnemyDieState extends BaseEnemyDieState {
-  protected speed = 0;
+  protected speed = 10;
   protected sprites: StateSprites = ResourceLoader.getLoadedAssets().skeleton.die;
 }
 
 class SkeletonEnemyDeadState extends BaseEnemyDeadState {
-  protected speed = 26;
+  protected speed = 1;
   protected sprites: StateSprites = ResourceLoader.getLoadedAssets().skeleton.death;
 }
 
