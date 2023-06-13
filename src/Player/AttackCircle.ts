@@ -23,7 +23,7 @@ export class AttackCircle extends GameObject {
 
       context.save();
       context.beginPath();
-      context.strokeStyle = '#ff0000';
+      context.strokeStyle = 'rgba(255,0,0,0.33)';
       context.arc(relativePosition.x, relativePosition.y, this.radius, 0, 2 * Math.PI);
       context.stroke();
       context.restore();

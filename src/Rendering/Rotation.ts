@@ -9,8 +9,9 @@ export class Rotation {
     return this.value;
   }
 
-  public set(val: number) {
+  public set(val: number): this {
     this.value = val;
+    return this;
   }
 
   public add(val: number) {
@@ -19,11 +20,13 @@ export class Rotation {
 
   public isLeft(): boolean {
     const value = this.value % (Math.PI * 2);
-    return (
+    const toReturn = (
       Math.abs(value)
       >
       (Math.PI / 2)
     );
+
+    return toReturn;
   }
 
   public isRight(): boolean {

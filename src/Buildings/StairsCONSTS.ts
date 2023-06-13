@@ -1,4 +1,6 @@
-export const TOP_LEFT_WALL_PATH = [
+import { MarkupPoint, MarkupRect } from '../types';
+
+export const STAIRS_TOP_LEFT_WALL_PATH: MarkupPoint[] = [
   {
     "x": 471,
     "y": 5
@@ -65,7 +67,7 @@ export const TOP_LEFT_WALL_PATH = [
   }
 ];
 
-export const BOXES = [
+export const STAIRS_COLLISION_BOXES: MarkupRect[] = [
   [
     {
       "x": 1165,
@@ -637,3 +639,36 @@ export const BOXES = [
     }
   ]
 ];
+
+export const STAIRS_NAMED_RECTS: { stairsTopTeleport: MarkupRect, stairsBottomTeleport: MarkupRect, stairsSpawnArea: MarkupRect } = {
+  stairsTopTeleport:   [
+    {
+      "x": 239,
+      "y": 141.5
+    },
+    {
+      "x": 367,
+      "y": 252.5
+    }
+  ],
+  stairsBottomTeleport: [
+    {
+      "x": 122,
+      "y": 1655
+    },
+    {
+      "x": 300,
+      "y": 1719
+    }
+  ],
+  stairsSpawnArea: [
+    {
+      "x": 859,
+      "y": 797.5
+    },
+    {
+      "x": 582,
+      "y": 903.5
+    }
+  ]
+};

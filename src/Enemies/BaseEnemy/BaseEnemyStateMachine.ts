@@ -9,6 +9,7 @@ import { IEntityWithHealth } from '../../IEntityWithHealth';
 import { Random } from '../../Random';
 import { Rotation } from '../../Rendering/Rotation';
 import { UnsubscribeFn } from '../../EventEmitter';
+import { Position } from '../../Rendering/Position';
 
 export class BaseEnemyIdleState extends State {
   protected sprites: StateSprites = ResourceLoader.getLoadedAssets().guard.idle;
@@ -35,9 +36,15 @@ export class BaseEnemyIdleState extends State {
 
   public update(timeElapsed: number) {
     super.update(timeElapsed);
+
+    // this.fsm.setAttackState();
+    // return;
     const currentPlayer = this.fsm.getEnemy().getEntityManager().getEntityByName('player') as PlayerEntity;
-    const distance = this.fsm.getEnemy().getGameObject().getBox().getCenter().distance(currentPlayer.getGameObject().getBox().getCenter());
-    this.player.tuneSoundByDistance(distance);
+
+    if (currentPlayer) {
+      const distance = this.fsm.getEnemy().getGameObject().getBox().getCenter().distance(currentPlayer.getGameObject().getBox().getCenter());
+      this.player.tuneSoundByDistance(distance);
+    }
 
     // TODO
     const players = this.fsm.getEnemy().getEntityManager().findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), 200, (entity) => (
@@ -48,7 +55,7 @@ export class BaseEnemyIdleState extends State {
       this.fsm.setChasingPlayerState();
     } else {
       if (Random.runChance(timeElapsed / 1000, this.chanceToHangAround)) {
-        this.fsm.setHangingAroundState();
+        // this.fsm.setHangingAroundState();
       }
     }
   }
@@ -79,6 +86,9 @@ export class BaseEnemyHangingAroundState extends State {
 
   public update(timeElapsed: number) {
     super.update(timeElapsed);
+    // const angle = Math.PI;
+    //
+    // this.fsm.getEnemy().getGameObject().setRotation(angle);
 
     this.fsm.getEnemy().getGameObject().setRotation(this.rotation.get());
     const speed = this.fsm.getEnemy().getSpeed();
@@ -199,7 +209,9 @@ export class BaseEnemyChasingPlayerState extends State {
           this.fsm.getEnemy().getGameObject().getBox().move(dx, dy);
         }
 
+        console.log('here1')
       } else {
+        console.log('here')
         this.fsm.setAttackState();
       }
 
@@ -236,9 +248,13 @@ export class BaseEnemyAttackPlayerState extends State {
   public update(timeElapsed: number) {
     super.update(timeElapsed);
 
-    const currentPlayer = this.fsm.getEnemy().getEntityManager().getEntityByName('player') as PlayerEntity;
-    const distance = this.fsm.getEnemy().getGameObject().getBox().getCenter().distance(currentPlayer.getGameObject().getBox().getCenter());
-    this.player.tuneSoundByDistance(distance);
+    // return;
+    // const currentPlayer = this.fsm.getEnemy().getEntityManager().getEntityByName('player') as PlayerEntity;
+    //
+    // if (currentPlayer) {
+    //   const distance = this.fsm.getEnemy().getGameObject().getBox().getCenter().distance(currentPlayer.getGameObject().getBox().getCenter());
+    //   this.player.tuneSoundByDistance(distance);
+    // }
 
     // TODO
     const players = this.fsm.getEnemy().getEntityManager().findEntities(this.fsm.getEnemy().getGameObject().getBox().getCenter(), this.fsm.getEnemy().getReactDistance(), (entity) => (
@@ -255,6 +271,7 @@ export class BaseEnemyAttackPlayerState extends State {
       player.damage(damage);
 
       if (player.getGameObject().getBox().getCenter().distance(this.fsm.getEnemy().getGameObject().getBox().getCenter()) > this.fsm.getEnemy().getAttackRange()) {
+        console.log('bbbb')
         this.fsm.setChasingPlayerState();
       }
     }

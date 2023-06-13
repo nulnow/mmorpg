@@ -72,9 +72,11 @@ import fireball from '../assets/Fireball.mp3';
 import fireballExplosion from '../assets/FireballExplosion.mp3';
 import fire from '../assets/fire.mp3';
 
+import skeletonSprite from '../assets/Skeleton enemy/Skeleton enemy.png'
+
 import { Sprite } from './Rendering/Sprite';
 import { EventEmitter } from './EventEmitter';
-import { isMobileOrTablet } from './JSHACKS';
+import { isMobileOrTablet, TrippleMap } from './JSHACKS';
 
 export class ResourceLoader {
   public static readonly emitter = new EventEmitter();
@@ -149,6 +151,7 @@ export class ResourceLoader {
       run: guardRun,
       death: guardDeath,
     },
+    skeleton: skeletonSprite,
     fireSprite: fireSprite,
     deathSprite: deathSprite,
     treeSprite: treeSprite,
@@ -188,6 +191,13 @@ export class ResourceLoader {
       attack: null as any as Sprite,
       run: null as any as Sprite,
       death: null as any as Sprite,
+    },
+    skeleton: {
+      idle: null as any as Sprite,
+      attack: null as any as Sprite,
+      run: null as any as Sprite,
+      death: null as any as Sprite,
+      die: null as any as Sprite,
     },
     fireSprite: null as any as HTMLImageElement,
     deathSprite: null as any as Sprite,
@@ -268,10 +278,10 @@ export class ResourceLoader {
     return croppedImage;
   }
 
-  private static flippedImagesMap = new Map<HTMLImageElement, HTMLImageElement>();
-  public static flipImage(image: HTMLImageElement, rect: { width: number, height: number }): HTMLImageElement {
-    if (this.flippedImagesMap.has(image)) {
-      return this.flippedImagesMap.get(image)!;
+  private static flippedImagesMap = new TrippleMap<HTMLImageElement, unknown, any, HTMLImageElement>();
+  public static flipImage(image: HTMLImageElement, rect: { width: number, height: number }, key: unknown = 1): HTMLImageElement {
+    if (this.flippedImagesMap.has(image, key, rect)) {
+      return this.flippedImagesMap.get(image, key, rect)!;
     }
 
     const canvas = document.createElement('canvas');
@@ -286,12 +296,16 @@ export class ResourceLoader {
     const flippedImage = new Image();
     flippedImage.src = canvas.toDataURL();
 
-    this.flippedImagesMap.set(image, flippedImage);
+    this.flippedImagesMap.set(image, key, rect, flippedImage);
 
     return flippedImage;
   }
 
+  private static loadedImagesCache = new Map<string, HTMLImageElement>();
   static async loadImage(src: string): Promise<HTMLImageElement> {
+    if (this.loadedImagesCache.has(src)) {
+      return this.loadedImagesCache.get(src)!;
+    }
     return new Promise<HTMLImageElement>((resolve, reject) => {
       const image = new Image();
       image.src = src;
@@ -301,6 +315,7 @@ export class ResourceLoader {
           width: image.width,
           height: image.height,
         });
+        this.loadedImagesCache.set(src, image);
       };
       image.onerror = reject;
     });
@@ -442,18 +457,39 @@ export class ResourceLoader {
     await withLogging('death.idle', async () => {
       this.loadedAssets.deathSprite = new Sprite(await this.loadImage(this.rawAssets.deathSprite), { cols: 4, rows: 1, size: 4 });
     });
-    await withLogging('guard.idle', async () => {
-      this.loadedAssets.guard.idle = new Sprite(await this.loadImage(this.rawAssets.guard.idle), { cols: 10, rows: 1, size: 10 });
-    });
-    await withLogging('guard.attack', async () => {
-      this.loadedAssets.guard.attack = new Sprite(await this.loadImage(this.rawAssets.guard.attack), { cols: 4, rows: 1, size: 4 });
-    });
-    await withLogging('guard.run', async () => {
-      this.loadedAssets.guard.run = new Sprite(await this.loadImage(this.rawAssets.guard.run), { cols: 6, rows: 1, size: 6 });
-    });
-    await withLogging('guard.death', async () => {
-      this.loadedAssets.guard.death = new Sprite(await this.loadImage(this.rawAssets.guard.death), { cols: 9, rows: 1, size: 9 });
-    });
+    {
+      await withLogging('guard.idle', async () => {
+        this.loadedAssets.guard.idle = new Sprite(await this.loadImage(this.rawAssets.guard.idle), { cols: 10, rows: 1, size: 10 });
+      });
+      await withLogging('guard.attack', async () => {
+        this.loadedAssets.guard.attack = new Sprite(await this.loadImage(this.rawAssets.guard.attack), { cols: 4, rows: 1, size: 4 });
+      });
+      await withLogging('guard.run', async () => {
+        this.loadedAssets.guard.run = new Sprite(await this.loadImage(this.rawAssets.guard.run), { cols: 6, rows: 1, size: 6 });
+      });
+      await withLogging('guard.death', async () => {
+        this.loadedAssets.guard.death = new Sprite(await this.loadImage(this.rawAssets.guard.death), { cols: 9, rows: 1, size: 9 });
+      });
+    }
+
+    {
+      await withLogging('skeleton.attack', async () => {
+        this.loadedAssets.skeleton.attack = new Sprite(await this.loadImage(this.rawAssets.skeleton), { cols: 13, rows: 5, size: 13, rowIndex: 0 });
+      });
+      await withLogging('skeleton.death', async () => {
+        this.loadedAssets.skeleton.death = new Sprite(await this.loadImage(this.rawAssets.skeleton), { cols: 13, rows: 5, size: 13, rowIndex: 1 });
+      });
+      await withLogging('skeleton.die', async () => {
+        this.loadedAssets.skeleton.die = new Sprite(await this.loadImage(this.rawAssets.guard.death), { cols: 13, rows: 5, size: 1 });
+      });
+      await withLogging('skeleton.run', async () => {
+        this.loadedAssets.skeleton.run = new Sprite(await this.loadImage(this.rawAssets.skeleton), { cols: 13, rows: 5, size: 12, rowIndex: 2 });
+      });
+      await withLogging('skeleton.idle', async () => {
+        this.loadedAssets.skeleton.idle = new Sprite(await this.loadImage(this.rawAssets.skeleton), { cols: 13, rows: 5, size: 4, rowIndex: 3 });
+      });
+    }
+
     await withLogging('treeSprite', async () => {
       this.loadedAssets.treeSprite = new Sprite(await this.loadImage(this.rawAssets.treeSprite), { cols: 3, rows: 5, size: 15 });
     });

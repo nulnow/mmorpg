@@ -5,6 +5,21 @@ import { EventEmitter } from './EventEmitter';
 export class Entity {
   public readonly emitter = new EventEmitter();
 
+  // private children: Entity[] = [];
+  // public getChildren(): Entity[] {
+  //   return this.children;
+  // }
+  // public addChild(entity: Entity): this {
+  //   this.children.push(entity);
+  //
+  //   return this;
+  // }
+  // public removeChild(entity: Entity): this {
+  //   removeOneFromArray(this.children, e => e === entity);
+  //
+  //   return this;
+  // }
+
   private tags: string[] = [];
   public addTag(tag: string): void {
     this.tags.push(tag);

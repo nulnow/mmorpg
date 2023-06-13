@@ -20,11 +20,13 @@ export class FiniteStateMachine {
   public constructor() {}
   public start(): void {}
 
-  protected addState(name: string, fsmConstructor: FSMStateConstructor): void {
+  protected addState(name: string, fsmConstructor: FSMStateConstructor): this {
     this.states[name] = fsmConstructor;
+
+    return this;
   }
 
-  public setState(NewStateConstructor: FSMStateConstructor): void {
+  public setState(NewStateConstructor: FSMStateConstructor): this {
     const prevState = this.state;
 
     if (prevState && prevState.constructor.name !== NewStateConstructor.name) {
@@ -32,6 +34,8 @@ export class FiniteStateMachine {
     }
     this.state = new NewStateConstructor(this);
     this.state.onEnter();
+
+    return this;
   }
 
   public getCurrentState(): State {

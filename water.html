@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="svg-filters" width="275" height="183" viewBox="0 0 220 220">
+    <defs>
+        <filter id="filter">
+            <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="2" result="turbulence" />
+            <feDisplacementMap xChannelSelector="R" yChannelSelector="G" scale="10" in="SourceGraphic" in2="turbulence" />
+        </filter>
+    </defs>
+</svg>
+<div id="imgWrapper">
+    <img class="test" src="https://img4.goodfon.ru/wallpaper/middle/4/e8/makro-klematis-lomonos-lepestki-1.jpg"/>
+</div>
+<script>
+    var img = document.querySelector("#filter feTurbulence");
+    var frames = 0;
+    var rad = Math.PI / 360;
+
+    function AnimateBaseFrequency() {
+        bfx = .04;
+        bfy = .04;
+        frames += 3;
+        bfx += 0.01 * Math.sin(frames * rad);
+        bfy += 0.01 * Math.cos(frames * rad);
+        bf = bfx.toString() + ' ' + bfy.toString();
+        img.setAttributeNS(null, 'baseFrequency', bf);
+        window.requestAnimationFrame(AnimateBaseFrequency);
+    }
+
+    window.requestAnimationFrame(AnimateBaseFrequency);
+</script>
+<style>
+    .test {
+        -webkit-filter: url("#filter");
+        filter: url("#filter");
+        position: relative;
+        transform: scale(1.05);
+    }
+
+    #imgWrapper {
+        overflow:hidden;
+        position: absolute;
+        top:0;
+        left:0;
+        z-index: 1000;
+    }
+
+</style>

@@ -6,11 +6,11 @@ import { addScreenOrientationChangeEventHandler, removeScreenOrientationChangeEv
 export class FollowPlayerCamera extends Camera {
   private unsubscribeFromPlayerMoveEventFn: UnsubscribeFn | null = null;
 
-  public constructor(width: number, height: number, private player: PlayerEntity, private params?: { maxWidth: number, maxHeight: number, minWidth: number, minHeight: number }) {
+  public constructor(width: number, height: number, private player: PlayerEntity, public params?: { maxWidth: number, maxHeight: number, minWidth: number, minHeight: number }) {
     super(width, height);
   }
 
-  private syncWithPlayer = (): void => {
+  public syncWithPlayer = (): void => {
     const topLeft = this.getBox().getTopLeft();
     const playerCenter = this.player.getGameObject().getBox().getCenter();
 
@@ -19,16 +19,16 @@ export class FollowPlayerCamera extends Camera {
     let nextY = playerCenter.y - (window.innerHeight / 2);
 
     if (this.params) {
-      if (nextX <= 0) {
-        nextX = 0;
+      if (nextX <= this.params.minWidth) {
+        nextX = this.params.minWidth;
       }
 
       if (nextX + window.innerWidth >= this.params.maxWidth) {
         nextX = this.params.maxWidth - window.innerWidth;
       }
 
-      if (nextY <= 0) {
-        nextY = 0;
+      if (nextY <= this.params.minHeight) {
+        nextY = this.params.minHeight;
       }
 
       if (nextY + window.innerHeight >= this.params.maxHeight) {
@@ -43,7 +43,7 @@ export class FollowPlayerCamera extends Camera {
   public initEntity(): void {
     super.initEntity();
     this.syncWithPlayer();
-    this.unsubscribeFromPlayerMoveEventFn = this.player.emitter.subscribe('player_move', () => {
+    this.unsubscribeFromPlayerMoveEventFn = this.getEntityManager().emitter.subscribe('player_move', () => {
       this.syncWithPlayer();
       document.getElementById('cameraPos')!.innerHTML = `camera center x ${this.getBox().getCenter().x} y ${this.getBox().getCenter().y} <br />`;
       document.getElementById('cameraPos')!.innerHTML += `camera corner x ${this.getBox().getRect().left} y ${this.getBox().getRect().top} <br />`;

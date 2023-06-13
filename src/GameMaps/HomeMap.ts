@@ -1,14 +1,10 @@
 import { Position } from '../Rendering/Position';
 import { ResourceLoader } from '../ResourceLoader';
 import { UIEntity } from '../UI/UIEntity';
-import { Entity } from '../Entity';
-import { NetworkController } from '../NetworkController';
-import { Stairs } from '../Buildings/Stairs';
 import { TreeEntity } from '../Buildings/TreeEntity';
 import { MapWall } from '../Buildings/MapWall';
 import { BedEntity } from '../Buildings/BedEntity';
 import { PlayerEntity } from '../Player/PlayerEntity';
-import { InputController } from '../InputController';
 import { FollowPlayerCamera } from '../Camera/FollowPlayerCamera';
 import { SlimeEntity } from '../Enemies/Slime/SlimeEntity';
 import { GuardEntity } from '../Enemies/Guard/GuardEntity';
@@ -16,10 +12,17 @@ import { DeathEntity } from '../Buildings/DeathEntity';
 import { QuestEntity } from '../Quests/QuestEntity';
 import { DeathQuestEntity } from '../Quests/DeathQuest/DeathQuestEntity';
 import { GameMap } from './GameMap';
+import { TeleportEntity } from '../TeleportEntity';
+import { StairsLocation } from '../Locations/StairsLocation';
+import { Game } from '../Game';
+import { UnsubscribeFn } from '../EventEmitter';
+import { HOME_MAP_NAMED_LOCATIONS, HOME_MAP_TREES_POSITIONS } from './HomeMapCONSTANTS';
+import { Box } from '../Rendering/Box';
+import { SkeletonEntity } from '../Enemies/Skeleton/SkeletonEntity';
 
 export class HomeMap extends GameMap {
-  public constructor() {
-    super();
+  public constructor(private game: Game) {
+    super(game.getCanvas());
   }
 
   private flowersMap = (() => {
@@ -54,17 +57,8 @@ export class HomeMap extends GameMap {
 
     const entityManager = this.getEntityManager();
 
-    const uiEntity = new UIEntity();
-    entityManager.addEntity(uiEntity, 'ui');
-
-    const networkEntity = new Entity();
-    const networkController = new NetworkController();
-    networkEntity.addComponent(networkController);
-    entityManager.addEntity(networkEntity, 'network');
-
-    const stairs = new Stairs(11000, 0, 1.5);
-    entityManager.addToScene(stairs);
-    entityManager.addEntity(stairs);
+    // const uiEntity = new UIEntity();
+    // entityManager.addEntity(uiEntity, 'ui');
 
     { // TREES
       const TREE_TYPE = 7;
@@ -101,92 +95,43 @@ export class HomeMap extends GameMap {
     entityManager.addEntity(bed, 'bed');
     entityManager.addToScene(bed);
 
-    const player = new PlayerEntity(12000 - 200, 1250);
-    player.emitter.subscribe('dead_and_modal_closed', () => {
-      player.respawn();
-    });
+    const stairsLocation = new StairsLocation(4000, 0);
+    entityManager.addToScene(stairsLocation);
+    entityManager.addEntity(stairsLocation);
 
-    for (let j = 0; j < 3; j++) {
-      const slime = new SlimeEntity(12000 - 100 + Math.random() * 300, 1250 - 100 + Math.random() * 300);
-      entityManager.addEntity(slime);
-      entityManager.addToScene(slime);
-    }
+    const teleportTopToBottom = new TeleportEntity(
+      stairsLocation.getTopStairsTeleportBox().copy(),
+      stairsLocation.getBottomStairsTeleportBox().copy().move(200, -200),
+    );
+    entityManager.addEntity(teleportTopToBottom);
+    entityManager.addToScene(teleportTopToBottom);
 
-    const inputController = new InputController();
-    player.addComponent(inputController);
-    entityManager.addEntity(player, 'player');
+    // const teleportBottomToTop = new TeleportEntity(
+    //   stairsLocation.getBottomStairsTeleportBox().copy(),
+    //   stairsLocation.getTopStairsTeleportBox().copy().move(200, 300),
+    // );
+    // entityManager.addEntity(teleportBottomToTop);
+    // entityManager.addToScene(teleportBottomToTop);
 
-    const camera = new FollowPlayerCamera(window.innerWidth, window.innerHeight, player);
-    entityManager.addEntity(camera, 'camera');
-    this.getScene().camera = camera;
+    // const player = new PlayerEntity(
+    //   stairsLocation.getGameObject().getBox().getCenter().x,
+    //   stairsLocation.getGameObject().getBox().getCenter().y
+    // );
 
-    // const fieldEntity = new Entity();
-
-    // for (let i = 0; i < 1; i++) {
-    //   for (let j = -1000; j < 1000; j++) {
-    //     if (j % 50 !== 0) continue;
-    //     // TOP
-    //     const fire1 = new FireEntity(j, -1000 - ((i + 1) * 30), 150, 150);
-    //     // fire1.getGameObject().setIsCollidable(true);
-    //     this.entityManager.addEntity(fire1);
-    //     this.scene.entities.push(fire1);
-    //
-    //     // BOTTOM
-    //     const fire2 = new FireEntity(j, 1000  + ((i + 1) * 30), 150, 150);
-    //     // fire2.getGameObject().setIsCollidable(true);
-    //     this.entityManager.addEntity(fire2);
-    //     this.scene.entities.push(fire2);
-    //
-    //     // LEFT
-    //     const fire3 = new FireEntity(-1000  - ((i + 1) * 30), j, 150, 150);
-    //     // fire3.getGameObject().setIsCollidable(true);
-    //     this.entityManager.addEntity(fire3);
-    //     this.scene.entities.push(fire3);
-    //
-    //     // RIGHT
-    //     const fire4 = new FireEntity(1000 + ((i + 1) * 30), j, 150, 150);
-    //     // fire4.getGameObject().setIsCollidable(true);
-    //     this.entityManager.addEntity(fire4);
-    //     this.scene.entities.push(fire4);
-    //   }
+    // for (let j = 0; j < 3; j++) {
+    //   const slime = new SlimeEntity(12000 - 100 + Math.random() * 300, 1250 - 100 + Math.random() * 300);
+    //   entityManager.addEntity(slime);
+    //   entityManager.addToScene(slime);
     // }
 
-    const getRandomDiff = () => (0.5 - Math.random()) * 500;
-
-    for (let i = 0; i < 10; i++) {
-      for (let j = -2000; j < 2000; j++) {
-        if (j % 500 !== 0) continue;
-        const MULT = 200;
-        // TOP
-        const tree1 = new TreeEntity(j + getRandomDiff(), -1000 - ((i + 1) * MULT) + getRandomDiff(), 0, true, 2);
-        // fire1.getGameObject().setIsCollidable(true);
-        entityManager.addEntity(tree1);
-        entityManager.addToScene(tree1);
-
-        // BOTTOM
-        const tree2 = new TreeEntity(j + getRandomDiff(), 1000  + ((i + 1) * MULT) + getRandomDiff(), 0, true, 2);
-        // fire2.getGameObject().setIsCollidable(true);
-        entityManager.addEntity(tree2);
-        entityManager.addToScene(tree2);
-
-        if (j > -1000 && j < 1000) {
-          // LEFT
-          const tree3 = new TreeEntity(-1000  - ((i + 1) * MULT) + getRandomDiff(), j + getRandomDiff(), 0, true, 2);
-          // fire3.getGameObject().setIsCollidable(true);
-          entityManager.addEntity(tree3);
-          entityManager.addToScene(tree3);
-
-          // RIGHT
-          const tree4 = new TreeEntity(1000 + ((i + 1) * MULT) + getRandomDiff(), j + getRandomDiff(), 0, true, 2);
-          // fire4.getGameObject().setIsCollidable(true);
-          entityManager.addEntity(tree4);
-          entityManager.addToScene(tree4);
-        }
-      }
+    for (const treesPosition of HOME_MAP_TREES_POSITIONS) {
+      const tree = new TreeEntity(treesPosition.x, treesPosition.y, 0, true, 2);
+      entityManager.addEntity(tree);
+      entityManager.addToScene(tree);
     }
 
-    for (let j = 0; j < 3; j++) {
-      const slime = new SlimeEntity(200 * Math.random() + 200, 200 * Math.random() + 200);
+    for (let j = 0; j < 1; j++) {
+      const slime = new SkeletonEntity(200 * Math.random() + 200, 200 * Math.random() + 200);
       entityManager.addEntity(slime);
       entityManager.addToScene(slime);
     }
@@ -196,8 +141,6 @@ export class HomeMap extends GameMap {
       entityManager.addEntity(guard);
       entityManager.addToScene(guard);
     }
-
-    entityManager.addToScene(player);
 
     const death = new DeathEntity(800, 200);
 
@@ -209,5 +152,53 @@ export class HomeMap extends GameMap {
 
     const deathQuest = new DeathQuestEntity();
     entityManager.addEntity(deathQuest, 'deathQuest');
+  }
+
+  private unsubscribeFromPlayerMoveFn: UnsubscribeFn | null = null;
+  public attachPlayer(player: PlayerEntity, namedLocation?: keyof typeof HOME_MAP_NAMED_LOCATIONS): this {
+    const entityManager = this.getEntityManager();
+
+    let topLeft: Position;
+    if (namedLocation) {
+      topLeft = Box.fromMarkupRect(HOME_MAP_NAMED_LOCATIONS[namedLocation]).getTopLeft();
+    }
+    else {
+      topLeft = Box.fromMarkupRect(HOME_MAP_NAMED_LOCATIONS.home).getTopLeft();
+    }
+
+    player.getGameObject().getBox().setTopLeft(topLeft);
+
+
+    // const inputController = new InputController();
+    // player.addComponent(inputController);
+
+    entityManager.addEntity(player, 'player');
+    player.emitter.subscribe('dead_and_modal_closed', () => {
+      player.respawn();
+    });
+
+    const camera = new FollowPlayerCamera(window.innerWidth, window.innerHeight, player);
+    entityManager.addEntity(camera, 'camera');
+    this.getScene().camera = camera;
+
+    entityManager.addToScene(player);
+
+    this.unsubscribeFromPlayerMoveFn = this.getEntityManager().emitter.subscribe('player_move', (player: PlayerEntity) => {
+      if (player.getGameObject().getBox().getTopLeft().y < -3000) {
+        this.game.setGiantTreeMap();
+      }
+    });
+
+    return this;
+  }
+
+  public removePlayer(): this {
+    if (this.unsubscribeFromPlayerMoveFn) {
+      this.unsubscribeFromPlayerMoveFn();
+    }
+
+    super.removePlayer();
+
+    return this;
   }
 }

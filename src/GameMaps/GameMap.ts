@@ -19,6 +19,10 @@ export abstract class GameMap {
     this.context = canvas.getContext('2d');
   }
 
+  public constructor(canvas: HTMLCanvasElement) {
+    this.setCanvas(canvas);
+  }
+
   private entityManager: EntityManager | null = null;
   public getEntityManager(): EntityManager {
     return this.entityManager!;
@@ -31,8 +35,16 @@ export abstract class GameMap {
   public getScene(): Scene {
     return this.scene!;
   }
-  public setScene(scene: Scene): void {
+  public setScene(scene: Scene): this {
     this.scene = scene;
+    return this;
+  }
+
+  public abstract attachPlayer(player: PlayerEntity, namedLocation?: string): this;
+
+  public removePlayer(): this {
+    this.getEntityManager().removeEntity(this.getEntityManager().getEntityByName('player'), false);
+    return this;
   }
 
   public initialize(): void {

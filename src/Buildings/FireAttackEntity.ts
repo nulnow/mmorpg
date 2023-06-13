@@ -49,7 +49,7 @@ export class FireAttackEntity extends FireEntity {
 
   private travelledDistance = 0;
   private stoppedAtCollisionTimeMs = 0;
-  private MAX_FIRE_TIME_MS = 60000 * 1;
+  private MAX_FIRE_TIME_MS = 60000 * 0.2;
 
   private exploded = false;
   private stopped = false;

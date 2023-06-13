@@ -10,8 +10,9 @@ export class DrawableEntity extends Entity implements IDrawableEntity {
     return this.gameObject;
   }
 
-  public setGameObject(gameObject: GameObject): void {
+  public setGameObject(gameObject: GameObject): this {
     this.gameObject = gameObject;
+    return this;
   }
 
   public findCollisions(boxToFindCollisionsWith: Box): GameObject[] {

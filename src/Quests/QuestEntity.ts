@@ -3,7 +3,7 @@ import { PlayerEntity } from '../Player/PlayerEntity';
 import { GAME_EVENTS } from '../GAME_EVENTS';
 import { UnsubscribeFn } from '../EventEmitter';
 import { SlimeEntity } from '../Enemies/slime/SlimeEntity';
-import { UIEntity } from '../UI/UIEntity';
+import { uiEntity, UIEntity } from '../UI/UIEntity';
 import { FireEntity } from '../Buildings/FireEntity';
 
 const TITLE = `Задача. Очистить дом`;
@@ -26,7 +26,8 @@ export class QuestEntity extends Entity {
 
   public initEntity() {
     super.initEntity();
-    const uiEntity = (this.getEntityManager().getEntityByName('ui') as UIEntity);
+
+    return;
     uiEntity.addQuest('initial', TITLE, () => {
       uiEntity.showModal({
         title: TITLE,
@@ -70,8 +71,6 @@ export class QuestEntity extends Entity {
       this.closeStartModalFn();
     }
 
-    const uiEntity = (this.getEntityManager().getEntityByName('ui') as UIEntity);
-
     uiEntity.markQuestDone('initial');
 
     uiEntity.showModal({
@@ -82,8 +81,6 @@ export class QuestEntity extends Entity {
     this.fires.forEach(fire => {
       this.getEntityManager().removeEntity(fire);
     });
-
-    // this.getEntityManager().getEntityByName('fire')
   }
 
   public destroy() {

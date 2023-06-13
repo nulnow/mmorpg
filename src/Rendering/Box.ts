@@ -1,4 +1,5 @@
 import { Position } from './Position';
+import { MarkupRect } from '../types';
 
 export type Rect = {
   top: number,
@@ -11,6 +12,22 @@ export type Rect = {
 }
 
 export class Box {
+  public static fromMarkupRect(markupRect: MarkupRect, { scale = 1 }: { scale?: number } = {}): Box {
+    const point1 = markupRect[0];
+    const point2 = markupRect[1];
+
+    const topLeftX = Math.min(point1.x * scale, point2.x * scale);
+    const topLeftY =  Math.min(point1.y * scale, point2.y * scale);
+
+    const width = Math.abs(point1.x * scale - point2.x * scale);
+    const height = Math.abs(point1.y * scale - point2.y * scale);
+
+    return new Box(
+      new Position(topLeftX, topLeftY),
+      width, height,
+    );
+  }
+
   public constructor(
     private topLeft: Position,
     private width: number,
@@ -25,22 +42,25 @@ export class Box {
     return this.topLeft.y + this.height;
   }
 
-  public setTopLeft(position: Position): void {
+  public setTopLeft(position: Position): this {
     this.topLeft = position;
+    return this;
   }
 
   public getWidth(): number {
     return this.width;
   }
-  public setWidth(width: number): void {
+  public setWidth(width: number): this {
     this.width = width;
+    return this;
   }
 
   public getHeight(): number {
     return this.height;
   }
-  public setHeight(height: number): void {
+  public setHeight(height: number): this {
     this.height = height;
+    return this;
   }
 
   public getRect(): Rect {
@@ -78,22 +98,12 @@ export class Box {
     };
   }
 
-  public move(x: number, y: number): void {
+  public move(x: number, y: number): this {
     this.topLeft.x += x;
     this.topLeft.y += y;
-  }
 
-  // public setCenter(newCenter: Position): void {
-  //   const currentCenter = this.getCenter();
-  //   const dx = newCenter.x - currentCenter.x;
-  //   const dy = newCenter.y - currentCenter.y;
-  //
-  //   this.p1.x += dx;
-  //   this.p1.y += dy;
-  //
-  //   this.p2.x += dx;
-  //   this.p2.y += dy;
-  // }
+    return this;
+  }
 
   public copy(): Box {
     return new Box(
@@ -111,7 +121,7 @@ export class Box {
     return new Position(x, y, 0);
   }
 
-  public isCollide(box: Box) {
+  public isCollide(box: Box): boolean {
     const a = this.getRect();
     const b = box.getRect();
 

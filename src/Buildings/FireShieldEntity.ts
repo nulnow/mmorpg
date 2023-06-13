@@ -87,7 +87,7 @@ export class FireShieldEntity extends FireEntity {
     const playerTopLeft = this.player.getGameObject().getBox().getCenter();
 
     const x = Math.cos(this.rotation.get()) * this.distance + playerTopLeft.x - this.width / 2;
-    const y = (Math.sin(this.rotation.get()) * 0.7 * this.distance + playerTopLeft.y - this.height / 2);
+    const y = (Math.sin(this.rotation.get()) * 0.65 * this.distance + playerTopLeft.y - this.height / 2);
 
     const topLeft = this.gameObject.getBox().getTopLeft();
     topLeft.x = x;

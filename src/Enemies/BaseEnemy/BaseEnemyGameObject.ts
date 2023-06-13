@@ -12,12 +12,18 @@ export class BaseEnemyGameObject extends GameObject {
   private attackCircle: AttackCircle;
   private healthBar: HealthBar;
 
-  public constructor(x: number, y: number, enemy: BaseEnemyEntity, finiteStateMachine: BaseEnemyStateMachine) {
+  public constructor(
+    x: number, y: number,
+    enemy: BaseEnemyEntity,
+    finiteStateMachine: BaseEnemyStateMachine,
+    width: number = 100,
+    height: number = 100,
+    ) {
     super(finiteStateMachine);
     this.enemy = enemy;
     this.box = new Box(
       new Position(x, y, 0),
-      100, 100
+      width, height
     );
 
     this.rotation = new Rotation(123);

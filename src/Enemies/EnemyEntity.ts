@@ -27,6 +27,7 @@ export class EnemyEntity extends DrawableEntity implements IEntityWithHealth, IE
       this.emitter.emit(GAME_EVENTS.KILLED_EVENT, { who: this, killer: from });
       // TODO
       this.finiteStateMachine.setState(EnemyDieState as any);
+      this.onDeath();
     }
     this.setHealth(newHealth)
   }

@@ -5,8 +5,7 @@ export type SpriteConfig = {
   cols: number;
   size: number;
 
-  from?: number;
-  to?: number;
+  rowIndex?: number;
 }
 
 export type SpriteFilter = (context: CanvasRenderingContext2D) => void;
@@ -17,7 +16,7 @@ export class Sprite {
     private config: SpriteConfig,
   ) {}
 
-  private static cache = new TrippleMap<number, SpriteFilter | null, HTMLImageElement, HTMLImageElement>();
+  private static cache = new TrippleMap<number, SpriteFilter | null, unknown, HTMLImageElement>();
   private filter?: SpriteFilter;
   public setFilter(filter: SpriteFilter) {
     this.filter = filter;
@@ -28,7 +27,7 @@ export class Sprite {
   }
 
   public getSpriteByIndex(index: number): HTMLImageElement {
-    const fromCache = Sprite.cache.get(index, this.filter ?? null, this.sprites);
+    const fromCache = Sprite.cache.get(index, (this.filter ?? null), this.config);
     if (!!fromCache) {
       return fromCache;
     }
@@ -48,8 +47,15 @@ export class Sprite {
       this.filter(canvasContext);
     }
 
-    const rowIndex = Math.floor(index / this.config.cols);
-    const colIndex = index - (rowIndex * this.config.cols);
+    let rowIndex;
+    let colIndex;
+    if (this.config.rowIndex !== undefined) {
+      rowIndex = this.config.rowIndex;
+      colIndex = index;
+    } else {
+      rowIndex = Math.floor(index / this.config.cols);
+      colIndex = index - (rowIndex * this.config.cols);
+    }
 
     const xOffset = colIndex * colWidth;
     const yOffset = rowIndex * rowHeight;
@@ -68,7 +74,7 @@ export class Sprite {
     const image = new Image();
     image.src = canvas.toDataURL();
 
-    Sprite.cache.set(index, this.filter ?? null, this.sprites, image);
+    Sprite.cache.set(index, this.filter ?? null, this.config, image);
 
     return image;
   }

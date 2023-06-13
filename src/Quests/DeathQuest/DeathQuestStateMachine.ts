@@ -1,7 +1,7 @@
 import { FiniteStateMachine } from '../../StateMachine/FiniteStateMachine';
 import { DeathQuestEntity } from './DeathQuestEntity';
 import { State } from '../../StateMachine/State';
-import { UIEntity } from '../../UI/UIEntity';
+import { uiEntity } from '../../UI/UIEntity';
 
 export class NotSetDeathQuestState extends State {
   public onEnter() {
@@ -27,8 +27,6 @@ export class JustTakenDeathQuestState extends State {
 
   public onEnter() {
     super.onEnter();
-    const uiEntity = this.fsm.getQuest().getEntityManager().getEntityByName('ui') as UIEntity;
-
     uiEntity.addQuest('death-quest', 'Начало истории', () => {
       this.fsm.getQuest().showQuestInfo();
     });

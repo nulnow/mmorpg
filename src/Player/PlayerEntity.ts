@@ -6,7 +6,7 @@ import { FiniteStateMachine } from '../StateMachine/FiniteStateMachine';
 import { Health, IEntityWithHealth } from '../IEntityWithHealth';
 import { IEntityAbleToAttack } from '../IEntityAbleToAttack';
 import { DrawableEntity } from '../Rendering/DrawableEntity';
-import { UIEntity } from '../UI/UIEntity';
+import { uiEntity } from '../UI/UIEntity';
 import { FireAttackEntity } from '../Buildings/FireAttackEntity';
 import { Position } from '../Rendering/Position';
 import { fireGreenFilter, firePurpleFilter, FireShieldEntity } from '../Buildings/FireShieldEntity';
@@ -29,7 +29,7 @@ export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, I
     this.gameObject = new CharacterGameObject(x, y, this, this.finiteStateMachine);
   }
 
-  private health: Health = new Health(100, 150);
+  private health: Health = new Health(10000, 10000);
 
   public getHealth(): Health {
     return this.health;
@@ -42,7 +42,7 @@ export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, I
     this.finiteStateMachine.setState(PlayerIdleState);
     this.setHealth(this.getHealth().getMaxValue());
     this.gameObject.getBox().setTopLeft(new Position(40, 40, 0));
-    this.emitter.emit('player_move', null);
+    this.getEntityManager().emitter.emit('player_move', this);
   }
 
   public damage(value: number): void {
@@ -51,7 +51,7 @@ export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, I
       newHealth = 0;
       this.finiteStateMachine.setState(PlayerDieState as any);
       this.onDeath();
-      (this.getEntityManager().getEntityByName('ui') as UIEntity).showModal({
+      uiEntity.showModal({
         title: 'ПОРАЖЕНИЕ',
         body: 'О НЕТ! ПОСЛЕДНЯЯ НАДЕЖДА ИМПЕРИИ ПАЛА. ВЕСЬ МИР ВЗОРВАЛСЯ И ВСЕ УМЕРЛИ',
         onClose: () => {
@@ -144,7 +144,6 @@ export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, I
       this.getEntityManager().removeEntity(fireBall);
     }
     this.healBalls.length = 0;
-    console.log('here')
   }
 
   private HEAL_BALL_DELAY_MS = 100;
@@ -205,7 +204,7 @@ export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, I
     this.attackRange = value;
   }
 
-  private speed = 250;
+  private speed = 450;
   public getSpeed(): number {
     return this.speed;
   }

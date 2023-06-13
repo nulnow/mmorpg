@@ -16,12 +16,12 @@ class GuardEnemyIdleState extends BaseEnemyIdleState {
 }
 
 class GuardEnemyHangingAroundState extends BaseEnemyHangingAroundState {
-  protected speed = 2;
+  protected speed = 12;
   protected sprites: StateSprites = ResourceLoader.getLoadedAssets().guard.run;
 }
 
 class GuardEnemyDieState extends BaseEnemyDieState {
-  protected speed = 2;
+  protected speed = 12;
   protected sprites: StateSprites = ResourceLoader.getLoadedAssets().guard.death;
 }
 
@@ -31,12 +31,12 @@ class GuardEnemyDeadState extends BaseEnemyDeadState {
 }
 
 class GuardEnemyChasingPlayerState extends BaseEnemyChasingPlayerState {
-  protected speed = 2;
+  protected speed = 12;
   protected sprites: StateSprites = ResourceLoader.getLoadedAssets().guard.run;
 }
 
 class GuardEnemyAttackPlayerState extends BaseEnemyAttackPlayerState {
-  protected speed = 2;
+  protected speed = 12;
   protected sprites: StateSprites = ResourceLoader.getLoadedAssets().guard.attack;
 }
 

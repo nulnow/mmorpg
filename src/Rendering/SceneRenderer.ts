@@ -18,9 +18,9 @@ export class SceneRenderer {
     return this.canvas;
   }
 
-  public start() {
+  public start(): this {
     if (this.started) {
-      return;
+      return this;
     }
     this.started = true;
 
@@ -30,14 +30,18 @@ export class SceneRenderer {
     }
 
     this.run();
+
+    return this;
   }
 
-  public stop() {
+  public stop(): this {
     this.started = false;
+
+    return this;
   }
 
   private prevDOMHighResTimeStamp = 0;
-  private run() {
+  private run(): void {
     if (!this.started) {
       return;
     }

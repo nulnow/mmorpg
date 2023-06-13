@@ -133,7 +133,7 @@ export class PlayerRunState extends State {
           player.getGameObject().setRotation(angle);
         }
         playerBox.move(x, y);
-        player.emitter.emit('player_move', playerBox);
+        player.getEntityManager().emitter.emit('player_move', player);
       }
     }
   }

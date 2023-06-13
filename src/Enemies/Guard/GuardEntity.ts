@@ -7,7 +7,7 @@ export class GuardEntity extends BaseEnemyEntity {
   public constructor(x: number, y: number) {
     super(x, y);
     this.finiteStateMachine = new GuardStateMachine(this);
-    this.gameObject = new GuardGameObject(x, y, this, this.finiteStateMachine)
+    this.gameObject = new GuardGameObject(x, y, this, this.finiteStateMachine, 200, 200)
   }
 
   protected health: Health = new Health(100, 100);
@@ -16,5 +16,8 @@ export class GuardEntity extends BaseEnemyEntity {
   }
   public setHealth(value: number): void {
     this.health.setValue(value);
+  }
+  public getSpeed(): number {
+    return 0.06;
   }
 }

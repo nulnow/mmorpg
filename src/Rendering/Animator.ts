@@ -48,36 +48,46 @@ export class Animator {
           const box = this.gameObject.getBox();
           const rect = box.getRect();
 
+          // console.log('here1')
           return ResourceLoader.flipImage(this.sprites.getSpriteByIndex(this.currentAnimationId), rect);
         }
 
+        // console.log('here2')
         return this.sprites.getSpriteByIndex(this.currentAnimationId);
       } else {
         if (this.gameObject && this.gameObject.getRotation().isLeft()) {
           const box = this.gameObject.getBox();
           const rect = box.getRect();
 
+          // console.log('here3')
           return ResourceLoader.flipImage(this.sprites[this.currentAnimationId], rect);
         }
 
+        // console.log('here4')
         return this.sprites[this.currentAnimationId];
       }
     } else {
       if (this.sprites instanceof Sprite) {
-        if (this.gameObject && this.gameObject.getRotation().isRight()) {
-          const box = this.gameObject.getBox();
-          const rect = box.getRect();
 
-          return ResourceLoader.flipImage(this.sprites.getSpriteByIndex(this.currentAnimationId), rect);
+        if (this.gameObject && this.gameObject.getRotation().isRight()) {
+          return this.sprites.getSpriteByIndex(this.currentAnimationId);
         }
-        return this.sprites.getSpriteByIndex(this.currentAnimationId);
+
+        const box = this.gameObject.getBox();
+        const rect = box.getRect();
+
+        // console.log('here5')
+        return ResourceLoader.flipImage(this.sprites.getSpriteByIndex(this.currentAnimationId), rect, this.sprites);
       } else {
         if (this.gameObject && this.gameObject.getRotation().isRight()) {
           const box = this.gameObject.getBox();
           const rect = box.getRect();
 
+          // console.log('here7')
           return ResourceLoader.flipImage(this.sprites[this.currentAnimationId], rect);
         }
+
+        // console.log('here8')
         return this.sprites[this.currentAnimationId];
       }
     }

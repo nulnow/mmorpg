@@ -13,7 +13,7 @@ export class EntityPreview {
     private entity: Entity,
   ) {}
 
-  public mount(id: string): void {
+  public mount(id: string): this {
     const WIDTH = 100;
     const HEIGHT = 100;
 
@@ -37,6 +37,7 @@ export class EntityPreview {
     this.element?.appendChild(sceneRenderer.getCanvas()!);
 
     this.sceneRenderer = sceneRenderer;
+    return this;
   }
 
   public destroy(): void {

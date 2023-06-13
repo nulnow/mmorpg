@@ -22,8 +22,9 @@ export class GameObject {
   public getZIndex(): number {
     return this.zIndex;
   }
-  public setZIndex(zIndex: number): void {
+  public setZIndex(zIndex: number): this {
     this.zIndex = zIndex;
+    return this;
   }
 
   public constructor(finiteStateMachine: FiniteStateMachine = new FiniteStateMachine()) {
@@ -33,61 +34,69 @@ export class GameObject {
   public getImage(): HTMLImageElement | null {
     return this.image;
   }
-  public setImage(image: HTMLImageElement): void {
+  public setImage(image: HTMLImageElement): this {
     this.image = image;
+    return this;
   }
 
   public getPatternImage(): HTMLImageElement | null {
     return this.patternImage;
   }
 
-  public setPatternImage(patternImage: HTMLImageElement): void {
+  public setPatternImage(patternImage: HTMLImageElement): this {
     this.patternImage = patternImage;
+    return this;
   }
 
   public getColor(): string | null {
     return this.color;
   }
 
-  public setColor(color: string | null): void {
+  public setColor(color: string | null): this {
     this.color = color;
+    return this;
   }
 
   public isCollidable(): boolean {
     return this.collidable;
   }
 
-  public setIsCollidable(value: boolean): void {
+  public setIsCollidable(value: boolean): this {
     this.collidable = value;
+    return this;
   }
 
   private rightToLeft = true;
   public getIsRightToLeft(): boolean {
     return this.rightToLeft;
   }
-  public setIsRightToLeft(val: boolean): void {
+  public setIsRightToLeft(val: boolean): this {
     this.rightToLeft = val;
+    return this;
   }
 
   public getBox(): Box {
     return this.box;
   }
 
-  public setBox(box: Box): void {
+  public setBox(box: Box): this {
     this.box = box;
+    return this;
   }
 
   public getRotation(): Rotation {
     return this.rotation;
   }
 
-  public setRotation(rotation: Rotation | number): void {
+  public setRotation(rotation: Rotation | number): this {
     if (rotation instanceof Rotation) {
       this.rotation = rotation;
     }
     if (typeof rotation === 'number') {
       this.rotation.set(rotation);
     }
+
+    return this;
   }
 
   public getAllTheBoxes(): Box[] {
@@ -160,8 +169,9 @@ export class GameObject {
       this.removeHook(key, hook);
     };
   }
-  public removeHook(key: 'before' | 'after', hook: DrawHook): void {
+  public removeHook(key: 'before' | 'after', hook: DrawHook): this {
     removeOneFromArray(this.drawHooks[key], (h) => h === hook);
+    return this;
   }
   public draw(context: CanvasRenderingContext2D, camera: Camera): void {
     for (const hook of this.drawHooks.before) {

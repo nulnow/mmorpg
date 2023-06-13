@@ -4,7 +4,7 @@ import { Position } from '../Rendering/Position';
 import { ResourceLoader } from '../ResourceLoader';
 import { DrawableEntity } from '../Rendering/DrawableEntity';
 import { PlayerEntity } from '../Player/PlayerEntity';
-import { UIEntity } from '../UI/UIEntity';
+import { uiEntity, UIEntity } from '../UI/UIEntity';
 
 export class BedEntity extends DrawableEntity {
   protected gameObject: GameObject;
@@ -52,7 +52,7 @@ export class BedEntity extends DrawableEntity {
       if (distanceToPlayer < 150) {
         player.setHealth(1000);
         this.healed = true;
-        const uiEntity = this.getEntityManager().getEntityByName('ui') as UIEntity;
+
         uiEntity.showModal({
           title: 'You were healed!',
           body: ''

@@ -1,4 +1,6 @@
-export const TREE_POINTS = [
+import { MarkupPoint, MarkupRect } from '../types';
+
+export const GIANT_TREE_TREE_POINTS: MarkupPoint[] = [
   {
     "x": 625,
     "y": 739
@@ -328,8 +330,7 @@ export const TREE_POINTS = [
     "y": 768
   }
 ];
-
-export const TREE_BOXES = [
+export const GIANT_TREE_COLLISIONS: MarkupRect[] = [
   [
     {
       "x": 476,
@@ -1181,8 +1182,7 @@ export const TREE_BOXES = [
     }
   ]
 ];
-
-export const MINI_TREE_POINTS = [
+export const GIANT_TREE_MINI_TREE_POINTS: MarkupPoint[] = [
   {
     "x": 1165,
     "y": 1003.5
@@ -1340,7 +1340,7 @@ export const MINI_TREE_POINTS = [
     "y": 1016.5
   }
 ];
-export const MINI_TREE_BOXES = [
+export const GIANT_TREE_MINI_TREE_BOXES: MarkupRect[] = [
   [
     {
       "x": 1227,
@@ -1352,3 +1352,16 @@ export const MINI_TREE_BOXES = [
     }
   ]
 ];
+
+export const GIANT_TREE_NAMED_BOXED: { leftBottomExit: MarkupRect } = {
+  leftBottomExit: [
+    {
+      "x": 25,
+      "y": 1268
+    },
+    {
+      "x": 1,
+      "y": 1392
+    }
+  ]
+};

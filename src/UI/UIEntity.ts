@@ -90,3 +90,6 @@ export class UIEntity extends Entity {
     return 'modal_id_' + Math.random().toString().replace('.', '');
   }
 }
+
+// TODO
+export const uiEntity = new UIEntity();

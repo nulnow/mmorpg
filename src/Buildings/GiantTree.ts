@@ -3,7 +3,13 @@ import { Box } from '../Rendering/Box';
 import { Position } from '../Rendering/Position';
 import { GameObject } from '../Rendering/GameObject';
 import { ResourceLoader } from '../ResourceLoader';
-import { TREE_POINTS, TREE_BOXES, MINI_TREE_POINTS, MINI_TREE_BOXES } from './GiantTreeCONSTS';
+import {
+  GIANT_TREE_TREE_POINTS,
+  GIANT_TREE_COLLISIONS,
+  GIANT_TREE_MINI_TREE_POINTS,
+  GIANT_TREE_MINI_TREE_BOXES,
+  GIANT_TREE_NAMED_BOXED
+} from './GiantTreeCONSTS';
 
 const DEFAULT_WIDTH = 1920;
 const DEFAULT_HEIGHT = 2071;
@@ -20,7 +26,7 @@ class MiniTree extends DrawableEntity {
     this.gameObject.setBox(box);
     this.gameObject.setZIndex(1);
 
-    const topLeftWallImage = ResourceLoader.cropImageByPath(ResourceLoader.getLoadedAssets().giantTree, MINI_TREE_POINTS);
+    const topLeftWallImage = ResourceLoader.cropImageByPath(ResourceLoader.getLoadedAssets().giantTree, GIANT_TREE_MINI_TREE_POINTS);
     this.gameObject.setImage(topLeftWallImage);
 
     this.gameObject.addHook('before', (context, camera) => {
@@ -30,7 +36,7 @@ class MiniTree extends DrawableEntity {
       context.globalAlpha = 1;
     });
 
-    for (const box of MINI_TREE_BOXES) {
+    for (const box of GIANT_TREE_MINI_TREE_BOXES) {
       const point1 = box[0];
       const point2 = box[1];
 
@@ -75,7 +81,7 @@ class Tree extends DrawableEntity {
     this.gameObject.setBox(box);
     this.gameObject.setZIndex(1);
 
-    const topLeftWallImage = ResourceLoader.cropImageByPath(ResourceLoader.getLoadedAssets().giantTree, TREE_POINTS);
+    const topLeftWallImage = ResourceLoader.cropImageByPath(ResourceLoader.getLoadedAssets().giantTree, GIANT_TREE_TREE_POINTS);
     this.gameObject.setImage(topLeftWallImage);
 
     this.gameObject.addHook('before', (context, camera) => {
@@ -90,6 +96,11 @@ class Tree extends DrawableEntity {
 export class GiantTree extends DrawableEntity {
   private tree: Tree | null = null;
   private miniTree: MiniTree | null = null;
+
+  private readonly leftBottomExit: Box;
+  public getLeftBottomExit(): Box {
+    return this.leftBottomExit;
+  }
 
   public getWidth___TODO_DELETE_IT(): number {
     return this.getGameObject().getBox().getWidth();
@@ -112,7 +123,7 @@ export class GiantTree extends DrawableEntity {
     const backgroundImage = ResourceLoader.getLoadedAssets().giantTree;
     this.gameObject.setImage(backgroundImage);
 
-    for (const box of TREE_BOXES) {
+    for (const box of GIANT_TREE_COLLISIONS) {
       const point1 = box[0];
       const point2 = box[1];
 
@@ -142,6 +153,8 @@ export class GiantTree extends DrawableEntity {
 
       this.gameObject.addChild(collidableGameObject);
     }
+
+    this.leftBottomExit = Box.fromMarkupRect(GIANT_TREE_NAMED_BOXED.leftBottomExit, { scale: this.scale }).move(x, y);
   }
 
   public initEntity() {
