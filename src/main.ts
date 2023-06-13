@@ -60,8 +60,8 @@ canvas.height = window.innerHeight;
   await ResourceLoader.loadGameAssets();
   loading.style.display = 'none';
 
-  // const entityPreview = new EntityPreview(new PlayerEntity(0, 0));
-  // entityPreview.mount('select-hero')
+  const entityPreview = new EntityPreview(new PlayerEntity(0, 0));
+  entityPreview.mount('select-hero');
 
   const game = new Game(
     canvas,
@@ -73,7 +73,7 @@ canvas.height = window.innerHeight;
 
   state.innerText = 'started';
   startButton.onclick = async function () {
-    // entityPreview.destroy();
+    entityPreview.destroy();
     state.innerText = 'started';
     state.style.color = '#22ff00';
 

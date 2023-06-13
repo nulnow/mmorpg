@@ -3,7 +3,7 @@ import { PlayerEntity } from '../Player/PlayerEntity';
 import { GAME_EVENTS } from '../GAME_EVENTS';
 import { UnsubscribeFn } from '../EventEmitter';
 import { SlimeEntity } from '../Enemies/slime/SlimeEntity';
-import { uiEntity, UIEntity } from '../UI/UIEntity';
+import { uiEntity } from '../UI/UIEntity';
 import { FireEntity } from '../Buildings/FireEntity';
 
 const TITLE = `Задача. Очистить дом`;
@@ -27,7 +27,6 @@ export class QuestEntity extends Entity {
   public initEntity() {
     super.initEntity();
 
-    return;
     uiEntity.addQuest('initial', TITLE, () => {
       uiEntity.showModal({
         title: TITLE,
@@ -38,6 +37,11 @@ export class QuestEntity extends Entity {
     this.closeStartModalFn = uiEntity.showModal({
       title: TITLE,
       body: BODY,
+    });
+
+    uiEntity.showModal({
+      title: 'УПРАВЛЕНИЕ',
+      body: 'КНОПКИ АТАКИ X, R, F, C, E, Q. Если бежать вверх или вправо от дома, то там будут новые локации',
     });
 
     this.unsubscribeFromKilledEvent = this.getEntityManager().emitter.subscribe(GAME_EVENTS.KILLED_EVENT, ({ who, killer }) => {

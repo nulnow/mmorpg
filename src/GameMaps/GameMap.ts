@@ -118,7 +118,7 @@ export abstract class GameMap {
     context.fillStyle = '#ffffff';
     context.font = "15px monospace";
     context.fillText(`FPS: ${this.fps}`, 10, 30);
-    context.fillText('Attack: E, Q, X. Move: WASD', 10, 50);
+    context.fillText('Attack: X, R, F, C, E, Q. Move: WASD', 10, 50);
 
     const player = this.entityManager!.getEntityByName('player');
     if (player) {

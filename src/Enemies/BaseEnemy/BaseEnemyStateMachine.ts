@@ -55,7 +55,7 @@ export class BaseEnemyIdleState extends State {
       this.fsm.setChasingPlayerState();
     } else {
       if (Random.runChance(timeElapsed / 1000, this.chanceToHangAround)) {
-        // this.fsm.setHangingAroundState();
+        this.fsm.setHangingAroundState();
       }
     }
   }
