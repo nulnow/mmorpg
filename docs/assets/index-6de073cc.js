@@ -215,7 +215,6 @@ const _Sprite = class {
     __publicField(this, "filter");
     this.sprites = sprites;
     this.config = config;
-    this.warmCaches();
   }
   setFilter(filter) {
     this.filter = filter;
@@ -224,7 +223,6 @@ const _Sprite = class {
     for (let i = 0; i < this.getLength(); i++) {
       this.getSpriteByIndex(i);
     }
-    return this;
   }
   getLength() {
     return this.config.size;
@@ -692,28 +690,25 @@ class Animator {
   }
   setSpeed(speed) {
     this.speed = speed;
-    return this;
   }
   setSprites(sprites) {
     this.sprites = sprites;
     return this;
   }
-  warmCache() {
-    if (this.sprites instanceof Sprite && this.gameObject) {
-      const box = this.gameObject.getBox();
-      const rect = box.getRect();
-      for (let i = 0; i < this.sprites.getLength(); i++) {
-        ResourceLoader.flipImage(this.sprites.getSpriteByIndex(i), rect, this.sprites);
-      }
-    }
-    return this;
-  }
+  // public warmCache(): void {
+  //   if (this.sprites instanceof Sprite && this.gameObject) {
+  //     const box = this.gameObject.getBox();
+  //     const rect = box.getRect();
+  //     for (let i = 0; i < this.sprites.getLength(); i++) {
+  //       ResourceLoader.flipImage(this.sprites.getSpriteByIndex(i), rect, this.sprites);
+  //     }
+  //   }
+  // }
   getGameObject() {
     return this.gameObject;
   }
   setGameObject(gameObject) {
     this.gameObject = gameObject;
-    return this;
   }
   getCurrentSprite() {
     const SPRITE_TIME_MS = 1e3 / this.speed;
@@ -736,15 +731,19 @@ class Animator {
         if (this.gameObject && this.gameObject.getRotation().isLeft()) {
           const box = this.gameObject.getBox();
           const rect = box.getRect();
+          console.log("here1");
           return ResourceLoader.flipImage(this.sprites.getSpriteByIndex(this.currentAnimationId), rect);
         }
+        console.log("here2");
         return this.sprites.getSpriteByIndex(this.currentAnimationId);
       } else {
         if (this.gameObject && this.gameObject.getRotation().isLeft()) {
           const box = this.gameObject.getBox();
           const rect = box.getRect();
+          console.log("here3");
           return ResourceLoader.flipImage(this.sprites[this.currentAnimationId], rect);
         }
+        console.log("here4");
         return this.sprites[this.currentAnimationId];
       }
     } else {
@@ -754,13 +753,16 @@ class Animator {
         }
         const box = this.gameObject.getBox();
         const rect = box.getRect();
+        console.log("here5");
         return ResourceLoader.flipImage(this.sprites.getSpriteByIndex(this.currentAnimationId), rect, this.sprites);
       } else {
         if (this.gameObject && this.gameObject.getRotation().isRight()) {
           const box = this.gameObject.getBox();
           const rect = box.getRect();
+          console.log("here7");
           return ResourceLoader.flipImage(this.sprites[this.currentAnimationId], rect);
         }
+        console.log("here8");
         return this.sprites[this.currentAnimationId];
       }
     }
@@ -774,24 +776,188 @@ class Animator {
     this.timeSpent += timeElapsed;
   }
 }
+class State {
+  constructor(fsm) {
+    __publicField(this, "fsm");
+    this.fsm = fsm;
+  }
+  onEnter() {
+  }
+  onExit() {
+  }
+  update(timeElapsed) {
+  }
+}
+class StateWithAnimation extends State {
+  constructor(fsm) {
+    super(fsm);
+    __publicField(this, "fsm");
+    __publicField(this, "animator", new Animator());
+    __publicField(this, "sprites", []);
+    __publicField(this, "speed", 0);
+    this.fsm = fsm;
+  }
+  onEnter() {
+    this.animator.setGameObject(this.fsm.getEntity().getGameObject());
+    this.animator.setSprites(this.sprites);
+    this.animator.setSpeed(this.speed);
+  }
+  onExit() {
+  }
+  getCurrentSprite() {
+    return this.animator.getCurrentSprite();
+  }
+  update(timeElapsed) {
+    this.animator.update(timeElapsed);
+  }
+}
+const _MusicPlayer = class {
+  constructor(audio) {
+    __publicField(this, "audio");
+    __publicField(this, "isPlaying", false);
+    this.audio = audio;
+  }
+  static getIsStepsPlaying() {
+    return this.isStepsPlaying;
+  }
+  static getIsPlaying() {
+    return this.isPlaying;
+  }
+  static playMainTheme() {
+    this.currentTrack = this.createAudio(mainTheme, { loop: true, volume: 0.04 });
+    this.play();
+  }
+  static playSteps() {
+    if (this.getIsStepsPlaying()) {
+      return;
+    }
+    this.steps = this.createAudio(steps, { loop: true, volume: 0.3 });
+    this.steps.play();
+  }
+  static pausePlayingSteps() {
+    if (!this.steps) {
+      console.error("steps is not loaded. cannot play");
+      return;
+    }
+    this.steps.pause();
+  }
+  static playAttackOnce() {
+    const zap = this.createAudio(swordAttack, { loop: false, volume: 0.04 });
+    zap.addEventListener("timeupdate", function() {
+      const currentTime = zap.currentTime;
+      if (currentTime > 1) {
+        zap.pause();
+      }
+    });
+    zap.play();
+  }
+  static pause() {
+    if (!this.currentTrack) {
+      console.error("Trying to call pause when there is no currentTrack!");
+      return;
+    }
+    if (!this.isPlaying) {
+      return;
+    }
+    this.isPlaying = false;
+    this.currentTrack.pause();
+  }
+  static play() {
+    if (!this.currentTrack) {
+      console.error("Trying to call play when there is no currentTrack!");
+      return;
+    }
+    if (this.isPlaying) {
+      return;
+    }
+    this.isPlaying = true;
+    this.currentTrack.play();
+  }
+  static createAudio(src, options) {
+    const audio = document.createElement("audio");
+    audio.volume = options.volume || 0.5;
+    audio.loop = options.loop;
+    audio.src = src;
+    return audio;
+  }
+  static createPlayer(src, options) {
+    return new _MusicPlayer(this.createAudio(src, options));
+  }
+  static createSlimeMovingPlayer() {
+    return this.createPlayer(movingSlime, { loop: true, volume: 1e-3 });
+  }
+  static createEvilSlimePlayer() {
+    return this.createPlayer(evilSlime, { loop: true, volume: 2e-3 });
+  }
+  static createNeutralSlimePlayer() {
+    return this.createPlayer(neutralSlime, { loop: true, volume: 1e-3 });
+  }
+  static createFireBallPlayer() {
+    return this.createPlayer(fireBall, { loop: false, volume: 0.1 });
+  }
+  static createFirePlayer() {
+    return this.createPlayer(fire, { loop: true, volume: 0.1, maxTimeSEC: 10 });
+  }
+  static createFireballExplosionPlayer() {
+    return this.createPlayer(fireballExplosion, { loop: false, volume: 0.1 });
+  }
+  play() {
+    if (this.isPlaying) {
+      return;
+    }
+    this.audio.play().then(() => {
+      this.isPlaying = true;
+    });
+  }
+  pause() {
+    if (!this.isPlaying) {
+      return;
+    }
+    this.audio.pause();
+    this.isPlaying = false;
+  }
+  setVolume(volume) {
+    this.audio.volume = volume;
+  }
+  tuneSoundByDistance(distance) {
+    const MAX_DISTANCE2 = 400;
+    if (distance > MAX_DISTANCE2) {
+      this.setVolume(0);
+    } else {
+      const MAX_VOLUME = 0.3;
+      const volume = MAX_VOLUME - distance / MAX_DISTANCE2 * MAX_VOLUME;
+      this.setVolume(volume);
+    }
+  }
+};
+let MusicPlayer = _MusicPlayer;
+__publicField(MusicPlayer, "currentTrack");
+__publicField(MusicPlayer, "steps");
+__publicField(MusicPlayer, "isStepsPlaying", false);
+__publicField(MusicPlayer, "isPlaying", false);
 class FiniteStateMachine {
-  constructor() {
+  constructor(entity) {
     __publicField(this, "emitter", new EventEmitter());
     __publicField(this, "state");
     __publicField(this, "states", {});
+    __publicField(this, "entity");
+    this.entity = entity;
+  }
+  getEntity() {
+    return this.entity;
   }
   start() {
   }
-  addState(name, fsmConstructor) {
-    this.states[name] = fsmConstructor;
+  addState(name, state) {
+    this.states[name] = state;
     return this;
   }
-  setState(NewStateConstructor) {
+  setState(state) {
     const prevState = this.state;
-    if (prevState && prevState.constructor.name !== NewStateConstructor.name) {
+    if (prevState && prevState !== state) {
       this.state.onExit();
     }
-    this.state = new NewStateConstructor(this);
+    this.state = state;
     this.state.onEnter();
     return this;
   }
@@ -804,6 +970,267 @@ class FiniteStateMachine {
     if (this.state) {
       this.state.update(timeElapsed);
     }
+  }
+}
+class PlayerIdleState extends StateWithAnimation {
+  constructor(fsm) {
+    super(fsm);
+    // protected sprites = ResourceLoader.getLoadedAssets().adventurer.idle;
+    __publicField(this, "sprites", ResourceLoader.getLoadedAssets().skeleton.idle);
+    __publicField(this, "speed", 5);
+    __publicField(this, "fsm");
+    this.fsm = fsm;
+  }
+  onEnter() {
+    super.onEnter();
+  }
+  onExit() {
+    super.onExit();
+  }
+  update(timeElapsed) {
+    var _a, _b, _c, _d, _e, _f;
+    super.update(timeElapsed);
+    if ((_a = this.fsm.getPlayer().getInputController()) == null ? void 0 : _a.isAttack1Pressed()) {
+      this.fsm.setAttackState();
+    }
+    if ((_b = this.fsm.getPlayer().getInputController()) == null ? void 0 : _b.isAttack2Pressed()) {
+      this.fsm.getPlayer().fireAttack();
+    }
+    if ((_c = this.fsm.getPlayer().getInputController()) == null ? void 0 : _c.isAttack3Pressed()) {
+      this.fsm.getPlayer().activateFireShield();
+    }
+    if ((_d = this.fsm.getPlayer().getInputController()) == null ? void 0 : _d.isAttack4Pressed()) {
+      this.fsm.getPlayer().addHealBall();
+    }
+    if ((_e = this.fsm.getPlayer().getInputController()) == null ? void 0 : _e.isClearButtonPressed()) {
+      this.fsm.getPlayer().handleClear();
+    }
+    if ((_f = this.fsm.getPlayer().getInputController()) == null ? void 0 : _f.isOneOfMovementKeysIsPressed()) {
+      this.fsm.setRunState();
+    }
+  }
+}
+class PlayerRunState extends StateWithAnimation {
+  constructor(fsm) {
+    super(fsm);
+    // protected sprites = ResourceLoader.getLoadedAssets().adventurer.run;
+    __publicField(this, "sprites", ResourceLoader.getLoadedAssets().skeleton.run);
+    // protected speed = 5;
+    __publicField(this, "speed", 25);
+    __publicField(this, "fsm");
+    this.fsm = fsm;
+  }
+  onEnter() {
+    super.onEnter();
+    MusicPlayer.playSteps();
+  }
+  onExit() {
+    super.onExit();
+    MusicPlayer.pausePlayingSteps();
+  }
+  update(timeElapsed) {
+    var _a, _b, _c, _d;
+    super.update(timeElapsed);
+    const inputController = this.fsm.getInputController();
+    if (!inputController) {
+      return;
+    }
+    if ((_a = this.fsm.getPlayer().getInputController()) == null ? void 0 : _a.isAttack1Pressed()) {
+      this.fsm.setAttackState();
+    }
+    if ((_b = this.fsm.getPlayer().getInputController()) == null ? void 0 : _b.isAttack2Pressed()) {
+      this.fsm.getPlayer().fireAttack();
+    }
+    if ((_c = this.fsm.getPlayer().getInputController()) == null ? void 0 : _c.isAttack3Pressed()) {
+      this.fsm.getPlayer().activateFireShield();
+    }
+    if ((_d = this.fsm.getPlayer().getInputController()) == null ? void 0 : _d.isClearButtonPressed()) {
+      this.fsm.getPlayer().handleClear();
+    }
+    if (!(inputController == null ? void 0 : inputController.isOneOfMovementKeysIsPressed())) {
+      this.fsm.setIdleState();
+    } else {
+      const maxDeltaPX = 0.5;
+      const length = this.fsm.getPlayer().getSpeed() * timeElapsed / 1e3;
+      const size = Math.floor(length / maxDeltaPX);
+      const left = maxDeltaPX % length;
+      let isMoved = false;
+      const player = this.fsm.getPlayer();
+      const playerBox = player.getGameObject().getBox();
+      const nextBox = playerBox.copy();
+      for (let i = 0; i <= size; i++) {
+        let toAdd = maxDeltaPX;
+        if (i === size) {
+          toAdd = left;
+          break;
+        }
+        let x = 0;
+        let y = 0;
+        if (inputController.isTopPressed()) {
+          y -= toAdd;
+        }
+        if (inputController.isRightPressed()) {
+          x += toAdd;
+        }
+        if (inputController.isBottomPressed()) {
+          y += toAdd;
+        }
+        if (inputController.isLeftPressed()) {
+          x -= toAdd;
+        }
+        let xCollide = false;
+        let yCollide = false;
+        {
+          nextBox.move(x, 0);
+          const collisions = this.fsm.getPlayer().findCollisions(nextBox);
+          if (collisions.length === 0) {
+            const angle = Math.atan2(y, x);
+            if (Math.abs(angle) !== Math.PI / 2) {
+              player.getGameObject().setRotation(angle);
+            }
+            playerBox.move(x, 0);
+            isMoved = true;
+          } else {
+            xCollide = true;
+          }
+        }
+        {
+          nextBox.move(0, y);
+          const collisions = this.fsm.getPlayer().findCollisions(nextBox);
+          if (collisions.length === 0) {
+            const angle = Math.atan2(y, x);
+            if (Math.abs(angle) !== Math.PI / 2) {
+              player.getGameObject().setRotation(angle);
+            }
+            playerBox.move(0, y);
+            isMoved = true;
+          } else {
+            yCollide = true;
+          }
+        }
+        if (xCollide && yCollide) {
+          break;
+        }
+      }
+      if (isMoved) {
+        player.getEntityManager().emitter.emit("player_move", player);
+      }
+    }
+  }
+}
+class PlayerAttackState extends StateWithAnimation {
+  constructor(fsm) {
+    super(fsm);
+    // protected sprites = ResourceLoader.getLoadedAssets().adventurer.attack1;
+    __publicField(this, "sprites", ResourceLoader.getLoadedAssets().skeleton.attack);
+    __publicField(this, "speed", 20);
+    __publicField(this, "fsm");
+    __publicField(this, "player");
+    __publicField(this, "unsubscribeFromAnimationEnd", null);
+    this.fsm = fsm;
+    this.player = this.fsm.getPlayer();
+  }
+  onEnter() {
+    super.onEnter();
+    MusicPlayer.playAttackOnce();
+    this.unsubscribeFromAnimationEnd = this.animator.onAnimationEndOnce(() => {
+      this.fsm.setIdleState();
+    });
+  }
+  onExit() {
+    super.onExit();
+    if (this.unsubscribeFromAnimationEnd) {
+      this.unsubscribeFromAnimationEnd();
+    }
+  }
+  update(timeElapsed) {
+    super.update(timeElapsed);
+    const entities = this.fsm.getPlayer().getEntityManager().findEntities(this.player.getGameObject().getBox().getCenter(), this.player.getAttackRange(), (entity) => entity !== this.player && !!entity.getHealth && entity.getHealth().getValue() > 0);
+    const damage = this.player.getAttackDamage() * this.player.getAttackSpeed() * (timeElapsed / 1e3);
+    for (const e of entities) {
+      e.damage(damage, this.player);
+    }
+  }
+}
+class PlayerDieState extends StateWithAnimation {
+  constructor(fsm) {
+    super(fsm);
+    // protected sprites = ResourceLoader.getLoadedAssets().adventurer.die;
+    __publicField(this, "sprites", ResourceLoader.getLoadedAssets().skeleton.die);
+    __publicField(this, "speed", 5);
+    __publicField(this, "fsm");
+    __publicField(this, "unsubscribeFromAnimationEnd", null);
+    this.fsm = fsm;
+  }
+  onEnter() {
+    super.onEnter();
+    this.unsubscribeFromAnimationEnd = this.animator.onAnimationEndOnce(() => {
+      this.fsm.setDeadState();
+    });
+  }
+  onExit() {
+    super.onExit();
+    if (this.unsubscribeFromAnimationEnd) {
+      this.unsubscribeFromAnimationEnd();
+    }
+  }
+}
+class PlayerDeadState extends StateWithAnimation {
+  constructor(fsm) {
+    super(fsm);
+    // protected sprites = ResourceLoader.getLoadedAssets().adventurer.dead.slice(0, 1);
+    __publicField(this, "sprites", ResourceLoader.getLoadedAssets().adventurer.dead.slice(0, 1));
+    __publicField(this, "speed", 1);
+    __publicField(this, "fsm");
+    this.fsm = fsm;
+  }
+}
+class PlayerFiniteStateMachine extends FiniteStateMachine {
+  constructor(player) {
+    super(player);
+    __publicField(this, "player");
+    __publicField(this, "inputController");
+    __publicField(this, "idleState");
+    __publicField(this, "runState");
+    __publicField(this, "attackState");
+    __publicField(this, "deadState");
+    __publicField(this, "dieState");
+    this.player = player;
+    this.idleState = new PlayerIdleState(this);
+    this.runState = new PlayerRunState(this);
+    this.attackState = new PlayerAttackState(this);
+    this.deadState = new PlayerDeadState(this);
+    this.dieState = new PlayerDieState(this);
+    this.setIdleState();
+  }
+  setIdleState() {
+    this.setState(this.idleState);
+  }
+  setRunState() {
+    this.setState(this.runState);
+  }
+  setAttackState() {
+    this.setState(this.attackState);
+  }
+  setDeadState() {
+    this.setState(this.deadState);
+  }
+  setDieState() {
+    this.setState(this.dieState);
+  }
+  getPlayer() {
+    return this.player;
+  }
+  getInputController() {
+    return this.inputController;
+  }
+  onEntityInit() {
+    this.inputController = this.player.getInputController();
+  }
+  onAction(_) {
+  }
+  update(timeElapsed) {
+    super.update(timeElapsed);
   }
 }
 class Rotation {
@@ -1030,359 +1457,6 @@ class GameObject {
     }
   }
 }
-class State {
-  constructor(fsm) {
-    __publicField(this, "fsm");
-    __publicField(this, "animator", new Animator());
-    __publicField(this, "sprites", []);
-    __publicField(this, "speed", 0);
-    __publicField(this, "gameObject");
-    __publicField(this, "animatorCacheFilled", false);
-    this.fsm = fsm;
-    this.gameObject = new GameObject(fsm);
-  }
-  onEnter() {
-    this.animator.setGameObject(this.gameObject);
-    this.animator.setSprites(this.sprites);
-    this.animator.setSpeed(this.speed);
-    if (!this.animatorCacheFilled) {
-      this.animator.warmCache();
-      this.animatorCacheFilled = true;
-    }
-  }
-  onExit() {
-  }
-  getCurrentSprite() {
-    return this.animator.getCurrentSprite();
-  }
-  update(timeElapsed) {
-    this.animator.update(timeElapsed);
-  }
-}
-const _MusicPlayer = class {
-  constructor(audio) {
-    __publicField(this, "audio");
-    __publicField(this, "isPlaying", false);
-    this.audio = audio;
-  }
-  static getIsStepsPlaying() {
-    return this.isStepsPlaying;
-  }
-  static getIsPlaying() {
-    return this.isPlaying;
-  }
-  static playMainTheme() {
-    this.currentTrack = this.createAudio(mainTheme, { loop: true, volume: 0.04 });
-    this.play();
-  }
-  static playSteps() {
-    if (this.getIsStepsPlaying()) {
-      return;
-    }
-    this.steps = this.createAudio(steps, { loop: true, volume: 0.3 });
-    this.steps.play();
-  }
-  static pausePlayingSteps() {
-    if (!this.steps) {
-      console.error("steps is not loaded. cannot play");
-      return;
-    }
-    this.steps.pause();
-  }
-  static playAttackOnce() {
-    const zap = this.createAudio(swordAttack, { loop: false, volume: 0.04 });
-    zap.addEventListener("timeupdate", function() {
-      const currentTime = zap.currentTime;
-      if (currentTime > 1) {
-        zap.pause();
-      }
-    });
-    zap.play();
-  }
-  static pause() {
-    if (!this.currentTrack) {
-      console.error("Trying to call pause when there is no currentTrack!");
-      return;
-    }
-    if (!this.isPlaying) {
-      return;
-    }
-    this.isPlaying = false;
-    this.currentTrack.pause();
-  }
-  static play() {
-    if (!this.currentTrack) {
-      console.error("Trying to call play when there is no currentTrack!");
-      return;
-    }
-    if (this.isPlaying) {
-      return;
-    }
-    this.isPlaying = true;
-    this.currentTrack.play();
-  }
-  static createAudio(src, options) {
-    const audio = document.createElement("audio");
-    audio.volume = options.volume || 0.5;
-    audio.loop = options.loop;
-    audio.src = src;
-    return audio;
-  }
-  static createPlayer(src, options) {
-    return new _MusicPlayer(this.createAudio(src, options));
-  }
-  static createSlimeMovingPlayer() {
-    return this.createPlayer(movingSlime, { loop: true, volume: 1e-3 });
-  }
-  static createEvilSlimePlayer() {
-    return this.createPlayer(evilSlime, { loop: true, volume: 2e-3 });
-  }
-  static createNeutralSlimePlayer() {
-    return this.createPlayer(neutralSlime, { loop: true, volume: 1e-3 });
-  }
-  static createFireBallPlayer() {
-    return this.createPlayer(fireBall, { loop: false, volume: 0.1 });
-  }
-  static createFirePlayer() {
-    return this.createPlayer(fire, { loop: true, volume: 0.1, maxTimeSEC: 10 });
-  }
-  static createFireballExplosionPlayer() {
-    return this.createPlayer(fireballExplosion, { loop: false, volume: 0.1 });
-  }
-  play() {
-    if (this.isPlaying) {
-      return;
-    }
-    this.audio.play().then(() => {
-      this.isPlaying = true;
-    });
-  }
-  pause() {
-    if (!this.isPlaying) {
-      return;
-    }
-    this.audio.pause();
-    this.isPlaying = false;
-  }
-  setVolume(volume) {
-    this.audio.volume = volume;
-  }
-  tuneSoundByDistance(distance) {
-    const MAX_DISTANCE2 = 400;
-    if (distance > MAX_DISTANCE2) {
-      this.setVolume(0);
-    } else {
-      const MAX_VOLUME = 0.3;
-      const volume = MAX_VOLUME - distance / MAX_DISTANCE2 * MAX_VOLUME;
-      this.setVolume(volume);
-    }
-  }
-};
-let MusicPlayer = _MusicPlayer;
-__publicField(MusicPlayer, "currentTrack");
-__publicField(MusicPlayer, "steps");
-__publicField(MusicPlayer, "isStepsPlaying", false);
-__publicField(MusicPlayer, "isPlaying", false);
-class PlayerIdleState extends State {
-  constructor(fsm) {
-    super(fsm);
-    __publicField(this, "sprites", ResourceLoader.getLoadedAssets().adventurer.idle);
-    __publicField(this, "speed", 5);
-    __publicField(this, "fsm");
-    this.fsm = fsm;
-    this.gameObject = this.fsm.getPlayer().getGameObject();
-  }
-  onEnter() {
-    super.onEnter();
-  }
-  onExit() {
-    super.onExit();
-  }
-  update(timeElapsed) {
-    var _a, _b, _c, _d, _e, _f;
-    super.update(timeElapsed);
-    if ((_a = this.fsm.getPlayer().getInputController()) == null ? void 0 : _a.isAttack1Pressed()) {
-      this.fsm.setState(PlayerAttackState);
-    }
-    if ((_b = this.fsm.getPlayer().getInputController()) == null ? void 0 : _b.isAttack2Pressed()) {
-      this.fsm.getPlayer().fireAttack();
-    }
-    if ((_c = this.fsm.getPlayer().getInputController()) == null ? void 0 : _c.isAttack3Pressed()) {
-      this.fsm.getPlayer().activateFireShield();
-    }
-    if ((_d = this.fsm.getPlayer().getInputController()) == null ? void 0 : _d.isAttack4Pressed()) {
-      this.fsm.getPlayer().addHealBall();
-    }
-    if ((_e = this.fsm.getPlayer().getInputController()) == null ? void 0 : _e.isClearButtonPressed()) {
-      this.fsm.getPlayer().handleClear();
-    }
-    if ((_f = this.fsm.getPlayer().getInputController()) == null ? void 0 : _f.isOneOfMovementKeysIsPressed()) {
-      this.fsm.setState(PlayerRunState);
-    }
-  }
-}
-class PlayerRunState extends State {
-  constructor(fsm) {
-    super(fsm);
-    __publicField(this, "sprites", ResourceLoader.getLoadedAssets().adventurer.run);
-    __publicField(this, "speed", 5);
-    __publicField(this, "fsm");
-    this.fsm = fsm;
-    this.gameObject = fsm.getPlayer().getGameObject();
-  }
-  onEnter() {
-    super.onEnter();
-    MusicPlayer.playSteps();
-  }
-  onExit() {
-    super.onExit();
-    MusicPlayer.pausePlayingSteps();
-  }
-  update(timeElapsed) {
-    var _a, _b, _c, _d;
-    super.update(timeElapsed);
-    const inputController = this.fsm.getInputController();
-    if (!inputController) {
-      return;
-    }
-    if ((_a = this.fsm.getPlayer().getInputController()) == null ? void 0 : _a.isAttack1Pressed()) {
-      this.fsm.setState(PlayerAttackState);
-    }
-    if ((_b = this.fsm.getPlayer().getInputController()) == null ? void 0 : _b.isAttack2Pressed()) {
-      this.fsm.getPlayer().fireAttack();
-    }
-    if ((_c = this.fsm.getPlayer().getInputController()) == null ? void 0 : _c.isAttack3Pressed()) {
-      this.fsm.getPlayer().activateFireShield();
-    }
-    if ((_d = this.fsm.getPlayer().getInputController()) == null ? void 0 : _d.isClearButtonPressed()) {
-      this.fsm.getPlayer().handleClear();
-    }
-    if (!(inputController == null ? void 0 : inputController.isOneOfMovementKeysIsPressed())) {
-      this.fsm.setState(PlayerIdleState);
-    } else {
-      const length = this.fsm.getPlayer().getSpeed() * timeElapsed / 1e3;
-      let x = 0;
-      let y = 0;
-      if (inputController.isTopPressed()) {
-        y -= length;
-      }
-      if (inputController.isRightPressed()) {
-        x += length;
-      }
-      if (inputController.isBottomPressed()) {
-        y += length;
-      }
-      if (inputController.isLeftPressed()) {
-        x -= length;
-      }
-      const player = this.fsm.getPlayer();
-      const playerBox = player.getGameObject().getBox();
-      const nextBox = playerBox.copy();
-      nextBox.move(x, y);
-      document.getElementById("playerPos").innerHTML = `player center x ${nextBox.getCenter().x} y ${nextBox.getCenter().y} <br />`;
-      document.getElementById("playerPos").innerHTML += `player topleft x ${nextBox.getTopLeft().x} y ${nextBox.getTopLeft().y}`;
-      const collisions = this.fsm.getPlayer().findCollisions(nextBox);
-      if (collisions.length === 0) {
-        const angle = Math.atan2(y, x);
-        if (Math.abs(angle) !== Math.PI / 2) {
-          player.getGameObject().setRotation(angle);
-        }
-        playerBox.move(x, y);
-        player.getEntityManager().emitter.emit("player_move", player);
-      }
-    }
-  }
-}
-class PlayerAttackState extends State {
-  constructor(fsm) {
-    super(fsm);
-    __publicField(this, "sprites", ResourceLoader.getLoadedAssets().adventurer.attack1);
-    __publicField(this, "speed", 20);
-    __publicField(this, "fsm");
-    __publicField(this, "player");
-    __publicField(this, "unsubscribeFromAnimationEnd", null);
-    this.fsm = fsm;
-    this.gameObject = this.fsm.getPlayer().getGameObject();
-    this.player = this.fsm.getPlayer();
-  }
-  onEnter() {
-    super.onEnter();
-    MusicPlayer.playAttackOnce();
-    this.unsubscribeFromAnimationEnd = this.animator.onAnimationEndOnce(() => {
-      this.fsm.setState(PlayerIdleState);
-    });
-  }
-  onExit() {
-    super.onExit();
-    if (this.unsubscribeFromAnimationEnd) {
-      this.unsubscribeFromAnimationEnd();
-    }
-  }
-  update(timeElapsed) {
-    super.update(timeElapsed);
-    const entities = this.fsm.getPlayer().getEntityManager().findEntities(this.player.getGameObject().getBox().getCenter(), this.player.getAttackRange(), (entity) => entity !== this.player && !!entity.getHealth && entity.getHealth().getValue() > 0);
-    const damage = this.player.getAttackDamage() * this.player.getAttackSpeed() * (timeElapsed / 1e3);
-    for (const e of entities) {
-      e.damage(damage, this.player);
-    }
-  }
-}
-class PlayerDieState extends State {
-  constructor(fsm) {
-    super(fsm);
-    __publicField(this, "sprites", ResourceLoader.getLoadedAssets().adventurer.die);
-    __publicField(this, "speed", 5);
-    __publicField(this, "fsm");
-    __publicField(this, "unsubscribeFromAnimationEnd", null);
-    this.fsm = fsm;
-    this.gameObject = this.fsm.getPlayer().getGameObject();
-  }
-  onEnter() {
-    super.onEnter();
-    this.unsubscribeFromAnimationEnd = this.animator.onAnimationEndOnce(() => {
-      this.fsm.setState(PlayerDeadState);
-    });
-  }
-  onExit() {
-    super.onExit();
-    if (this.unsubscribeFromAnimationEnd) {
-      this.unsubscribeFromAnimationEnd();
-    }
-  }
-}
-class PlayerDeadState extends State {
-  constructor(fsm) {
-    super(fsm);
-    __publicField(this, "sprites", ResourceLoader.getLoadedAssets().adventurer.dead.slice(0, 1));
-    __publicField(this, "speed", 1);
-    __publicField(this, "fsm");
-    this.fsm = fsm;
-    this.gameObject = this.fsm.getPlayer().getGameObject();
-  }
-}
-class PlayerFiniteStateMachine extends FiniteStateMachine {
-  constructor(player) {
-    super();
-    __publicField(this, "player");
-    __publicField(this, "inputController");
-    this.player = player;
-    this.setState(PlayerIdleState);
-  }
-  getPlayer() {
-    return this.player;
-  }
-  getInputController() {
-    return this.inputController;
-  }
-  onEntityInit() {
-    this.inputController = this.player.getInputController();
-  }
-  onAction(_) {
-  }
-  update(timeElapsed) {
-    super.update(timeElapsed);
-  }
-}
 class Position {
   constructor(x = 0, y = 0, z = 0) {
     __publicField(this, "pos", [0, 0, 0]);
@@ -1425,6 +1499,11 @@ class Position {
     copy.x = this.x - pos.x;
     copy.y = this.y - pos.y;
     return copy;
+  }
+  scale(scale) {
+    this.x *= scale;
+    this.y *= scale;
+    this.z *= scale;
   }
   addVector(pos) {
     this.x += pos.x;
@@ -1531,7 +1610,7 @@ class Random {
     return Math.random() < 1 - Math.pow(1 - chanceSEC, timeSEC);
   }
 }
-class EnemyIdleState extends State {
+class EnemyIdleState extends StateWithAnimation {
   constructor(fsm) {
     super(fsm);
     __publicField(this, "sprites", ResourceLoader.getLoadedAssets().slime.idle);
@@ -1540,7 +1619,6 @@ class EnemyIdleState extends State {
     __publicField(this, "player", MusicPlayer.createNeutralSlimePlayer());
     __publicField(this, "chanceToHangAround", 0.1);
     this.fsm = fsm;
-    this.gameObject = this.fsm.getEnemy().getGameObject();
   }
   onEnter() {
     super.onEnter();
@@ -1565,7 +1643,7 @@ class EnemyIdleState extends State {
     }
   }
 }
-class EnemyHangingAroundState extends State {
+class EnemyHangingAroundState extends StateWithAnimation {
   constructor(fsm) {
     super(fsm);
     __publicField(this, "sprites", ResourceLoader.getLoadedAssets().slime.move);
@@ -1575,7 +1653,6 @@ class EnemyHangingAroundState extends State {
     __publicField(this, "chanceToStay", 0.1);
     __publicField(this, "rotation", new Rotation(0));
     this.fsm = fsm;
-    this.gameObject = this.fsm.getEnemy().getGameObject();
   }
   onEnter() {
     super.onEnter();
@@ -1603,7 +1680,7 @@ class EnemyHangingAroundState extends State {
     }
   }
 }
-class EnemyChasingPlayerState extends State {
+class EnemyChasingPlayerState extends StateWithAnimation {
   constructor(fsm) {
     super(fsm);
     __publicField(this, "sprites", ResourceLoader.getLoadedAssets().slime.move);
@@ -1611,7 +1688,6 @@ class EnemyChasingPlayerState extends State {
     __publicField(this, "fsm");
     __publicField(this, "player", MusicPlayer.createSlimeMovingPlayer());
     this.fsm = fsm;
-    this.gameObject = this.fsm.getEnemy().getGameObject();
   }
   onEnter() {
     super.onEnter();
@@ -1647,7 +1723,7 @@ class EnemyChasingPlayerState extends State {
     }
   }
 }
-class EnemyAttackPlayerState extends State {
+class EnemyAttackPlayerState extends StateWithAnimation {
   constructor(fsm) {
     super(fsm);
     __publicField(this, "sprites", ResourceLoader.getLoadedAssets().slime.attack);
@@ -1656,7 +1732,6 @@ class EnemyAttackPlayerState extends State {
     __publicField(this, "player", MusicPlayer.createEvilSlimePlayer());
     __publicField(this, "enemy");
     this.fsm = fsm;
-    this.gameObject = this.fsm.getEnemy().getGameObject();
     this.enemy = this.fsm.getEnemy();
   }
   onEnter() {
@@ -1892,12 +1967,125 @@ class DrawableEntity extends Entity {
     );
   }
 }
+class Chat {
+  constructor(ui) {
+    __publicField(this, "chatDiv");
+    __publicField(this, "messagesDiv");
+    __publicField(this, "input");
+    this.ui = ui;
+    this.ui.innerHTML += Chat.render();
+    this.chatDiv = this.ui.querySelector("#chat");
+    this.messagesDiv = this.chatDiv.querySelector(".chat__messages");
+    this.input = this.chatDiv.querySelector("input");
+    this.input.addEventListener("keypress", (event) => {
+      if (event.key === "Enter") {
+        const text = this.input.value;
+        this.messagesDiv.innerHTML += `
+            <div class="chat__message"><span class="chat__player-name">Player</span>: ${text}</div>
+          `;
+        this.input.value = "";
+        this.messagesDiv.scrollTo(0, this.messagesDiv.scrollHeight);
+      }
+    });
+    this.input.addEventListener("keyup", (event) => {
+      if (event.key === "Escape") {
+        this.input.blur();
+      }
+    });
+    this.input.addEventListener("focus", () => {
+      this.chatDiv.classList.add("focus");
+    });
+    this.input.addEventListener("blur", () => {
+      this.chatDiv.classList.remove("focus");
+    });
+    this.input.addEventListener("keydown", (event) => {
+      event.stopPropagation();
+    });
+  }
+  static getStyles() {
+    return `
+        <style>
+         .chat {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            width: 450px;
+            height: 270px;
+            
+            /* TODO move to common styles */
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            color: white;
+            
+            /*border: 1px solid gray;*/
+            border-radius: 8px;
+            overflow: hidden;
+            opacity: 0.6;
+            transition: 0.2s ease-in-out;
+          }
+          .chat.focus,
+           .chat:hover {
+            opacity: 1;
+          }
+          .chat__messages {
+            overflow-y: scroll;
+            max-height: 80%;
+            font-size: 13px;
+            font-weight: 300;
+          }
+          .chat__input-wrapper {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            padding: 10px;
+          }
+          .chat input {
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+            color: #d3d3d3;
+            border: 1px solid rgba(94,94,94,0.65);
+            border-radius: 4px;
+          }
+          .chat input:focus {
+            outline: 1px solid crimson;
+          }
+          .chat__message {
+            padding: 5px 10px;
+            border-bottom: 1px solid rgba(128,128,128,0.38);
+            color: #d3d3d3;
+          }
+          .chat__player-name {
+            font-weight: bold;
+            color: #0065d9;
+          }
+        </style>
+      `;
+  }
+  static render() {
+    return `
+        ${Chat.getStyles()}
+        <div class="chat" id="chat">
+            <div class="chat__messages">
+                
+            </div>
+            <div class="chat__input-wrapper">
+                <input type="text">
+            </div>
+        </div>
+      `;
+  }
+}
 class UIEntity extends Entity {
   constructor() {
-    super(...arguments);
+    super();
     __publicField(this, "ui", document.getElementById("ui"));
     __publicField(this, "openModals", []);
     __publicField(this, "quests", []);
+    __publicField(this, "chat");
+    this.chat = new Chat(this.ui);
   }
   addQuest(id, text, onClick) {
     this.quests.push({ id, text, onClick });
@@ -1967,14 +2155,13 @@ class UIEntity extends Entity {
   }
 }
 const uiEntity = new UIEntity();
-class FireBurningState extends State {
+class FireBurningState extends StateWithAnimation {
   constructor(fsm) {
     super(fsm);
     __publicField(this, "sprites", new Sprite(ResourceLoader.getLoadedAssets().fireSprite, { cols: 2, rows: 2, size: 4 }));
     __publicField(this, "speed", 6);
     __publicField(this, "fsm");
     this.fsm = fsm;
-    this.gameObject = this.fsm.getFire().getGameObject();
     if (this.fsm.getFilter()) {
       this.sprites.setFilter(this.fsm.getFilter());
     }
@@ -1989,19 +2176,20 @@ class FireBurningState extends State {
 }
 class FireStateMachine extends FiniteStateMachine {
   constructor(fire2, filter) {
-    super();
+    super(fire2);
+    __publicField(this, "burningState");
     __publicField(this, "fire");
     __publicField(this, "filter");
     this.filter = filter;
     this.fire = fire2;
-    this.addState(FireBurningState);
-    this.setState(FireBurningState);
+    this.burningState = new FireBurningState(this);
+    this.setState(this.burningState);
   }
   getFilter() {
     return this.filter;
   }
-  getFire() {
-    return this.fire;
+  setBurningState() {
+    this.setState(this.burningState);
   }
 }
 class FireEntity extends DrawableEntity {
@@ -2043,6 +2231,7 @@ const _FireAttackEntity = class extends FireEntity {
     __publicField(this, "stopped", false);
     this.rotation = rotation;
     this.speed = speed;
+    this.filter = filter;
     this.gameObject.setIsCollidable(false);
   }
   initEntity() {
@@ -2113,6 +2302,9 @@ __publicField(FireAttackEntity, "DEFAULT_HEIGHT", 60);
 const firePurpleFilter = (context) => {
   context.filter = "hue-rotate(250deg)";
 };
+const fireBlueFilter = (context) => {
+  context.filter = "hue-rotate(180deg)";
+};
 const fireGreenFilter = (context) => {
   context.filter = "hue-rotate(100deg)";
 };
@@ -2123,6 +2315,7 @@ class FireShieldEntity extends FireEntity {
     __publicField(this, "rotation", new Rotation(0));
     this.player = player;
     this.speed = speed;
+    this.filter = filter;
     this.gameObject.setIsCollidable(false);
   }
   initEntity() {
@@ -2195,10 +2388,31 @@ class PlayerEntity extends DrawableEntity {
     __publicField(this, "attackSpeed", 15);
     __publicField(this, "attackDamage", 20);
     __publicField(this, "attackRange", 65);
-    __publicField(this, "speed", 450);
+    __publicField(this, "speed", 150);
     __publicField(this, "unsubscribeFromSpeedChange");
     this.finiteStateMachine = new PlayerFiniteStateMachine(this);
     this.gameObject = new CharacterGameObject(x, y, this, this.finiteStateMachine);
+  }
+  static detachFronEntityManager(player) {
+    const entityManager = player.getEntityManager();
+    entityManager.removeEntity(player, false);
+    for (const healBall of player.healBalls) {
+      entityManager.removeEntity(healBall, false);
+    }
+    for (const fireShieldBall of player.fireShieldBalls) {
+      entityManager.removeEntity(fireShieldBall, false);
+    }
+  }
+  static attachToEntityManager(player, entityManager) {
+    entityManager.addEntity(player);
+    for (const healBall of player.healBalls) {
+      entityManager.addEntity(healBall);
+      entityManager.addToScene(healBall);
+    }
+    for (const fireShieldBall of player.fireShieldBalls) {
+      entityManager.addEntity(fireShieldBall);
+      entityManager.addToScene(fireShieldBall);
+    }
   }
   getFiniteStateMachine() {
     return this.finiteStateMachine;
@@ -2213,7 +2427,7 @@ class PlayerEntity extends DrawableEntity {
     this.health.setValue(value);
   }
   respawn() {
-    this.finiteStateMachine.setState(PlayerIdleState);
+    this.finiteStateMachine.setIdleState();
     this.setHealth(this.getHealth().getMaxValue());
     this.gameObject.getBox().setTopLeft(new Position(40, 40, 0));
     this.getEntityManager().emitter.emit("player_move", this);
@@ -2801,6 +3015,9 @@ class BedEntity extends DrawableEntity {
     super.update(timeElapsed);
     if (!this.healed) {
       const player = this.getEntityManager().getEntityByName("player");
+      if (!player) {
+        return;
+      }
       const selfTopLeft = this.gameObject.getChildren()[0].getBox().getTopLeft();
       const playerTopLeft = player.getGameObject().getBox().getTopLeft();
       if (!selfTopLeft || !playerTopLeft) {
@@ -2889,7 +3106,7 @@ class BaseEnemyGameObject extends GameObject {
     return false;
   }
 }
-class BaseEnemyIdleState extends State {
+class BaseEnemyIdleState extends StateWithAnimation {
   constructor(fsm) {
     super(fsm);
     __publicField(this, "sprites", ResourceLoader.getLoadedAssets().guard.idle);
@@ -2898,7 +3115,6 @@ class BaseEnemyIdleState extends State {
     __publicField(this, "player", MusicPlayer.createNeutralSlimePlayer());
     __publicField(this, "chanceToHangAround", 0.1);
     this.fsm = fsm;
-    this.gameObject = this.fsm.getEnemy().getGameObject();
   }
   onEnter() {
     super.onEnter();
@@ -2925,7 +3141,7 @@ class BaseEnemyIdleState extends State {
     }
   }
 }
-class BaseEnemyHangingAroundState extends State {
+class BaseEnemyHangingAroundState extends StateWithAnimation {
   constructor(fsm) {
     super(fsm);
     __publicField(this, "sprites", ResourceLoader.getLoadedAssets().guard.run);
@@ -2935,7 +3151,6 @@ class BaseEnemyHangingAroundState extends State {
     __publicField(this, "chanceToStay", 0.1);
     __publicField(this, "rotation", new Rotation(0));
     this.fsm = fsm;
-    this.gameObject = this.fsm.getEnemy().getGameObject();
   }
   onEnter() {
     super.onEnter();
@@ -2963,7 +3178,7 @@ class BaseEnemyHangingAroundState extends State {
     }
   }
 }
-class BaseEnemyDieState extends State {
+class BaseEnemyDieState extends StateWithAnimation {
   constructor(fsm) {
     super(fsm);
     __publicField(this, "sprites", ResourceLoader.getLoadedAssets().guard.death);
@@ -2971,7 +3186,6 @@ class BaseEnemyDieState extends State {
     __publicField(this, "fsm");
     __publicField(this, "unsubscribeFromAnimationEnd", null);
     this.fsm = fsm;
-    this.gameObject = this.fsm.getEnemy().getGameObject();
   }
   onEnter() {
     super.onEnter();
@@ -2989,17 +3203,16 @@ class BaseEnemyDieState extends State {
     super.update(timeElapsed);
   }
 }
-class BaseEnemyDeadState extends State {
+class BaseEnemyDeadState extends StateWithAnimation {
   constructor(fsm) {
     super(fsm);
     __publicField(this, "sprites", ResourceLoader.getLoadedAssets().guard.death);
     __publicField(this, "speed", 0);
     __publicField(this, "fsm");
     this.fsm = fsm;
-    this.gameObject = this.fsm.getEnemy().getGameObject();
   }
 }
-class BaseEnemyChasingPlayerState extends State {
+class BaseEnemyChasingPlayerState extends StateWithAnimation {
   constructor(fsm) {
     super(fsm);
     __publicField(this, "sprites", ResourceLoader.getLoadedAssets().guard.run);
@@ -3007,7 +3220,6 @@ class BaseEnemyChasingPlayerState extends State {
     __publicField(this, "fsm");
     __publicField(this, "player", MusicPlayer.createSlimeMovingPlayer());
     this.fsm = fsm;
-    this.gameObject = this.fsm.getEnemy().getGameObject();
   }
   onEnter() {
     super.onEnter();
@@ -3047,7 +3259,7 @@ class BaseEnemyChasingPlayerState extends State {
     }
   }
 }
-class BaseEnemyAttackPlayerState extends State {
+class BaseEnemyAttackPlayerState extends StateWithAnimation {
   constructor(fsm) {
     super(fsm);
     __publicField(this, "sprites", ResourceLoader.getLoadedAssets().guard.attack);
@@ -3056,7 +3268,6 @@ class BaseEnemyAttackPlayerState extends State {
     __publicField(this, "player", MusicPlayer.createEvilSlimePlayer());
     __publicField(this, "enemy");
     this.fsm = fsm;
-    this.gameObject = this.fsm.getEnemy().getGameObject();
     this.enemy = this.fsm.getEnemy();
   }
   onEnter() {
@@ -3084,15 +3295,15 @@ class BaseEnemyAttackPlayerState extends State {
 }
 class BaseEnemyStateMachine extends FiniteStateMachine {
   constructor(enemy) {
-    super();
+    super(enemy);
     __publicField(this, "enemy");
     this.enemy = enemy;
-    this.addState("idle", BaseEnemyIdleState);
-    this.addState("attack", BaseEnemyIdleState);
-    this.addState("die", BaseEnemyDieState);
-    this.addState("dead", BaseEnemyDeadState);
-    this.addState("hangingAround", BaseEnemyHangingAroundState);
-    this.addState("chasingPlayer", BaseEnemyChasingPlayerState);
+    this.addState("idle", new BaseEnemyIdleState(this));
+    this.addState("attack", new BaseEnemyIdleState(this));
+    this.addState("die", new BaseEnemyDieState(this));
+    this.addState("dead", new BaseEnemyDeadState(this));
+    this.addState("hangingAround", new BaseEnemyHangingAroundState(this));
+    this.addState("chasingPlayer", new BaseEnemyChasingPlayerState(this));
   }
   setIdleState() {
     this.send({ type: "idle" });
@@ -3117,7 +3328,12 @@ class BaseEnemyStateMachine extends FiniteStateMachine {
   }
   send(action) {
     super.send(action);
-    this.setState(this.states[action.type]);
+    const state = this.states[action.type];
+    if (state) {
+      this.setState(state);
+    } else {
+      console.error("WRONG STATE", state, this);
+    }
   }
   start() {
     super.start();
@@ -3234,12 +3450,12 @@ class GuardEnemyAttackPlayerState extends BaseEnemyAttackPlayerState {
 class GuardStateMachine extends BaseEnemyStateMachine {
   constructor(enemy) {
     super(enemy);
-    this.addState("idle", GuardEnemyIdleState);
-    this.addState("attack", GuardEnemyAttackPlayerState);
-    this.addState("die", GuardEnemyDieState);
-    this.addState("dead", GuardEnemyDeadState);
-    this.addState("hangingAround", GuardEnemyHangingAroundState);
-    this.addState("chasingPlayer", GuardEnemyChasingPlayerState);
+    this.addState("idle", new GuardEnemyIdleState(this));
+    this.addState("attack", new GuardEnemyAttackPlayerState(this));
+    this.addState("die", new GuardEnemyDieState(this));
+    this.addState("dead", new GuardEnemyDeadState(this));
+    this.addState("hangingAround", new GuardEnemyHangingAroundState(this));
+    this.addState("chasingPlayer", new GuardEnemyChasingPlayerState(this));
   }
 }
 class GuardGameObject extends BaseEnemyGameObject {
@@ -3261,14 +3477,13 @@ class GuardEntity extends BaseEnemyEntity {
     return 0.06;
   }
 }
-class DeathIdleState extends State {
+class DeathIdleState extends StateWithAnimation {
   constructor(fsm) {
     super(fsm);
     __publicField(this, "sprites", ResourceLoader.getLoadedAssets().deathSprite);
     __publicField(this, "speed", 2);
     __publicField(this, "fsm");
     this.fsm = fsm;
-    this.gameObject = this.fsm.getDeath().getGameObject();
   }
   update(timeElapsed) {
     super.update(timeElapsed);
@@ -3276,11 +3491,11 @@ class DeathIdleState extends State {
 }
 class DeathStateMachine extends FiniteStateMachine {
   constructor(death) {
-    super();
+    super(death);
     __publicField(this, "death");
     this.death = death;
-    this.addState("idle", DeathIdleState);
-    this.setState(DeathIdleState);
+    this.addState("idle", new DeathIdleState(this));
+    this.setState(this.states["idle"]);
   }
   getDeath() {
     return this.death;
@@ -3346,12 +3561,12 @@ class SlimeEnemyAttackPlayerState extends BaseEnemyAttackPlayerState {
 class SlimeStateMachine extends BaseEnemyStateMachine {
   constructor(slimeEnemyEntity) {
     super(slimeEnemyEntity);
-    this.addState("idle", SlimeEnemyIdleState);
-    this.addState("attack", SlimeEnemyAttackPlayerState);
-    this.addState("die", SlimeEnemyDieState);
-    this.addState("dead", SlimeEnemyDeadState);
-    this.addState("hangingAround", SlimeEnemyHangingAroundState);
-    this.addState("chasingPlayer", SlimeEnemyChasingPlayerState);
+    this.addState("idle", new SlimeEnemyIdleState(this));
+    this.addState("attack", new SlimeEnemyAttackPlayerState(this));
+    this.addState("die", new SlimeEnemyDieState(this));
+    this.addState("dead", new SlimeEnemyDeadState(this));
+    this.addState("hangingAround", new SlimeEnemyHangingAroundState(this));
+    this.addState("chasingPlayer", new SlimeEnemyChasingPlayerState(this));
   }
 }
 class SlimeGameObject extends BaseEnemyGameObject {
@@ -3443,6 +3658,9 @@ class QuestEntity extends Entity {
   }
 }
 class NotSetDeathQuestState extends State {
+  constructor(fsm) {
+    super(fsm);
+  }
   onEnter() {
     super.onEnter();
   }
@@ -3490,11 +3708,11 @@ class JustTakenDeathQuestState extends State {
 }
 class DeathQuestStateMachine extends FiniteStateMachine {
   constructor(quest) {
-    super();
+    super(quest);
     this.quest = quest;
-    this.addState("not-set", NotSetDeathQuestState);
-    this.addState("just-taken", JustTakenDeathQuestState);
-    this.setState(NotSetDeathQuestState);
+    this.addState("not-set", new NotSetDeathQuestState(this));
+    this.addState("just-taken", new JustTakenDeathQuestState(this));
+    this.setState(this.states["not-set"]);
   }
   getQuest() {
     return this.quest;
@@ -3502,7 +3720,7 @@ class DeathQuestStateMachine extends FiniteStateMachine {
   send(action) {
     if (action.type === "player_near_death") {
       if (this.getCurrentState() instanceof NotSetDeathQuestState) {
-        this.setState(JustTakenDeathQuestState);
+        this.setState(this.states["just-taken"]);
       }
     }
   }
@@ -3538,10 +3756,171 @@ class DeathQuestEntity extends Entity {
     }
   }
 }
+class MiniMap {
+  constructor() {
+    __publicField(this, "open", false);
+    __publicField(this, "onKeyDown", (event) => {
+      if (event.code === "KeyM") {
+        this.open = !this.open;
+      }
+    });
+    document.addEventListener("keydown", this.onKeyDown);
+  }
+  destroy() {
+    document.removeEventListener("keyup", this.onKeyDown);
+  }
+  draw(context, camera) {
+    const entityManager = camera.getEntityManager();
+    if (!entityManager) {
+      return;
+    }
+    if (this.open) {
+      this.drawOpen(context, camera);
+    }
+    this.drawMini(context, camera);
+  }
+  drawMini(context, camera) {
+    const entityManager = camera.getEntityManager();
+    const WIDTH = 200;
+    const HEIGHT = 200;
+    const MAX_DISTANCE2 = 1e3;
+    const SCALE = 0.1;
+    const X_OFFSET = window.innerWidth - WIDTH;
+    const Y_OFFSET = 0;
+    const OBJ_X_OFFSET = X_OFFSET + WIDTH / 2;
+    const OBJ_Y_OFFSET = Y_OFFSET + HEIGHT / 2;
+    const RADIUS = 3;
+    context.save();
+    context.beginPath();
+    context.strokeStyle = "rgba(0,0,0,0.44)";
+    context.rect(X_OFFSET, Y_OFFSET, WIDTH, HEIGHT);
+    context.fillStyle = "rgba(0,0,0,0.57)";
+    context.fill();
+    context.stroke();
+    context.closePath();
+    context.restore();
+    const cameraCenter = camera.getBox().getCenter();
+    const entities = entityManager.findEntities(cameraCenter, MAX_DISTANCE2);
+    context.lineWidth = 0.1;
+    for (const entity of entities) {
+      context.beginPath();
+      const drawableEntity = entity;
+      const drawableEntityCenter = drawableEntity.getGameObject().getBox().getCenter();
+      if (drawableEntity instanceof PlayerEntity) {
+        context.strokeStyle = "rgba(0,81,255,0.52)";
+        context.fillStyle = "rgba(0,60,255,0.38)";
+      } else if (drawableEntity instanceof BaseEnemyEntity) {
+        context.strokeStyle = "rgba(255,0,0,0.52)";
+        context.fillStyle = "rgba(255,0,0,0.38)";
+      } else if (entity instanceof FireEntity) {
+        if (entity instanceof FireShieldEntity || entity instanceof FireAttackEntity) {
+          if (entity.filter === firePurpleFilter) {
+            context.strokeStyle = "rgb(230,0,255)";
+            context.fillStyle = "rgb(123,0,255)";
+          } else if (entity.filter === fireGreenFilter) {
+            context.strokeStyle = "rgb(0,255,81)";
+            context.fillStyle = "rgb(0,255,178)";
+          } else if (entity.filter === fireBlueFilter) {
+            context.strokeStyle = "rgb(0,255,247)";
+            context.fillStyle = "rgb(0,102,255)";
+          } else {
+            context.strokeStyle = "rgb(255,153,0)";
+            context.fillStyle = "rgb(255,68,0)";
+          }
+        } else {
+          context.strokeStyle = "rgb(255,153,0)";
+          context.fillStyle = "rgb(255,68,0)";
+        }
+      } else if (entity instanceof TreeEntity) {
+        context.strokeStyle = "rgba(154,63,0,0.52)";
+        context.fillStyle = "rgba(45,189,0,0.43)";
+      } else {
+        context.strokeStyle = "rgba(255,255,255,0.52)";
+        context.fillStyle = "rgba(255,255,255,0.38)";
+      }
+      const vector = drawableEntityCenter.getVector(cameraCenter);
+      vector.scale(SCALE);
+      context.arc(OBJ_X_OFFSET + vector.x, OBJ_Y_OFFSET + vector.y, RADIUS, 2, Math.PI * 2);
+      context.stroke();
+      context.fill();
+      context.closePath();
+    }
+    context.restore();
+  }
+  drawOpen(context, camera) {
+    const entityManager = camera.getEntityManager();
+    const WIDTH = window.innerWidth;
+    const HEIGHT = window.innerHeight;
+    const MAX_DISTANCE2 = 2e4;
+    const SCALE = 0.1;
+    const X_OFFSET = window.innerWidth - WIDTH;
+    const Y_OFFSET = 0;
+    const OBJ_X_OFFSET = X_OFFSET + WIDTH / 2;
+    const OBJ_Y_OFFSET = Y_OFFSET + HEIGHT / 2;
+    const RADIUS = 3;
+    context.save();
+    context.beginPath();
+    context.strokeStyle = "rgba(0,0,0,0.44)";
+    context.rect(X_OFFSET, Y_OFFSET, WIDTH, HEIGHT);
+    context.fillStyle = "rgba(0,0,0,0.66)";
+    context.fill();
+    context.stroke();
+    context.closePath();
+    context.restore();
+    const cameraCenter = camera.getBox().getCenter();
+    const entities = entityManager.findEntities(cameraCenter, MAX_DISTANCE2);
+    context.lineWidth = 0.1;
+    for (const entity of entities) {
+      context.beginPath();
+      const drawableEntity = entity;
+      const drawableEntityCenter = drawableEntity.getGameObject().getBox().getCenter();
+      if (drawableEntity instanceof PlayerEntity) {
+        context.strokeStyle = "rgba(0,81,255,0.52)";
+        context.fillStyle = "rgba(0,60,255,0.38)";
+      } else if (drawableEntity instanceof BaseEnemyEntity) {
+        context.strokeStyle = "rgba(255,0,0,0.52)";
+        context.fillStyle = "rgba(255,0,0,0.38)";
+      } else if (entity instanceof FireEntity) {
+        if (entity instanceof FireShieldEntity || entity instanceof FireAttackEntity) {
+          if (entity.filter === firePurpleFilter) {
+            context.strokeStyle = "rgb(230,0,255)";
+            context.fillStyle = "rgb(123,0,255)";
+          } else if (entity.filter === fireGreenFilter) {
+            context.strokeStyle = "rgb(0,255,81)";
+            context.fillStyle = "rgb(0,255,178)";
+          } else if (entity.filter === fireBlueFilter) {
+            context.strokeStyle = "rgb(0,255,247)";
+            context.fillStyle = "rgb(0,102,255)";
+          } else {
+            context.strokeStyle = "rgb(255,153,0)";
+            context.fillStyle = "rgb(255,68,0)";
+          }
+        } else {
+          context.strokeStyle = "rgb(255,153,0)";
+          context.fillStyle = "rgb(255,68,0)";
+        }
+      } else if (entity instanceof TreeEntity) {
+        context.strokeStyle = "rgba(154,63,0,0.52)";
+        context.fillStyle = "rgba(45,189,0,0.43)";
+      } else {
+        context.strokeStyle = "rgba(255,255,255,0.52)";
+        context.fillStyle = "rgba(255,255,255,0.38)";
+      }
+      const vector = drawableEntityCenter.getVector(cameraCenter);
+      vector.scale(SCALE);
+      context.arc(OBJ_X_OFFSET + vector.x, OBJ_Y_OFFSET + vector.y, RADIUS, 2, Math.PI * 2);
+      context.stroke();
+      context.fill();
+      context.closePath();
+    }
+    context.restore();
+  }
+}
 class GameMap {
   constructor(canvas2) {
     __publicField(this, "canvas", null);
     __publicField(this, "context", null);
+    __publicField(this, "miniMap", new MiniMap());
     __publicField(this, "entityManager", null);
     __publicField(this, "scene", null);
     __publicField(this, "fps", 0);
@@ -3627,6 +4006,7 @@ class GameMap {
     if (this.i % 20 === 0) {
       this.fps = Math.round(1e3 / timeElapsedReal);
     }
+    this.miniMap.draw(context, camera);
     context.save();
     context.fillStyle = "#ffffff";
     context.font = "15px monospace";
@@ -4470,7 +4850,7 @@ class SpawnArea extends Entity {
     super.initEntity();
     this.unsubscribeFromEnemyDeathFn = this.getEntityManager().emitter.subscribe(GAME_EVENTS.KILLED_EVENT, ({ who }) => {
       const length = this.liveEntities.length;
-      removeOneFromArray(this.liveEntities, (e) => e !== who);
+      removeOneFromArray(this.liveEntities, (e) => e === who);
       const newLenght = this.liveEntities.length;
       if (length !== newLenght) {
         this.deadEntities.push(who);
@@ -4553,6 +4933,9 @@ const _StairsLocation = class extends Stairs {
   update(timeElapsed) {
     super.update(timeElapsed);
     const player = this.getEntityManager().getEntityByName("player");
+    if (!player) {
+      return;
+    }
     const playerCollision = player.getGameObject().getBox().isCollide(this.getGameObject().getBox());
     if (playerCollision && !this.isPlayerEntered) {
       this.isPlayerEntered = true;
@@ -5537,12 +5920,12 @@ class SkeletonEnemyAttackPlayerState extends BaseEnemyAttackPlayerState {
 class SkeletonStateMachine extends BaseEnemyStateMachine {
   constructor(enemy) {
     super(enemy);
-    this.addState("idle", SkeletonEnemyIdleState);
-    this.addState("attack", SkeletonEnemyAttackPlayerState);
-    this.addState("die", SkeletonEnemyDieState);
-    this.addState("dead", SkeletonEnemyDeadState);
-    this.addState("hangingAround", SkeletonEnemyHangingAroundState);
-    this.addState("chasingPlayer", SkeletonEnemyChasingPlayerState);
+    this.addState("idle", new SkeletonEnemyIdleState(this));
+    this.addState("attack", new SkeletonEnemyAttackPlayerState(this));
+    this.addState("die", new SkeletonEnemyDieState(this));
+    this.addState("dead", new SkeletonEnemyDeadState(this));
+    this.addState("hangingAround", new SkeletonEnemyHangingAroundState(this));
+    this.addState("chasingPlayer", new SkeletonEnemyChasingPlayerState(this));
   }
 }
 class HomeMap extends GameMap {
@@ -7347,9 +7730,13 @@ class TestMap extends GameMap {
   }
   initialize() {
     super.initialize();
-    const skeleton = new SkeletonEntity(window.innerWidth / 2, window.innerHeight / 2);
+    const skeleton = new SkeletonEntity(400, 400);
+    skeleton.getGameObject().setRotation(0);
     this.getEntityManager().addEntity(skeleton);
     this.getEntityManager().addToScene(skeleton);
+    const fire2 = new FireEntity(100, 100, 160, 160);
+    this.getEntityManager().addEntity(fire2);
+    this.getEntityManager().addToScene(fire2);
   }
   attachPlayer(player) {
     player.getGameObject().getBox().setTopLeft(new Position());
@@ -7358,7 +7745,6 @@ class TestMap extends GameMap {
     const camera = new FollowPlayerCamera(window.innerWidth, window.innerHeight, player);
     this.getEntityManager().addEntity(camera, "camera");
     this.getScene().camera = camera;
-    return this;
   }
 }
 class Game {
@@ -7383,26 +7769,23 @@ class Game {
   }
   setGiantTreeMap(namedLocation = "bottom") {
     this.setGameMap(this.giantTreeMap, namedLocation);
-    return this;
   }
   setHomeMap(namedLocation = "home") {
     this.setGameMap(this.homeMap, namedLocation);
-    return this;
   }
   setGameMap(gameMap, namedLocation) {
     let player;
     if (this.currentGameMap) {
       player = this.currentGameMap.getEntityManager().getEntityByName("player");
-      this.currentGameMap.removePlayer();
+      PlayerEntity.detachFronEntityManager(player);
     } else {
       player = new PlayerEntity(0, 0);
       const inputController = new InputController();
       player.addComponent(inputController);
     }
-    player.handleClear();
+    PlayerEntity.attachToEntityManager(player, gameMap.getEntityManager());
     gameMap.attachPlayer(player, namedLocation);
     this.currentGameMap = gameMap;
-    return this;
   }
   tick(timeElapsed, timeElapsedReal) {
     this.currentGameMap.tick(timeElapsed);
