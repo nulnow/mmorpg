@@ -30,7 +30,7 @@ export class SpawnArea extends Entity {
     this.unsubscribeFromEnemyDeathFn =
       this.getEntityManager().emitter.subscribe(GAME_EVENTS.KILLED_EVENT, ({ who }: { who: Entity }) => {
         const length = this.liveEntities.length;
-        removeOneFromArray(this.liveEntities, (e) => e !== who);
+        removeOneFromArray(this.liveEntities, (e) => e === who);
         const newLenght = this.liveEntities.length;
         if (length !== newLenght) {
           this.deadEntities.push(who as any);

@@ -1,5 +1,5 @@
 import { FiniteStateMachine } from '../StateMachine/FiniteStateMachine';
-import { State } from '../StateMachine/State';
+import { State, StateWithAnimation } from '../StateMachine/State';
 import { ResourceLoader } from '../ResourceLoader';
 import { EnemyEntity } from './EnemyEntity';
 import { PlayerEntity } from '../Player/PlayerEntity';
@@ -9,7 +9,7 @@ import { Rotation } from '../Rendering/Rotation';
 import { Random } from '../Random';
 import { UnsubscribeFn } from '../EventEmitter';
 
-export class EnemyIdleState extends State {
+export class EnemyIdleState extends StateWithAnimation {
   protected sprites = ResourceLoader.getLoadedAssets().slime.idle;
   protected speed = 7;
   protected fsm: EnemyStateMachine;
@@ -17,9 +17,8 @@ export class EnemyIdleState extends State {
   protected chanceToHangAround = 0.1;
 
   public constructor(fsm: EnemyStateMachine) {
-    super(fsm)
+    super(fsm);
     this.fsm = fsm;
-    this.gameObject = this.fsm.getEnemy().getGameObject();
   }
 
   public onEnter() {
@@ -52,7 +51,7 @@ export class EnemyIdleState extends State {
   }
 }
 
-export class EnemyHangingAroundState extends State {
+export class EnemyHangingAroundState extends StateWithAnimation {
   protected sprites = ResourceLoader.getLoadedAssets().slime.move;
   protected speed = 7;
   protected fsm: EnemyStateMachine;
@@ -61,9 +60,8 @@ export class EnemyHangingAroundState extends State {
   protected rotation: Rotation = new Rotation(0);
 
   public constructor(fsm: EnemyStateMachine) {
-    super(fsm)
+    super(fsm);
     this.fsm = fsm;
-    this.gameObject = this.fsm.getEnemy().getGameObject();
   }
 
   public onEnter() {
@@ -100,7 +98,7 @@ export class EnemyHangingAroundState extends State {
   }
 }
 
-export class EnemyDieState extends State {
+export class EnemyDieState extends StateWithAnimation {
   protected sprites = ResourceLoader.getLoadedAssets().slime.die;
   protected speed = 7;
   protected fsm: EnemyStateMachine;
@@ -108,9 +106,8 @@ export class EnemyDieState extends State {
   private unsubscribeFromAnimationEnd: UnsubscribeFn | null = null;
 
   public constructor(fsm: EnemyStateMachine) {
-    super(fsm)
+    super(fsm);
     this.fsm = fsm;
-    this.gameObject = this.fsm.getEnemy().getGameObject();
   }
 
   public onEnter(): void {
@@ -132,28 +129,26 @@ export class EnemyDieState extends State {
   }
 }
 
-export class EnemyDeadState extends State {
+export class EnemyDeadState extends StateWithAnimation {
   protected sprites = ResourceLoader.getLoadedAssets().slime.die.slice(0, 2);
   protected speed = 1;
   protected fsm: EnemyStateMachine;
 
   public constructor(fsm: EnemyStateMachine) {
-    super(fsm)
+    super(fsm);
     this.fsm = fsm;
-    this.gameObject = this.fsm.getEnemy().getGameObject();
   }
 }
 
-export class EnemyChasingPlayerState extends State {
+export class EnemyChasingPlayerState extends StateWithAnimation {
   protected sprites = ResourceLoader.getLoadedAssets().slime.move;
   protected speed = 7;
   protected fsm: EnemyStateMachine;
   private player: MusicPlayer = MusicPlayer.createSlimeMovingPlayer();
 
   public constructor(fsm: EnemyStateMachine) {
-    super(fsm)
+    super(fsm);
     this.fsm = fsm;
-    this.gameObject = this.fsm.getEnemy().getGameObject();
   }
 
   public onEnter() {
@@ -204,7 +199,7 @@ export class EnemyChasingPlayerState extends State {
   }
 }
 
-export class EnemyAttackPlayerState extends State {
+export class EnemyAttackPlayerState extends StateWithAnimation {
   protected sprites = ResourceLoader.getLoadedAssets().slime.attack;
   protected speed = 7;
   protected fsm: EnemyStateMachine;
@@ -212,9 +207,8 @@ export class EnemyAttackPlayerState extends State {
   private enemy: EnemyEntity;
 
   public constructor(fsm: EnemyStateMachine) {
-    super(fsm)
+    super(fsm);
     this.fsm = fsm;
-    this.gameObject = this.fsm.getEnemy().getGameObject();
     this.enemy = this.fsm.getEnemy();
   }
 
@@ -263,7 +257,7 @@ export class EnemyStateMachine extends FiniteStateMachine {
   }
 
   public constructor(enemy: EnemyEntity) {
-    super();
+    super(enemy);
 
     this.enemy = enemy;
 

@@ -1,17 +1,16 @@
 import { DeathEntity } from './DeathEntity';
 import { ResourceLoader } from '../ResourceLoader';
-import { State } from '../StateMachine/State';
+import { State, StateWithAnimation } from '../StateMachine/State';
 import { FiniteStateMachine } from '../StateMachine/FiniteStateMachine';
 
-class DeathIdleState extends State {
+class DeathIdleState extends StateWithAnimation {
   protected sprites = ResourceLoader.getLoadedAssets().deathSprite;
   protected speed = 2;
   protected fsm: DeathStateMachine;
 
   public constructor(fsm: DeathStateMachine) {
-    super(fsm)
+    super(fsm);
     this.fsm = fsm;
-    this.gameObject = this.fsm.getDeath().getGameObject();
   }
 
   public update(timeElapsed: number) {
@@ -27,11 +26,11 @@ export class DeathStateMachine extends FiniteStateMachine{
   }
 
   public constructor(death: DeathEntity) {
-    super();
+    super(death);
 
     this.death = death;
-    this.addState('idle', DeathIdleState as any);
+    this.addState('idle', new DeathIdleState(this));
 
-    this.setState(DeathIdleState as any);
+    this.setState(this.states['idle']);
   }
 }

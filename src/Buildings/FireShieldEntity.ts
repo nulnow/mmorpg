@@ -26,7 +26,7 @@ export class FireShieldEntity extends FireEntity {
     private speed: number = 0.002,
     width: number = 30,
     height: number = 30,
-    filter?: SpriteFilter
+    public readonly filter?: SpriteFilter
   ) {
     super(x, y, width, height, filter);
     this.gameObject.setIsCollidable(false);

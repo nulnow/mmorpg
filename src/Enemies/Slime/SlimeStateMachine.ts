@@ -39,11 +39,11 @@ export class SlimeStateMachine extends BaseEnemyStateMachine {
   public constructor(slimeEnemyEntity: SlimeEntity) {
     super(slimeEnemyEntity);
 
-    this.addState('idle', SlimeEnemyIdleState);
-    this.addState('attack', SlimeEnemyAttackPlayerState);
-    this.addState('die', SlimeEnemyDieState);
-    this.addState('dead', SlimeEnemyDeadState);
-    this.addState('hangingAround', SlimeEnemyHangingAroundState);
-    this.addState('chasingPlayer', SlimeEnemyChasingPlayerState);
+    this.addState('idle', new SlimeEnemyIdleState(this));
+    this.addState('attack', new SlimeEnemyAttackPlayerState(this));
+    this.addState('die', new SlimeEnemyDieState(this));
+    this.addState('dead', new SlimeEnemyDeadState(this));
+    this.addState('hangingAround', new SlimeEnemyHangingAroundState(this));
+    this.addState('chasingPlayer', new SlimeEnemyChasingPlayerState(this));
   }
 }

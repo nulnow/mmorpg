@@ -2,41 +2,9 @@ import { HomeMap } from './GameMaps/HomeMap';
 import { GiantTreeMap } from './GameMaps/GiantTreeMap';
 import { GameMap } from './GameMaps/GameMap';
 import { PlayerEntity } from './Player/PlayerEntity';
-import { InputController } from './InputController';
 import { HOME_MAP_NAMED_LOCATIONS } from './GameMaps/HomeMapCONSTANTS';
-import { Position } from './Rendering/Position';
-import { SkeletonEntity } from './Enemies/Skeleton/SkeletonEntity';
-import { FollowPlayerCamera } from './Camera/FollowPlayerCamera';
-import { Camera } from './Camera/Camera';
-
-class TestMap extends GameMap {
-  public constructor(game: Game) {
-    super(game.getCanvas());
-  }
-
-  public initialize() {
-    super.initialize();
-
-    const skeleton = new SkeletonEntity(window.innerWidth/ 2, window.innerHeight / 2);
-
-    this.getEntityManager().addEntity(skeleton);
-    this.getEntityManager().addToScene(skeleton);
-  }
-
-  public attachPlayer(player: PlayerEntity): this {
-    player.getGameObject().getBox().setTopLeft(new Position());
-    this.getEntityManager().addEntity(player, 'player');
-    this.getEntityManager().addToScene(player);
-
-    // const camera = new Camera(window.innerWidth, window.innerHeight);
-    const camera = new FollowPlayerCamera(window.innerWidth, window.innerHeight, player);
-    this.getEntityManager().addEntity(camera, 'camera');
-    this.getScene().camera = camera;
-
-    return this;
-  }
-
-}
+import { InputController } from './InputController';
+import { TestMap } from './GameMaps/TestMap';
 
 export class Game {
   private readonly canvas: HTMLCanvasElement;
@@ -65,36 +33,36 @@ export class Game {
     this.giantTreeMap.initialize();
   }
 
-  public setGiantTreeMap(namedLocation: 'top' | 'bottom' = 'bottom'): this {
+  public setGiantTreeMap(namedLocation: 'top' | 'bottom' = 'bottom'): void {
     this.setGameMap(this.giantTreeMap, namedLocation);
-    return this;
   }
 
-  public setHomeMap(namedLocation: keyof typeof HOME_MAP_NAMED_LOCATIONS = 'home'): this {
+  public setHomeMap(namedLocation: keyof typeof HOME_MAP_NAMED_LOCATIONS = 'home'): void {
     this.setGameMap(this.homeMap, namedLocation);
-    return this;
   }
 
-  private setGameMap(gameMap: GameMap, namedLocation?: string): this {
+  private setGameMap(gameMap: GameMap, namedLocation?: string): void {
     let player: PlayerEntity;
 
     if (this.currentGameMap) {
       player = this.currentGameMap!.getEntityManager().getEntityByName('player') as PlayerEntity;
-      this.currentGameMap!.removePlayer();
+      PlayerEntity.detachFronEntityManager(player);
     } else {
       player = new PlayerEntity(0, 0);
       const inputController = new InputController();
       player.addComponent(inputController);
     }
 
-    player.handleClear();
+    PlayerEntity.attachToEntityManager(player, gameMap.getEntityManager())
     gameMap.attachPlayer(player, namedLocation);
     this.currentGameMap = gameMap;
-
-    return this;
   }
 
   private tick(timeElapsed: number, timeElapsedReal: number): void {
+    // this.homeMap.tick(timeElapsed);
+    // this.giantTreeMap.tick(timeElapsed);
+    // this.testMap.tick(timeElapsed);
+
     this.currentGameMap!.tick(timeElapsed);
   }
 

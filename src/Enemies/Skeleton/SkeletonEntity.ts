@@ -87,11 +87,11 @@ export class SkeletonStateMachine extends BaseEnemyStateMachine {
   public constructor(enemy: BaseEnemyEntity) {
     super(enemy);
 
-    this.addState('idle', SkeletonEnemyIdleState);
-    this.addState('attack', SkeletonEnemyAttackPlayerState);
-    this.addState('die', SkeletonEnemyDieState);
-    this.addState('dead', SkeletonEnemyDeadState);
-    this.addState('hangingAround', SkeletonEnemyHangingAroundState);
-    this.addState('chasingPlayer', SkeletonEnemyChasingPlayerState);
+    this.addState('idle', new SkeletonEnemyIdleState(this));
+    this.addState('attack', new SkeletonEnemyAttackPlayerState(this));
+    this.addState('die', new SkeletonEnemyDieState(this));
+    this.addState('dead', new SkeletonEnemyDeadState(this));
+    this.addState('hangingAround', new SkeletonEnemyHangingAroundState(this));
+    this.addState('chasingPlayer', new SkeletonEnemyChasingPlayerState(this));
   }
 }

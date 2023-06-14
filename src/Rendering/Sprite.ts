@@ -1,5 +1,4 @@
 import { TrippleMap } from '../JSHACKS';
-import { ResourceLoader } from '../ResourceLoader';
 
 export type SpriteConfig = {
   rows: number;
@@ -16,7 +15,7 @@ export class Sprite {
     private sprites: HTMLImageElement,
     private config: SpriteConfig,
   ) {
-    this.warmCaches();
+    // this.warmCaches();
   }
 
   private static cache = new TrippleMap<number, SpriteFilter | null, unknown, HTMLImageElement>();
@@ -25,11 +24,10 @@ export class Sprite {
     this.filter = filter;
   }
 
-  private warmCaches(): this {
+  private warmCaches(): void {
     for (let i = 0; i < this.getLength(); i++) {
       this.getSpriteByIndex(i);
     }
-    return this;
   }
 
   public getLength(): number {

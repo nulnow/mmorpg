@@ -1,17 +1,15 @@
 import { BaseEnemyEntity } from './BaseEnemyEntity';
 import { FiniteStateMachine } from '../../StateMachine/FiniteStateMachine';
-import { State, StateSprites } from '../../StateMachine/State';
+import { State, StateSprites, StateWithAnimation } from '../../StateMachine/State';
 import { MusicPlayer } from '../../MusicPlayer';
 import { ResourceLoader } from '../../ResourceLoader';
 import { PlayerEntity } from '../../Player/PlayerEntity';
-import { GameMap } from '../../GameMap';
 import { IEntityWithHealth } from '../../IEntityWithHealth';
 import { Random } from '../../Random';
 import { Rotation } from '../../Rendering/Rotation';
 import { UnsubscribeFn } from '../../EventEmitter';
-import { Position } from '../../Rendering/Position';
 
-export class BaseEnemyIdleState extends State {
+export class BaseEnemyIdleState extends StateWithAnimation {
   protected sprites: StateSprites = ResourceLoader.getLoadedAssets().guard.idle;
   protected speed = 7;
   protected fsm: BaseEnemyStateMachine;
@@ -19,9 +17,8 @@ export class BaseEnemyIdleState extends State {
   protected chanceToHangAround = 0.1;
 
   public constructor(fsm: BaseEnemyStateMachine) {
-    super(fsm)
+    super(fsm);
     this.fsm = fsm;
-    this.gameObject = this.fsm.getEnemy().getGameObject();
   }
 
   public onEnter() {
@@ -61,7 +58,7 @@ export class BaseEnemyIdleState extends State {
   }
 }
 
-export class BaseEnemyHangingAroundState extends State {
+export class BaseEnemyHangingAroundState extends StateWithAnimation {
   protected sprites: StateSprites = ResourceLoader.getLoadedAssets().guard.run;
   protected speed = 7;
   protected fsm: BaseEnemyStateMachine;
@@ -70,9 +67,8 @@ export class BaseEnemyHangingAroundState extends State {
   protected rotation: Rotation = new Rotation(0);
 
   public constructor(fsm: BaseEnemyStateMachine) {
-    super(fsm)
+    super(fsm);
     this.fsm = fsm;
-    this.gameObject = this.fsm.getEnemy().getGameObject();
   }
 
   public onEnter() {
@@ -112,7 +108,7 @@ export class BaseEnemyHangingAroundState extends State {
   }
 }
 
-export class BaseEnemyDieState extends State {
+export class BaseEnemyDieState extends StateWithAnimation {
   protected sprites: StateSprites = ResourceLoader.getLoadedAssets().guard.death;
   protected speed = 7;
   protected fsm: BaseEnemyStateMachine;
@@ -120,9 +116,8 @@ export class BaseEnemyDieState extends State {
   private unsubscribeFromAnimationEnd: UnsubscribeFn | null = null;
 
   public constructor(fsm: BaseEnemyStateMachine) {
-    super(fsm)
+    super(fsm);
     this.fsm = fsm;
-    this.gameObject = this.fsm.getEnemy().getGameObject();
   }
 
   public onEnter(): void {
@@ -144,28 +139,26 @@ export class BaseEnemyDieState extends State {
   }
 }
 
-export class BaseEnemyDeadState extends State {
+export class BaseEnemyDeadState extends StateWithAnimation {
   protected sprites: StateSprites = ResourceLoader.getLoadedAssets().guard.death;
   protected speed = 0;
   protected fsm: BaseEnemyStateMachine;
 
   public constructor(fsm: BaseEnemyStateMachine) {
-    super(fsm)
+    super(fsm);
     this.fsm = fsm;
-    this.gameObject = this.fsm.getEnemy().getGameObject();
   }
 }
 
-export class BaseEnemyChasingPlayerState extends State {
+export class BaseEnemyChasingPlayerState extends StateWithAnimation {
   protected sprites: StateSprites = ResourceLoader.getLoadedAssets().guard.run;
   protected speed = 7;
   protected fsm: BaseEnemyStateMachine;
   private player: MusicPlayer = MusicPlayer.createSlimeMovingPlayer();
 
   public constructor(fsm: BaseEnemyStateMachine) {
-    super(fsm)
+    super(fsm);
     this.fsm = fsm;
-    this.gameObject = this.fsm.getEnemy().getGameObject();
   }
 
   public onEnter() {
@@ -220,7 +213,7 @@ export class BaseEnemyChasingPlayerState extends State {
   }
 }
 
-export class BaseEnemyAttackPlayerState extends State {
+export class BaseEnemyAttackPlayerState extends StateWithAnimation {
   protected sprites: StateSprites = ResourceLoader.getLoadedAssets().guard.attack;
   protected speed = 7;
   protected fsm: BaseEnemyStateMachine;
@@ -228,9 +221,8 @@ export class BaseEnemyAttackPlayerState extends State {
   private enemy: BaseEnemyEntity;
 
   public constructor(fsm: BaseEnemyStateMachine) {
-    super(fsm)
+    super(fsm);
     this.fsm = fsm;
-    this.gameObject = this.fsm.getEnemy().getGameObject();
     this.enemy = this.fsm.getEnemy();
   }
 
@@ -308,19 +300,25 @@ export class BaseEnemyStateMachine extends FiniteStateMachine {
   }
 
   public constructor(enemy: BaseEnemyEntity) {
-    super();
+    super(enemy);
     this.enemy = enemy;
-    this.addState('idle', BaseEnemyIdleState);
-    this.addState('attack', BaseEnemyIdleState);
-    this.addState('die', BaseEnemyDieState);
-    this.addState('dead', BaseEnemyDeadState);
-    this.addState('hangingAround', BaseEnemyHangingAroundState);
-    this.addState('chasingPlayer', BaseEnemyChasingPlayerState);
+    this.addState('idle', new BaseEnemyIdleState(this));
+    this.addState('attack', new BaseEnemyIdleState(this));
+    this.addState('die', new BaseEnemyDieState(this));
+    this.addState('dead', new BaseEnemyDeadState(this));
+    this.addState('hangingAround', new BaseEnemyHangingAroundState(this));
+    this.addState('chasingPlayer', new BaseEnemyChasingPlayerState(this));
   }
 
   public send(action: { type: string; data?: any }) {
     super.send(action);
-    this.setState(this.states[action.type] as any)
+
+    const state = this.states[action.type];
+    if (state) {
+      this.setState(state);
+    } else {
+      console.error('WRONG STATE', state, this);
+    }
   }
 
   public start() {

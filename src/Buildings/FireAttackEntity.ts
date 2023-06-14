@@ -22,7 +22,7 @@ export class FireAttackEntity extends FireEntity {
     private speed: number = FireAttackEntity.DEFAULT_SPEED,
     width: number = FireAttackEntity.DEFAULT_WIDTH,
     height: number = FireAttackEntity.DEFAULT_HEIGHT,
-    filter?: SpriteFilter,
+    public readonly filter?: SpriteFilter,
   ) {
     super(x, y, width, height, filter);
     this.gameObject.setIsCollidable(false);

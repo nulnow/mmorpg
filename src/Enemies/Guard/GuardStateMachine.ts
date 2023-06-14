@@ -44,11 +44,11 @@ export class GuardStateMachine extends BaseEnemyStateMachine {
   public constructor(enemy: BaseEnemyEntity) {
     super(enemy);
 
-    this.addState('idle', GuardEnemyIdleState);
-    this.addState('attack', GuardEnemyAttackPlayerState);
-    this.addState('die', GuardEnemyDieState);
-    this.addState('dead', GuardEnemyDeadState);
-    this.addState('hangingAround', GuardEnemyHangingAroundState);
-    this.addState('chasingPlayer', GuardEnemyChasingPlayerState);
+    this.addState('idle', new GuardEnemyIdleState(this));
+    this.addState('attack', new GuardEnemyAttackPlayerState(this));
+    this.addState('die', new GuardEnemyDieState(this));
+    this.addState('dead', new GuardEnemyDeadState(this));
+    this.addState('hangingAround', new GuardEnemyHangingAroundState(this));
+    this.addState('chasingPlayer', new GuardEnemyChasingPlayerState(this));
   }
 }

@@ -1,10 +1,17 @@
 import { Entity } from '../Entity';
 import { UnsubscribeFn } from '../EventEmitter';
+import { Chat } from '../Chat/Chat';
 
 export class UIEntity extends Entity {
-  private ui = document.getElementById('ui') as HTMLElement;
+  private ui = document.getElementById('ui') as HTMLDivElement;
   private openModals: string[] = [];
   private quests: { id: string, text: string, done?: boolean, onClick?: () => void }[] = [];
+  private chat: Chat;
+
+  public constructor() {
+    super();
+    this.chat = new Chat(this.ui);
+  }
 
   public addQuest(id: string, text: string, onClick?: () => void): void {
     this.quests.push({id, text, onClick});

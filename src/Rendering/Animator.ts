@@ -11,10 +11,8 @@ export class Animator {
   private currentAnimationId = 0;
   private timeSpent = 0;
 
-  public setSpeed(speed: number): this {
+  public setSpeed(speed: number): void {
     this.speed = speed;
-
-    return this;
   }
 
   public setSprites(sprites: HTMLImageElement[] | Sprite): this {
@@ -23,27 +21,22 @@ export class Animator {
     return this;
   }
 
-  public warmCache(): this {
-    if (this.sprites instanceof Sprite && this.gameObject) {
-      const box = this.gameObject.getBox();
-      const rect = box.getRect();
-
-      for (let i = 0; i < this.sprites.getLength(); i++) {
-        ResourceLoader.flipImage(this.sprites.getSpriteByIndex(i), rect, this.sprites);
-      }
-    }
-
-    return this;
-  }
+  // public warmCache(): void {
+  //   if (this.sprites instanceof Sprite && this.gameObject) {
+  //     const box = this.gameObject.getBox();
+  //     const rect = box.getRect();
+  //     for (let i = 0; i < this.sprites.getLength(); i++) {
+  //       ResourceLoader.flipImage(this.sprites.getSpriteByIndex(i), rect, this.sprites);
+  //     }
+  //   }
+  // }
 
   public getGameObject(): GameObject {
     return this.gameObject;
   }
 
-  public setGameObject(gameObject: GameObject): this {
+  public setGameObject(gameObject: GameObject): void {
     this.gameObject = gameObject;
-
-    return this;
   }
 
   public getCurrentSprite(): HTMLImageElement {
@@ -70,22 +63,22 @@ export class Animator {
           const box = this.gameObject.getBox();
           const rect = box.getRect();
 
-          // console.log('here1')
+          console.log('here1')
           return ResourceLoader.flipImage(this.sprites.getSpriteByIndex(this.currentAnimationId), rect);
         }
 
-        // console.log('here2')
+        console.log('here2')
         return this.sprites.getSpriteByIndex(this.currentAnimationId);
       } else {
         if (this.gameObject && this.gameObject.getRotation().isLeft()) {
           const box = this.gameObject.getBox();
           const rect = box.getRect();
 
-          // console.log('here3')
+          console.log('here3')
           return ResourceLoader.flipImage(this.sprites[this.currentAnimationId], rect);
         }
 
-        // console.log('here4')
+        console.log('here4')
         return this.sprites[this.currentAnimationId];
       }
     } else {
@@ -98,18 +91,18 @@ export class Animator {
         const box = this.gameObject.getBox();
         const rect = box.getRect();
 
-        // console.log('here5')
+        console.log('here5')
         return ResourceLoader.flipImage(this.sprites.getSpriteByIndex(this.currentAnimationId), rect, this.sprites);
       } else {
         if (this.gameObject && this.gameObject.getRotation().isRight()) {
           const box = this.gameObject.getBox();
           const rect = box.getRect();
 
-          // console.log('here7')
+          console.log('here7')
           return ResourceLoader.flipImage(this.sprites[this.currentAnimationId], rect);
         }
 
-        // console.log('here8')
+        console.log('here8')
         return this.sprites[this.currentAnimationId];
       }
     }

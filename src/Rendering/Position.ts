@@ -45,6 +45,12 @@ export class Position {
     return copy;
   }
 
+  public scale(scale: number): void {
+    this.x *= scale;
+    this.y *= scale;
+    this.z *= scale;
+  }
+
   public addVector(pos: Position): void {
     this.x += pos.x;
     this.y += pos.y;

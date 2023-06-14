@@ -5,12 +5,14 @@ import { UnsubscribeFn } from '../EventEmitter';
 import { removeOneFromArray } from '../JSHACKS';
 import { DrawableEntity } from '../Rendering/DrawableEntity';
 import { PlayerEntity } from '../Player/PlayerEntity';
+import { MiniMap } from '../Player/MiniMap';
 
 export type DrawMapHook = (context: CanvasRenderingContext2D, camera: Camera) => void;
 
 export abstract class GameMap {
   private canvas: HTMLCanvasElement | null = null;
   private context: CanvasRenderingContext2D | null = null;
+  private miniMap = new MiniMap();
   public getCanvas(): HTMLCanvasElement {
     return this.canvas!;
   }
@@ -40,7 +42,7 @@ export abstract class GameMap {
     return this;
   }
 
-  public abstract attachPlayer(player: PlayerEntity, namedLocation?: string): this;
+  public abstract attachPlayer(player: PlayerEntity, namedLocation?: string): void;
 
   public removePlayer(): this {
     this.getEntityManager().removeEntity(this.getEntityManager().getEntityByName('player'), false);
@@ -113,6 +115,8 @@ export abstract class GameMap {
     if (this.i % 20 === 0) {
       this.fps = Math.round(1000 / timeElapsedReal);
     }
+
+    this.miniMap.draw(context, camera);
 
     context.save();
     context.fillStyle = '#ffffff';

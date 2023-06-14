@@ -48,6 +48,11 @@ export class StairsLocation extends Stairs {
   public update(timeElapsed: number) {
     super.update(timeElapsed);
     const player = this.getEntityManager().getEntityByName('player') as PlayerEntity;
+
+    if (!player) {
+      return;
+    }
+
     const playerCollision = player.getGameObject().getBox().isCollide(this.getGameObject().getBox());
     if (playerCollision && !this.isPlayerEntered) {
       this.isPlayerEntered = true;

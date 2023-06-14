@@ -1,4 +1,4 @@
-import { State } from '../StateMachine/State';
+import { StateWithAnimation } from '../StateMachine/State';
 import { MusicPlayer } from '../MusicPlayer';
 import { FiniteStateMachine, FSMAction } from '../StateMachine/FiniteStateMachine';
 import { ResourceLoader } from '../ResourceLoader';
@@ -8,15 +8,15 @@ import { InputController } from '../InputController';
 import { IEntityWithHealth } from '../IEntityWithHealth';
 import { EnemyEntity } from '../Enemies/EnemyEntity';
 
-export class PlayerIdleState extends State {
-  protected sprites = ResourceLoader.getLoadedAssets().adventurer.idle;
+export class PlayerIdleState extends StateWithAnimation {
+  // protected sprites = ResourceLoader.getLoadedAssets().adventurer.idle;
+  protected sprites = ResourceLoader.getLoadedAssets().skeleton.idle;
   protected speed = 5;
   protected fsm: PlayerFiniteStateMachine;
 
   public constructor(fsm: PlayerFiniteStateMachine) {
     super(fsm);
     this.fsm = fsm;
-    this.gameObject = this.fsm.getPlayer().getGameObject();
   }
 
   public onEnter(): void {
@@ -30,7 +30,7 @@ export class PlayerIdleState extends State {
   public update(timeElapsed: number): void {
     super.update(timeElapsed);
     if (this.fsm.getPlayer().getInputController()?.isAttack1Pressed()) {
-      this.fsm.setState(PlayerAttackState as any);
+      this.fsm.setAttackState();
     }
     if (this.fsm.getPlayer().getInputController()?.isAttack2Pressed()) {
       this.fsm.getPlayer().fireAttack();
@@ -47,21 +47,21 @@ export class PlayerIdleState extends State {
       this.fsm.getPlayer().handleClear();
     }
     if (this.fsm.getPlayer().getInputController()?.isOneOfMovementKeysIsPressed()) {
-      this.fsm.setState(PlayerRunState as any);
+      this.fsm.setRunState();
     }
   }
 }
 
-export class PlayerRunState extends State {
-  protected sprites = ResourceLoader.getLoadedAssets().adventurer.run;
-  protected speed = 5;
+export class PlayerRunState extends StateWithAnimation {
+  // protected sprites = ResourceLoader.getLoadedAssets().adventurer.run;
+  protected sprites = ResourceLoader.getLoadedAssets().skeleton.run;
+  // protected speed = 5;
+  protected speed = 25;
   protected fsm: PlayerFiniteStateMachine;
 
   public constructor(fsm: PlayerFiniteStateMachine) {
     super(fsm);
-
     this.fsm = fsm;
-    this.gameObject = fsm.getPlayer().getGameObject();
   }
 
   public onEnter(): void {
@@ -82,7 +82,7 @@ export class PlayerRunState extends State {
     }
 
     if (this.fsm.getPlayer().getInputController()?.isAttack1Pressed()) {
-      this.fsm.setState(PlayerAttackState as any);
+      this.fsm.setAttackState();
     }
     if (this.fsm.getPlayer().getInputController()?.isAttack2Pressed()) {
       this.fsm.getPlayer().fireAttack();
@@ -95,52 +95,96 @@ export class PlayerRunState extends State {
     }
 
     if (!inputController?.isOneOfMovementKeysIsPressed()) {
-      this.fsm.setState(PlayerIdleState as any);
+      this.fsm.setIdleState();
     } else {
+      const maxDeltaPX = 0.5;
       const length = (this.fsm.getPlayer().getSpeed() * timeElapsed) / 1000;
-      let x = 0;
-      let y = 0;
 
-      if (inputController.isTopPressed()) {
-        y -= length;
-      }
-
-      if (inputController.isRightPressed()) {
-        x += length;
-      }
-
-      if (inputController.isBottomPressed()) {
-        y += length;
-      }
-
-      if (inputController.isLeftPressed()) {
-        x -= length;
-      }
+      const size = Math.floor(length / maxDeltaPX);
+      const left = maxDeltaPX % length;
+      let isMoved = false;
 
       const player = this.fsm.getPlayer();
       const playerBox = player.getGameObject().getBox()
       const nextBox = playerBox.copy();
-      nextBox.move(x, y);
 
-      document.getElementById('playerPos')!.innerHTML = `player center x ${nextBox.getCenter().x} y ${nextBox.getCenter().y} <br />`
-      document.getElementById('playerPos')!.innerHTML += `player topleft x ${nextBox.getTopLeft().x} y ${nextBox.getTopLeft().y}`
-
-      const collisions = this.fsm.getPlayer().findCollisions(nextBox);
-
-      if (collisions.length === 0) {
-        const angle = Math.atan2(y, x);
-        if (Math.abs(angle) !== (Math.PI / 2)) {
-          player.getGameObject().setRotation(angle);
+      for (let i = 0; i <= size; i++) {
+        let toAdd = maxDeltaPX;
+        if (i === size) {
+          toAdd = left;
+          break;
         }
-        playerBox.move(x, y);
+
+        let x = 0;
+        let y = 0;
+
+        if (inputController.isTopPressed()) {
+          y -= toAdd;
+        }
+
+        if (inputController.isRightPressed()) {
+          x += toAdd;
+        }
+
+        if (inputController.isBottomPressed()) {
+          y += toAdd;
+        }
+
+        if (inputController.isLeftPressed()) {
+          x -= toAdd;
+        }
+
+        let xCollide = false;
+        let yCollide = false;
+        {
+          nextBox.move(x, 0);
+
+          const collisions = this.fsm.getPlayer().findCollisions(nextBox);
+
+          if (collisions.length === 0) {
+            const angle = Math.atan2(y, x);
+            if (Math.abs(angle) !== (Math.PI / 2)) {
+              player.getGameObject().setRotation(angle);
+            }
+            playerBox.move(x, 0);
+            isMoved = true;
+          } else {
+            xCollide = true;
+          }
+        }
+
+        {
+          nextBox.move(0, y);
+
+          const collisions = this.fsm.getPlayer().findCollisions(nextBox);
+
+          if (collisions.length === 0) {
+            const angle = Math.atan2(y, x);
+            if (Math.abs(angle) !== (Math.PI / 2)) {
+              player.getGameObject().setRotation(angle);
+            }
+            playerBox.move(0, y);
+            isMoved = true;
+          } else {
+            yCollide = true;
+          }
+        }
+
+        if (xCollide && yCollide) {
+          break;
+        }
+      }
+
+      if (isMoved) {
         player.getEntityManager().emitter.emit('player_move', player);
       }
     }
   }
 }
 
-export class PlayerAttackState extends State {
-  protected sprites = ResourceLoader.getLoadedAssets().adventurer.attack1;
+export class PlayerAttackState extends StateWithAnimation {
+  // protected sprites = ResourceLoader.getLoadedAssets().adventurer.attack1;
+  protected sprites = ResourceLoader.getLoadedAssets().skeleton.attack;
   protected speed = 20;
   protected fsm: PlayerFiniteStateMachine;
   protected player: PlayerEntity;
@@ -150,7 +194,6 @@ export class PlayerAttackState extends State {
   public constructor(fsm: PlayerFiniteStateMachine) {
     super(fsm);
     this.fsm = fsm;
-    this.gameObject = this.fsm.getPlayer().getGameObject();
     this.player = this.fsm.getPlayer();
   }
 
@@ -158,7 +201,7 @@ export class PlayerAttackState extends State {
     super.onEnter();
     MusicPlayer.playAttackOnce();
     this.unsubscribeFromAnimationEnd = this.animator.onAnimationEndOnce(() => {
-      this.fsm.setState(PlayerIdleState as any);
+      this.fsm.setIdleState();
     });
   }
 
@@ -187,8 +230,9 @@ export class PlayerAttackState extends State {
   }
 }
 
-export class PlayerDieState extends State {
-  protected sprites = ResourceLoader.getLoadedAssets().adventurer.die;
+export class PlayerDieState extends StateWithAnimation {
+  // protected sprites = ResourceLoader.getLoadedAssets().adventurer.die;
+  protected sprites = ResourceLoader.getLoadedAssets().skeleton.die;
   protected speed = 5;
   protected fsm: PlayerFiniteStateMachine;
 
@@ -197,13 +241,12 @@ export class PlayerDieState extends State {
   public constructor(fsm: PlayerFiniteStateMachine) {
     super(fsm);
     this.fsm = fsm;
-    this.gameObject = this.fsm.getPlayer().getGameObject();
   }
 
   public onEnter(): void {
     super.onEnter();
     this.unsubscribeFromAnimationEnd = this.animator.onAnimationEndOnce(() => {
-      this.fsm.setState(PlayerDeadState as any);
+      this.fsm.setDeadState();
     });
   }
 
@@ -215,7 +258,8 @@ export class PlayerDieState extends State {
   }
 }
 
-export class PlayerDeadState extends State {
+export class PlayerDeadState extends StateWithAnimation {
+  // protected sprites = ResourceLoader.getLoadedAssets().adventurer.dead.slice(0, 1);
   protected sprites = ResourceLoader.getLoadedAssets().adventurer.dead.slice(0, 1);
   protected speed = 1;
   protected fsm: PlayerFiniteStateMachine;
@@ -223,19 +267,50 @@ export class PlayerDeadState extends State {
   public constructor(fsm: PlayerFiniteStateMachine) {
     super(fsm);
     this.fsm = fsm;
-    this.gameObject = this.fsm.getPlayer().getGameObject();
   }
 }
 
 export class PlayerFiniteStateMachine extends FiniteStateMachine {
-  private player: PlayerEntity;
+  private readonly player: PlayerEntity;
   private inputController!: InputController;
 
+  private readonly idleState: PlayerIdleState;
+  private readonly runState: PlayerRunState;
+  private readonly attackState: PlayerAttackState;
+  private readonly deadState: PlayerDeadState;
+  private readonly dieState: PlayerDieState;
+
   public constructor(player: PlayerEntity) {
-    super();
+    super(player);
     this.player = player;
 
-    this.setState(PlayerIdleState as any);
+    this.idleState = new PlayerIdleState(this);
+    this.runState = new PlayerRunState(this);
+    this.attackState = new PlayerAttackState(this);
+    this.deadState = new PlayerDeadState(this);
+    this.dieState = new PlayerDieState(this);
+
+    this.setIdleState();
+  }
+
+  public setIdleState(): void {
+    this.setState(this.idleState);
+  }
+
+  public setRunState(): void {
+    this.setState(this.runState);
+  }
+
+  public setAttackState(): void {
+    this.setState(this.attackState);
+  }
+
+  public setDeadState(): void {
+    this.setState(this.deadState);
+  }
+
+  public setDieState(): void {
+    this.setState(this.dieState);
   }
 
   public getPlayer(): PlayerEntity {

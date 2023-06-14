@@ -39,6 +39,10 @@ export class BedEntity extends DrawableEntity {
     if (!this.healed) {
       const player = this.getEntityManager().getEntityByName('player') as any as PlayerEntity;
 
+      if (!player) {
+        return;
+      }
+
       const selfTopLeft = this.gameObject.getChildren()[0].getBox().getTopLeft();
       const playerTopLeft = player.getGameObject().getBox().getTopLeft();
 

@@ -10,8 +10,38 @@ import { uiEntity } from '../UI/UIEntity';
 import { FireAttackEntity } from '../Buildings/FireAttackEntity';
 import { Position } from '../Rendering/Position';
 import { fireGreenFilter, firePurpleFilter, FireShieldEntity } from '../Buildings/FireShieldEntity';
+import { EntityManager } from '../EntityManager';
+import { MiniMap } from './MiniMap';
 
 export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, IEntityAbleToAttack {
+
+  public static detachFronEntityManager(player: PlayerEntity): void {
+    const entityManager = player.getEntityManager();
+    entityManager.removeEntity(player, false);
+
+    for (const healBall of player.healBalls) {
+      entityManager.removeEntity(healBall, false);
+    }
+
+    for (const fireShieldBall of player.fireShieldBalls) {
+      entityManager.removeEntity(fireShieldBall, false);
+    }
+  }
+
+  public static attachToEntityManager(player: PlayerEntity, entityManager: EntityManager): void {
+    entityManager.addEntity(player);
+
+    for (const healBall of player.healBalls) {
+      entityManager.addEntity(healBall);
+      entityManager.addToScene(healBall);
+    }
+
+    for (const fireShieldBall of player.fireShieldBalls) {
+      entityManager.addEntity(fireShieldBall);
+      entityManager.addToScene(fireShieldBall);
+    }
+  }
+
   private readonly finiteStateMachine: PlayerFiniteStateMachine;
   private inputController!: InputController;
 
@@ -27,6 +57,8 @@ export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, I
     super();
     this.finiteStateMachine = new PlayerFiniteStateMachine(this);
     this.gameObject = new CharacterGameObject(x, y, this, this.finiteStateMachine);
+    // const minimap = new MiniMap(this);
+    // this.gameObject.addChild(minimap);
   }
 
   private health: Health = new Health(10000, 10000);
@@ -39,7 +71,7 @@ export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, I
   }
 
   public respawn(): void {
-    this.finiteStateMachine.setState(PlayerIdleState);
+    this.finiteStateMachine.setIdleState();
     this.setHealth(this.getHealth().getMaxValue());
     this.gameObject.getBox().setTopLeft(new Position(40, 40, 0));
     this.getEntityManager().emitter.emit('player_move', this);
@@ -204,7 +236,7 @@ export class PlayerEntity extends DrawableEntity implements IEntityWithHealth, I
     this.attackRange = value;
   }
 
-  private speed = 450;
+  private speed = 150;
   public getSpeed(): number {
     return this.speed;
   }

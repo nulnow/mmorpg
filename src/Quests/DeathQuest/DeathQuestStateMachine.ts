@@ -4,6 +4,10 @@ import { State } from '../../StateMachine/State';
 import { uiEntity } from '../../UI/UIEntity';
 
 export class NotSetDeathQuestState extends State {
+  public constructor(fsm: FiniteStateMachine) {
+    super(fsm);
+  }
+
   public onEnter() {
     super.onEnter();
   }
@@ -61,11 +65,11 @@ export class JustTakenDeathQuestState extends State {
 
 export class DeathQuestStateMachine extends FiniteStateMachine {
   public constructor(private quest: DeathQuestEntity) {
-    super();
-    this.addState('not-set', NotSetDeathQuestState);
-    this.addState('just-taken', JustTakenDeathQuestState);
+    super(quest);
+    this.addState('not-set', new NotSetDeathQuestState(this));
+    this.addState('just-taken', new JustTakenDeathQuestState(this));
 
-    this.setState(NotSetDeathQuestState);
+    this.setState(this.states['not-set']);
   }
 
   public getQuest(): DeathQuestEntity {
@@ -75,7 +79,7 @@ export class DeathQuestStateMachine extends FiniteStateMachine {
   public send(action): void {
     if (action.type === 'player_near_death') {
       if (this.getCurrentState() instanceof NotSetDeathQuestState) {
-        this.setState(JustTakenDeathQuestState);
+        this.setState(this.states['just-taken']);
       }
     }
   }
